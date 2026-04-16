@@ -78,6 +78,10 @@ function normalizeAuthError(error: unknown): string {
     if (code === "auth/email-already-in-use") {
       return "That email is already registered. Please sign in with the existing password.";
     }
+
+    if (code === "auth/operation-not-allowed") {
+      return "Enable Email/Password sign-in in Firebase Authentication > Sign-in method.";
+    }
   }
 
   return error instanceof Error ? error.message : "Unable to authenticate right now.";
@@ -120,22 +124,39 @@ export function AdminAuthProvider({ children }: PropsWithChildren) {
       } catch (error) {
         const code = error && typeof error === "object" && "code" in error ? String((error as { code?: unknown }).code) : "";
 
-        if (code === "auth/user-not-found") {
-          const created = await createUserWithEmailAndPassword(auth, ADMIN_LOGIN_EMAIL, ADMIN_LOGIN_PASSWORD);
-          const nextDisplayName = deriveDisplayName(ADMIN_LOGIN_EMAIL);
-          await updateProfile(created.user, {
-            displayName: nextDisplayName,
-          });
-          setCurrentUser({
-            uid: created.user.uid,
-            email: created.user.email,
-            displayName: nextDisplayName,
-            photoURL: created.user.photoURL,
-          });
-          return;
+        if (
+          code === "auth/user-not-found" ||
+          code === "auth/invalid-credential" ||
+          code === "auth/invalid-login-credentials"
+        ) {
+          try {
+            const created = await createUserWithEmailAndPassword(auth, ADMIN_LOGIN_EMAIL, ADMIN_LOGIN_PASSWORD);
+            const nextDisplayName = deriveDisplayName(ADMIN_LOGIN_EMAIL);
+            await updateProfile(created.user, {
+              displayName: nextDisplayName,
+            });
+            setCurrentUser({
+              uid: created.user.uid,
+              email: created.user.email,
+              displayName: nextDisplayName,
+              photoURL: created.user.photoURL,
+            });
+            return;
+          } catch (createError) {
+            const createCode =
+              createError && typeof createError === "object" && "code" in createError
+                ? String((createError as { code?: unknown }).code)
+                : "";
+
+            if (createCode === "auth/email-already-in-use") {
+              throw new Error("The configured dashboard password does not match Firebase Auth. Reset this user password in Firebase to continue.");
+            }
+
+            throw new Error(normalizeAuthError(createError));
+          }
         }
 
-        if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
+        if (code === "auth/wrong-password") {
           throw new Error("The configured dashboard password does not match Firebase Auth. Reset this user password in Firebase to continue.");
         }
 
