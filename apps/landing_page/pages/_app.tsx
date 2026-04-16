@@ -6,9 +6,10 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <link rel="icon" href="/logo.png" type="image/png" />
-        <link rel="shortcut icon" href="/logo.png" />
-        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="icon" href="/logo.png?v=1" type="image/png" sizes="any" />
+        <link rel="icon" href="/logo.png?v=1" type="image/png" sizes="32x32" />
+        <link rel="apple-touch-icon" href="/logo.png?v=1" />
+        <meta name="theme-color" content="#4b174a" />
       </Head>
       <Component {...pageProps} />
     </>
