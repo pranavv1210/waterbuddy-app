@@ -13,7 +13,10 @@ export function AppShell({ children }: PropsWithChildren) {
   return (
     <div style={{ fontFamily: "sans-serif", padding: 24 }}>
       <header style={{ marginBottom: 24 }}>
-        <h1>WaterBuddy Admin</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+          <img src="/logo.png" alt="WaterBuddy Logo" style={{ height: '40px', width: 'auto' }} />
+          <h1 style={{ margin: 0 }}>WaterBuddy Admin</h1>
+        </div>
         <nav style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           {navigation.map((item) => (
             <Link key={item.href} href={item.href}>

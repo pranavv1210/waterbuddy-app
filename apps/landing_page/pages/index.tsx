@@ -38,7 +38,8 @@ export default function LandingPage({ content }: LandingPageProps) {
       <div className={styles.page}>
         <nav className={styles.navbar}>
           <div className={styles.navInner}>
-            <a className={styles.logo} href="#">
+            <a className={styles.logo} href="#" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <img src="/logo.png" alt="WaterBuddy Logo" style={{ height: '40px', width: 'auto' }} />
               {content.brandName}
             </a>
             <div className={styles.navLinks}>
