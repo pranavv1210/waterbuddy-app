@@ -5,16 +5,9 @@ interface ModuleCardProps {
 
 export function ModuleCard({ title, description }: ModuleCardProps) {
   return (
-    <section
-      style={{
-        border: "1px solid #d1d5db",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-      }}
-    >
-      <h2>{title}</h2>
-      <p>{description}</p>
+    <section className="mb-4 rounded-2xl border border-lilac/50 bg-white p-5 shadow-sm">
+      <h2 className="text-lg font-semibold text-brand-600">{title}</h2>
+      <p className="mt-2 text-sm text-slate-600">{description}</p>
     </section>
   );
 }

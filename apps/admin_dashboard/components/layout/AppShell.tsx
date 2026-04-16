@@ -1,31 +1,13 @@
-import Link from "next/link";
 import { PropsWithChildren } from "react";
-
-const navigation = [
-  { href: "/orders", label: "Orders" },
-  { href: "/sellers", label: "Sellers" },
-  { href: "/customers", label: "Customers" },
-  { href: "/payments", label: "Payments" },
-  { href: "/complaints", label: "Complaints" },
-];
+import { Sidebar } from "./Sidebar";
+import { Header } from "./Header";
 
 export function AppShell({ children }: PropsWithChildren) {
   return (
-    <div style={{ fontFamily: "sans-serif", padding: 24 }}>
-      <header style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-          <img src="/logo.png" alt="WaterBuddy Logo" style={{ height: '40px', width: 'auto' }} />
-          <h1 style={{ margin: 0 }}>WaterBuddy Admin</h1>
-        </div>
-        <nav style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          {navigation.map((item) => (
-            <Link key={item.href} href={item.href}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
-      <main>{children}</main>
+    <div className="min-h-full bg-cream">
+      <Sidebar />
+      <Header />
+      <main className="ml-64 p-8 min-h-screen">{children}</main>
     </div>
   );
 }

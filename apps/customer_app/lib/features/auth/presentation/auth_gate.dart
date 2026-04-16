@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../providers/app_providers.dart';
-import 'auth_screen.dart';
+import '../../../routes/route_names.dart';
+import '../login_screen.dart';
 import '../../../widgets/async_state_view.dart';
-import '../../../widgets/feature_placeholder.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
@@ -14,16 +15,21 @@ class AuthGate extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
 
     return authState.when(
-      data: (user) => AsyncStateView(
-        isLoading: false,
-        hasError: false,
-        child: user == null
-            ? const AuthScreen()
-            : const FeaturePlaceholder(
-                title: 'Authentication',
-                description: 'Authenticated user session is active.',
-              ),
-      ),
+      data: (user) {
+        if (user != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              context.go(RouteNames.home);
+            }
+          });
+        }
+
+        return AsyncStateView(
+          isLoading: false,
+          hasError: false,
+          child: user == null ? const LoginScreen() : const SizedBox.shrink(),
+        );
+      },
       error: (_, __) => const AsyncStateView(
         isLoading: false,
         hasError: true,

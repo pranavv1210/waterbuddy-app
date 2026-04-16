@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import '../core/services/auth/auth_service.dart';
 import '../core/services/orders/order_service.dart';
+import '../features/auth/auth_controller.dart';
 import '../features/auth/presentation/auth_gate.dart';
+import '../features/auth/otp_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/orders/presentation/orders_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
@@ -16,8 +18,17 @@ final firebaseAuthProvider = Provider<FirebaseAuth>((ref) => FirebaseAuth.instan
 final firestoreProvider =
     Provider<FirebaseFirestore>((ref) => FirebaseFirestore.instance);
 
-final authServiceProvider =
-    Provider<AuthService>((ref) => AuthService(ref.watch(firebaseAuthProvider)));
+final authServiceProvider = Provider<AuthService>(
+  (ref) => AuthService(
+    ref.watch(firebaseAuthProvider),
+    ref.watch(firestoreProvider),
+  ),
+);
+
+final authControllerProvider =
+    StateNotifierProvider<AuthController, AuthState>(
+  (ref) => AuthController(ref.watch(authServiceProvider)),
+);
 
 final orderServiceProvider =
     Provider<OrderService>((ref) => OrderService(ref.watch(firestoreProvider)));
@@ -33,6 +44,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.auth,
         builder: (_, __) => const AuthGate(),
+      ),
+      GoRoute(
+        path: RouteNames.otp,
+        builder: (_, __) => const OtpScreen(),
       ),
       GoRoute(
         path: RouteNames.home,
