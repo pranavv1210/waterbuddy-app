@@ -10,6 +10,8 @@ import '../features/home/presentation/home_screen.dart';
 import '../features/orders/presentation/orders_screen.dart';
 import '../features/payments/presentation/payments_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
+import '../features/splash/presentation/splash_screen.dart';
+import '../features/tracking/presentation/searching_tankers_screen.dart';
 import '../features/tracking/presentation/tracking_screen.dart';
 import '../routes/route_names.dart';
 
@@ -29,8 +31,12 @@ final authStateProvider = StreamProvider<User?>(
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: RouteNames.auth,
+    initialLocation: RouteNames.splash,
     routes: [
+      GoRoute(
+        path: RouteNames.splash,
+        builder: (_, __) => const SplashScreen(),
+      ),
       GoRoute(
         path: RouteNames.auth,
         builder: (_, __) => const AuthGate(),
@@ -38,6 +44,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.home,
         builder: (_, __) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.searching,
+        builder: (_, __) => const SearchingTankersScreen(),
       ),
       GoRoute(
         path: RouteNames.orders,

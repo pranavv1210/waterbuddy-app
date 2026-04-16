@@ -80,16 +80,18 @@ export default function LandingPage({ content }: LandingPageProps) {
                   {content.hero.secondaryCta}
                 </a>
               </div>
-              <div className={styles.socialProof}>
-                <div className={styles.socialProofAvatars}>
-                  {content.hero.socialProofUsers.map((user) => (
-                    <div key={user.label} className={styles.avatar}>
-                      <img src={user.image} alt={user.alt} />
-                    </div>
-                  ))}
+              {content.hero.socialProofUsers.length > 0 && content.hero.socialProofLabel ? (
+                <div className={styles.socialProof}>
+                  <div className={styles.socialProofAvatars}>
+                    {content.hero.socialProofUsers.map((user) => (
+                      <div key={user.label} className={styles.avatar}>
+                        <img src={user.image} alt={user.alt} />
+                      </div>
+                    ))}
+                  </div>
+                  <p>{content.hero.socialProofLabel}</p>
                 </div>
-                <p>{content.hero.socialProofLabel}</p>
-              </div>
+              ) : null}
             </div>
 
             <div className={styles.heroVisual}>
@@ -273,27 +275,31 @@ export default function LandingPage({ content }: LandingPageProps) {
                 </div>
               ))}
 
-              <div className={styles.footerGroup}>
-                <h4>Social</h4>
-                <div className={styles.socialLinks}>
-                  {content.footer.socialLinks.map((link) => (
-                    <a key={link.label} href={link.href} aria-label={link.label}>
-                      <span className="material-symbols-outlined">{link.icon}</span>
-                    </a>
-                  ))}
+              {content.footer.socialLinks.length > 0 ? (
+                <div className={styles.footerGroup}>
+                  <h4>Social</h4>
+                  <div className={styles.socialLinks}>
+                    {content.footer.socialLinks.map((link) => (
+                      <a key={link.label} href={link.href} aria-label={link.label}>
+                        <span className="material-symbols-outlined">{link.icon}</span>
+                      </a>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
 
             <div className={styles.footerBottom}>
               <p>
                 &copy; {new Date().getFullYear()} {content.footer.copyrightLabel}
               </p>
-              <div className={styles.storeBadges}>
-                {content.footer.storeBadges.map((badge) => (
-                  <img key={badge.label} src={badge.image} alt={badge.label} />
-                ))}
-              </div>
+              {content.footer.storeBadges.length > 0 ? (
+                <div className={styles.storeBadges}>
+                  {content.footer.storeBadges.map((badge) => (
+                    <img key={badge.label} src={badge.image} alt={badge.label} />
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
         </footer>

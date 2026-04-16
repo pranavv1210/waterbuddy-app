@@ -124,8 +124,6 @@ export class ContentService {
     return {
       brandName: "WaterBuddy",
       navigation: [
-        { label: "For Customers", href: "#customers", isActive: true },
-        { label: "For Sellers", href: "#sellers" },
         { label: "Get the App", href: "#download", isPrimary: true },
       ],
       hero: {
@@ -135,27 +133,8 @@ export class ContentService {
           "No more calling tanker numbers. Book water instantly and track it right to your apartment gate.",
         primaryCta: "Get the App",
         secondaryCta: "Become a Seller",
-        socialProofLabel: "Trusted by 5,000+ households",
-        socialProofUsers: [
-          {
-            label: "User 1",
-            image:
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuAfkCBHHBWUdw94t6-WH4yt-MGegjn0wbCujwyjU41DSkuBPK5PhqMgJFm2kf4ogi-PIrdhWCjuser5nFqdVX8jCRkp5A0wkEMEUrpp03lgnCk4OCDyNWO393gbOTgT5BuLCyQ_vXHqLDZfZrL7jUNy6IC2EUNxhvw2O55jSq6A1GZpde9LczklseZkza4Ht68YBGKVvM44NAd_g1Hf3gnbjDMAWIEDPlQU0PYJ9UkCnQwcmq8hq7CP84yDrdXI7C-45dfBM3gWEtiz",
-            alt: "Happy WaterBuddy customer one",
-          },
-          {
-            label: "User 2",
-            image:
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuAxWFIQljswlmwC6WgK_Kix8utk6YXyt0p4cEND4jsfdzhvgz1yF9gsiDD9T2fYTgD3UnBjwMIt80aPoKvuQOEYr0UTVLf27l2CqSIp-EDheedlQBI8rx3VmLpuPmI-VypUlmvXGBGII9U9LAM6PULzAymxcHPBqyy_RdXIb4OfuzuSFpUCKwdoaCe7QDmKpl-payCfrgBjvf3VO_m2T75B7icVYhjrQOH3_cl2CLa3H76hVsIziZTwJf-_g6W0LpydbVUwHmxek4Su",
-            alt: "Happy WaterBuddy customer two",
-          },
-          {
-            label: "User 3",
-            image:
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuCXMSs2uC0CR7DkyYP-Jgsmgv-9u0J0qeH22hG28tzufG2HE7_yhflSyNzpcuEIV1yr1zTowr-62SOS2bFhno8uyhKaZf8In2pGOSUyGO4-I2lqcgx69bu9Z2YkpoANpKxN-E2BzmfN5Msmajl_lqy4RKjgwfaLkCaavhMQ_AJL-pkdSCc0J9XZPXERSHB3Eec38ejQ-wLdJeHFR_wro5BcMrc0xIKmP0wIGSS_K6OyOFflKLsR3A9zIjuEZ31u9KyQ8FE5anE-hrfc",
-            alt: "Happy WaterBuddy customer three",
-          },
-        ],
+        socialProofLabel: "",
+        socialProofUsers: [],
         phoneStatus: "10:24 AM",
         trackingTitle: "Tracking Tanker #4218",
         etaLabel: "Arriving in 8 mins",
@@ -302,35 +281,18 @@ export class ContentService {
             title: "Company",
             links: [
               { label: "About Us", href: "#" },
-              { label: "Careers", href: "#" },
-              { label: "Partner With Us", href: "#" },
             ],
           },
           {
             title: "Support",
             links: [
-              { label: "Contact Support", href: "#" },
-              { label: "Privacy Policy", href: "#" },
-              { label: "Terms of Service", href: "#" },
+              { label: "Privacy Policy", href: "/privacy-policy" },
+              { label: "Terms of Service", href: "/terms-of-use" },
             ],
           },
         ],
-        socialLinks: [
-          { label: "Website", href: "#", icon: "public" },
-          { label: "Share", href: "#", icon: "share" },
-        ],
-        storeBadges: [
-          {
-            label: "Play Store",
-            image:
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuC7sus7pY3U02jNT4i1vLvWOIWmD0o150WKHq82DSEDqKLVJ9eSPAb8nDtAyxQTHXzbcakEMar9G0wRgcvxdICyOWIa6piwjipgzOWqXi8v0NspfsftS5p-J1eda1PZFmq1ipQO0ShuWVnxwKajVJxoQCx_1CWgqnKhLeBU50ADEfqx-pznAWsNIgmpFDDXwTo6CsfYmXQvOidca1xP_nwoMxPQuCYfyqEBeFF8KhJEK5Y4qeaPEZTaYdkY-0YItliN2n__nJZMCpij",
-          },
-          {
-            label: "App Store",
-            image:
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuDpnto_eFp40nvKNE5F8HZe-CSnSb20THc855BXHflGAg15Mb2irWHOZ2iqR5tyCE8IkAloDT94Sw64dSQ_5MJKCZAOcO2goJEMTG0LkptSW4sWZ8NfANtMF3FC-5PdE31MrW8V_K2lVfFt6dT90LXnYe6ytWsuTRRV7wfkyPDZflAh5IhZvjHIMwMhRmt1H3KlFQ9dv0yyW1-WD7sDw7Q6VCOtcUtCKkrj-GpIJ2bpUYNiqLzjkopvc41ON9k1CYbcsdDXCHeirsgH",
-          },
-        ],
+        socialLinks: [],
+        storeBadges: [],
         copyrightLabel: "WaterBuddy Technologies. All rights reserved.",
       },
     };

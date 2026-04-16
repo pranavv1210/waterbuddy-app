@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../providers/app_providers.dart';
+import 'auth_screen.dart';
 import '../../../widgets/async_state_view.dart';
 import '../../../widgets/feature_placeholder.dart';
 
@@ -16,12 +17,12 @@ class AuthGate extends ConsumerWidget {
       data: (user) => AsyncStateView(
         isLoading: false,
         hasError: false,
-        child: FeaturePlaceholder(
-          title: 'Authentication',
-          description: user == null
-              ? 'OTP and Google sign-in flows attach here.'
-              : 'Authenticated user session is active.',
-        ),
+        child: user == null
+            ? const AuthScreen()
+            : const FeaturePlaceholder(
+                title: 'Authentication',
+                description: 'Authenticated user session is active.',
+              ),
       ),
       error: (_, __) => const AsyncStateView(
         isLoading: false,
