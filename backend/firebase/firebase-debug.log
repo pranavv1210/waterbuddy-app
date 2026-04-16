@@ -1,0 +1,163 @@
+[debug] [2026-04-16T13:51:42.201Z] ----------------------------------------------------------------------
+[debug] [2026-04-16T13:51:42.204Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Pranav\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting --project waterbuddy-edcf7
+[debug] [2026-04-16T13:51:42.205Z] CLI Version:   15.15.0
+[debug] [2026-04-16T13:51:42.205Z] Platform:      win32
+[debug] [2026-04-16T13:51:42.206Z] Node Version:  v22.17.0
+[debug] [2026-04-16T13:51:42.206Z] Time:          Thu Apr 16 2026 19:21:42 GMT+0530 (India Standard Time)
+[debug] [2026-04-16T13:51:42.207Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-04-16T13:51:45.241Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-16T13:51:45.243Z] > authorizing via signed-in user (waterbuddyapp.wb@gmail.com)
+[debug] [2026-04-16T13:51:45.243Z] [iam] checking project waterbuddy-edcf7 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-04-16T13:51:45.245Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:51:45.246Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:51:45.248Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/waterbuddy-edcf7:testIamPermissions [none]
+[debug] [2026-04-16T13:51:45.248Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/waterbuddy-edcf7:testIamPermissions  x-goog-user-project=waterbuddy-edcf7
+[debug] [2026-04-16T13:51:45.248Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/waterbuddy-edcf7:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-04-16T13:51:46.797Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/waterbuddy-edcf7:testIamPermissions 200
+[debug] [2026-04-16T13:51:46.798Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/waterbuddy-edcf7:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-04-16T13:51:46.799Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:51:46.799Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:51:46.799Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/waterbuddy-edcf7 [none]
+[debug] [2026-04-16T13:51:47.321Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/waterbuddy-edcf7 200
+[debug] [2026-04-16T13:51:47.321Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/waterbuddy-edcf7 {"projectId":"waterbuddy-edcf7","projectNumber":"979686341816","displayName":"waterbuddy","name":"projects/waterbuddy-edcf7","resources":{"hostingSite":"waterbuddy-edcf7"},"state":"ACTIVE","etag":"1_c9e40181-6c1d-46e7-a60c-eb3e75688c10"}
+[info] 
+[info] === Deploying to 'waterbuddy-edcf7'...
+[info] 
+[info] i  deploying hosting 
+[info] Running command: node scripts/prepare-admin-hosting.js
+[info] +  hosting: Finished running predeploy script. 
+[debug] [2026-04-16T13:52:24.536Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:24.537Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:24.537Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/waterbuddy-edcf7/versions [none]
+[debug] [2026-04-16T13:52:24.537Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/waterbuddy-edcf7/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2026-04-16T13:52:26.231Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/waterbuddy-edcf7/versions 200
+[debug] [2026-04-16T13:52:26.231Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/waterbuddy-edcf7/versions {"name":"projects/979686341816/sites/waterbuddy-edcf7/versions/871c70406e5ae93b","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[info] i  hosting[waterbuddy-edcf7]: beginning deploy... 
+[info] i  hosting[waterbuddy-edcf7]: found 29 files in hosting/admin_dashboard 
+[debug] [2026-04-16T13:52:28.323Z] [hosting] uploading with 200 concurrency
+[debug] [2026-04-16T13:52:28.399Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:28.399Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:28.402Z] [hosting] hash cache [aG9zdGluZ1xhZG1pbl9kYXNoYm9hcmQ] stored for 29 files
+[debug] [2026-04-16T13:52:28.403Z] [hosting][hash queue][FINAL] {"max":62,"min":17,"avg":32.758620689655174,"active":0,"complete":29,"success":29,"errored":0,"retried":0,"total":29,"elapsed":75}
+[debug] [2026-04-16T13:52:28.403Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/979686341816/sites/waterbuddy-edcf7/versions/871c70406e5ae93b:populateFiles [none]
+[debug] [2026-04-16T13:52:28.403Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/979686341816/sites/waterbuddy-edcf7/versions/871c70406e5ae93b:populateFiles {"files":{"/logo.png":"c682216d0edc08bc3d44e32816498672242fc16f211511e3b7fd956778399752","/index.html":"d310c4a8daef74d400395eff6227289a58d92c7615c8d034bbb74bdea0a0db24","/404.html":"e411a872d4a75aeeb9507840f798f0133c0f3b95634710867e68a20441324aae","/_next/static/chunks/webpack-ee7e63bc15b31913.js":"aa0ce316321dba6379d5bc7634eee908def27215c6a08d7305e041d264c883bf","/_next/static/chunks/pages/_error-7a92967bea80186d.js":"f3ac04cc0adae24dbc6ccb319d7f8d002aad09a9d678c02256f6588bd81449e3","/_next/static/css/6d042295b05f48e1.css":"7f2d15b2c3a7dc6773c65cae6f7b043d735e74bc10004b52a1fb70052be8a8bb","/_next/static/chunks/850-4e5a9e49281b56d8.js":"9ccddb0c1afd5e63a6fbadf3eba2f75b5f579e9ef86637ae56f399a0fc5eb6d3","/_next/static/chunks/pages/settings-a3a007e3fae69f06.js":"866586a534bd6434b6e0ca7be8368d779a17c172364492d9fedb69aabd79e7de","/_next/static/chunks/pages/payments-3b5536d012ad7d4d.js":"0da4a2d8801655f3e862efa0ae19e5599340510ba4aa4213b83897f45cfcb4c6","/_next/static/chunks/pages/login-af4d35b4d1b5fd7b.js":"efcd7cd4e989c2de6a3dc3c6c7a94cd8e27af18d9b481f7a46932dbab57c9e5a","/_next/static/chunks/pages/orders-3426163aa98747fd.js":"c528ab27452c20e9d9ccb1ee8e33244418684c7b7cfd0a375d4c452919056392","/_next/static/chunks/pages/index-015b7d34717b8b27.js":"cd2f32bc8588ec9e7a3e49b30a30d2a680840a39cefc3715a88239768eb92404","/_next/static/1SpVmC2nPLEtIkRCzaM-H/_ssgManifest.js":"f73bbe5888d285cbab0ee19990a0d9db0b352fa3dfd30959d64a2bc66422d35c","/settings/index.html":"f0ee89b3001b4a090d96c680f905c2ccc17977d8c9edf692bfd4f3aa1a748436","/_next/static/chunks/pages/customers-a1d18717b08149f4.js":"f10b2b8fb80515d0df2db0cdc8b11a71661094c466aec573076aeca58243e1f2","/payments/index.html":"5901279f0817aa9f27640379da7febe68a55403a894bf14ea5842c19a9a57e45","/sellers/index.html":"48404d27ba10fb715626f4eced3f2ad148a9c7394b098e36ecd45b544f6d0f57","/_next/static/chunks/pages/complaints-7b6ea2228d38e96f.js":"8c23eec3ac3907228b8909b46f63523d7683a6ee59cccb9ca98a00e0a23f0225","/_next/static/1SpVmC2nPLEtIkRCzaM-H/_buildManifest.js":"35abb3d9f6306a16976e4884ce02ae9c204a9ef1d0fbf1508643462e17e4c9f3","/login/index.html":"a6633ef995a0a2c77183c2e0472799ba5299f8b4ed22b8c7c4dbd12b235ac93b","/customers/index.html":"92e92f47c798518df554b29c97798299790c0daeb182784ca59abc23530457d1","/complaints/index.html":"202ebde76627109132f1d501417e7ab1efeb65736890be3b1c855a242cb6ae58","/_next/static/chunks/pages/sellers-ae6a876ff2b58d80.js":"7475f902b9da26145745c81721908f2324f1a0e082a40e70cb081c39e666e5b5","/404/index.html":"e411a872d4a75aeeb9507840f798f0133c0f3b95634710867e68a20441324aae","/orders/index.html":"99587ae648034d99435f738e41f45aa2c7f48700e3eb3ebac193e9d28d486451","/_next/static/chunks/main-f4701d23e362eb77.js":"078d2680641fd2ecd22220a7a5a1eab70a218fe68801b579f2226efee3ec9b2b","/_next/static/chunks/polyfills-42372ed130431b0a.js":"18e28d3214eda45048d80d3925ea7627b809e69ad2e95f7f98459e9146a61c3d","/_next/static/chunks/framework-64ad27b21261a9ce.js":"e3602f0208d127fb2a8eaf2c69fe8354025257feee8137cd0d6ff8307d228dca","/_next/static/chunks/pages/_app-f1f94412edc8421a.js":"71c42c1df89b022f2766c1c15fe5bbf25ab3c535b6c674471d39ae99ff3367dd"}}
+[debug] [2026-04-16T13:52:29.123Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/979686341816/sites/waterbuddy-edcf7/versions/871c70406e5ae93b:populateFiles 200
+[debug] [2026-04-16T13:52:29.124Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/979686341816/sites/waterbuddy-edcf7/versions/871c70406e5ae93b:populateFiles {"uploadRequiredHashes":["71c42c1df89b022f2766c1c15fe5bbf25ab3c535b6c674471d39ae99ff3367dd","48404d27ba10fb715626f4eced3f2ad148a9c7394b098e36ecd45b544f6d0f57","202ebde76627109132f1d501417e7ab1efeb65736890be3b1c855a242cb6ae58","f0ee89b3001b4a090d96c680f905c2ccc17977d8c9edf692bfd4f3aa1a748436","5901279f0817aa9f27640379da7febe68a55403a894bf14ea5842c19a9a57e45","d310c4a8daef74d400395eff6227289a58d92c7615c8d034bbb74bdea0a0db24","92e92f47c798518df554b29c97798299790c0daeb182784ca59abc23530457d1","a6633ef995a0a2c77183c2e0472799ba5299f8b4ed22b8c7c4dbd12b235ac93b","e411a872d4a75aeeb9507840f798f0133c0f3b95634710867e68a20441324aae","99587ae648034d99435f738e41f45aa2c7f48700e3eb3ebac193e9d28d486451"],"uploadUrl":"https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files"}
+[debug] [2026-04-16T13:52:29.125Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.126Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.126Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.126Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.127Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.127Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.127Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.127Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.128Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.128Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.128Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.128Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.129Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.129Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.129Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.129Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.130Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.130Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.130Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.130Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:29.131Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/71c42c1df89b022f2766c1c15fe5bbf25ab3c535b6c674471d39ae99ff3367dd [none]
+[debug] [2026-04-16T13:52:29.131Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/71c42c1df89b022f2766c1c15fe5bbf25ab3c535b6c674471d39ae99ff3367dd [stream]
+[debug] [2026-04-16T13:52:29.135Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/48404d27ba10fb715626f4eced3f2ad148a9c7394b098e36ecd45b544f6d0f57 [none]
+[debug] [2026-04-16T13:52:29.135Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/48404d27ba10fb715626f4eced3f2ad148a9c7394b098e36ecd45b544f6d0f57 [stream]
+[debug] [2026-04-16T13:52:29.139Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/202ebde76627109132f1d501417e7ab1efeb65736890be3b1c855a242cb6ae58 [none]
+[debug] [2026-04-16T13:52:29.139Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/202ebde76627109132f1d501417e7ab1efeb65736890be3b1c855a242cb6ae58 [stream]
+[debug] [2026-04-16T13:52:29.141Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/f0ee89b3001b4a090d96c680f905c2ccc17977d8c9edf692bfd4f3aa1a748436 [none]
+[debug] [2026-04-16T13:52:29.142Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/f0ee89b3001b4a090d96c680f905c2ccc17977d8c9edf692bfd4f3aa1a748436 [stream]
+[debug] [2026-04-16T13:52:29.145Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/5901279f0817aa9f27640379da7febe68a55403a894bf14ea5842c19a9a57e45 [none]
+[debug] [2026-04-16T13:52:29.145Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/5901279f0817aa9f27640379da7febe68a55403a894bf14ea5842c19a9a57e45 [stream]
+[debug] [2026-04-16T13:52:29.149Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/d310c4a8daef74d400395eff6227289a58d92c7615c8d034bbb74bdea0a0db24 [none]
+[debug] [2026-04-16T13:52:29.149Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/d310c4a8daef74d400395eff6227289a58d92c7615c8d034bbb74bdea0a0db24 [stream]
+[debug] [2026-04-16T13:52:29.152Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/92e92f47c798518df554b29c97798299790c0daeb182784ca59abc23530457d1 [none]
+[debug] [2026-04-16T13:52:29.153Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/92e92f47c798518df554b29c97798299790c0daeb182784ca59abc23530457d1 [stream]
+[debug] [2026-04-16T13:52:29.155Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/a6633ef995a0a2c77183c2e0472799ba5299f8b4ed22b8c7c4dbd12b235ac93b [none]
+[debug] [2026-04-16T13:52:29.155Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/a6633ef995a0a2c77183c2e0472799ba5299f8b4ed22b8c7c4dbd12b235ac93b [stream]
+[debug] [2026-04-16T13:52:29.159Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/e411a872d4a75aeeb9507840f798f0133c0f3b95634710867e68a20441324aae [none]
+[debug] [2026-04-16T13:52:29.159Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/e411a872d4a75aeeb9507840f798f0133c0f3b95634710867e68a20441324aae [stream]
+[debug] [2026-04-16T13:52:29.161Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/99587ae648034d99435f738e41f45aa2c7f48700e3eb3ebac193e9d28d486451 [none]
+[debug] [2026-04-16T13:52:29.161Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/99587ae648034d99435f738e41f45aa2c7f48700e3eb3ebac193e9d28d486451 [stream]
+[debug] [2026-04-16T13:52:29.163Z] [hosting][populate queue][FINAL] {"max":731,"min":731,"avg":731,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":764}
+[debug] [2026-04-16T13:52:29.163Z] [hosting] uploads queued: 10
+[debug] [2026-04-16T13:52:30.884Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/d310c4a8daef74d400395eff6227289a58d92c7615c8d034bbb74bdea0a0db24 200
+[debug] [2026-04-16T13:52:30.884Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/d310c4a8daef74d400395eff6227289a58d92c7615c8d034bbb74bdea0a0db24 [stream]
+[debug] [2026-04-16T13:52:30.918Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/f0ee89b3001b4a090d96c680f905c2ccc17977d8c9edf692bfd4f3aa1a748436 200
+[debug] [2026-04-16T13:52:30.918Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/f0ee89b3001b4a090d96c680f905c2ccc17977d8c9edf692bfd4f3aa1a748436 [stream]
+[debug] [2026-04-16T13:52:30.997Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/a6633ef995a0a2c77183c2e0472799ba5299f8b4ed22b8c7c4dbd12b235ac93b 200
+[debug] [2026-04-16T13:52:30.997Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/a6633ef995a0a2c77183c2e0472799ba5299f8b4ed22b8c7c4dbd12b235ac93b [stream]
+[debug] [2026-04-16T13:52:31.065Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/202ebde76627109132f1d501417e7ab1efeb65736890be3b1c855a242cb6ae58 200
+[debug] [2026-04-16T13:52:31.066Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/202ebde76627109132f1d501417e7ab1efeb65736890be3b1c855a242cb6ae58 [stream]
+[debug] [2026-04-16T13:52:31.068Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/e411a872d4a75aeeb9507840f798f0133c0f3b95634710867e68a20441324aae 200
+[debug] [2026-04-16T13:52:31.068Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/e411a872d4a75aeeb9507840f798f0133c0f3b95634710867e68a20441324aae [stream]
+[debug] [2026-04-16T13:52:31.096Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/48404d27ba10fb715626f4eced3f2ad148a9c7394b098e36ecd45b544f6d0f57 200
+[debug] [2026-04-16T13:52:31.096Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/48404d27ba10fb715626f4eced3f2ad148a9c7394b098e36ecd45b544f6d0f57 [stream]
+[debug] [2026-04-16T13:52:31.131Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/92e92f47c798518df554b29c97798299790c0daeb182784ca59abc23530457d1 200
+[debug] [2026-04-16T13:52:31.131Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/92e92f47c798518df554b29c97798299790c0daeb182784ca59abc23530457d1 [stream]
+[debug] [2026-04-16T13:52:31.143Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/5901279f0817aa9f27640379da7febe68a55403a894bf14ea5842c19a9a57e45 200
+[debug] [2026-04-16T13:52:31.143Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/5901279f0817aa9f27640379da7febe68a55403a894bf14ea5842c19a9a57e45 [stream]
+[debug] [2026-04-16T13:52:31.229Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/99587ae648034d99435f738e41f45aa2c7f48700e3eb3ebac193e9d28d486451 200
+[debug] [2026-04-16T13:52:31.230Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/99587ae648034d99435f738e41f45aa2c7f48700e3eb3ebac193e9d28d486451 [stream]
+[debug] [2026-04-16T13:52:31.353Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/71c42c1df89b022f2766c1c15fe5bbf25ab3c535b6c674471d39ae99ff3367dd 200
+[debug] [2026-04-16T13:52:31.353Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/waterbuddy-edcf7/versions/871c70406e5ae93b/files/71c42c1df89b022f2766c1c15fe5bbf25ab3c535b6c674471d39ae99ff3367dd [stream]
+[debug] [2026-04-16T13:52:31.354Z] [hosting][upload queue][FINAL] {"max":2229,"min":1757,"avg":1961.4,"active":0,"complete":10,"success":10,"errored":0,"retried":0,"total":10,"elapsed":2230}
+[info] +  hosting[waterbuddy-edcf7]: file upload complete 
+[debug] [2026-04-16T13:52:31.355Z] [hosting] deploy completed after 3078ms
+[debug] [2026-04-16T13:52:31.355Z] [
+  {
+    "config": {
+      "public": "hosting/admin_dashboard",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "predeploy": [
+        "node scripts/prepare-admin-hosting.js"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "site": "waterbuddy-edcf7"
+    },
+    "version": "projects/979686341816/sites/waterbuddy-edcf7/versions/871c70406e5ae93b"
+  }
+]
+[info] i  hosting[waterbuddy-edcf7]: finalizing version... 
+[debug] [2026-04-16T13:52:31.358Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:31.359Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:31.359Z] >>> [apiv2][query] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/waterbuddy-edcf7/versions/871c70406e5ae93b updateMask=status%2Cconfig
+[debug] [2026-04-16T13:52:31.359Z] >>> [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/waterbuddy-edcf7/versions/871c70406e5ae93b {"status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]}}
+[debug] [2026-04-16T13:52:32.220Z] <<< [apiv2][status] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/waterbuddy-edcf7/versions/871c70406e5ae93b 200
+[debug] [2026-04-16T13:52:32.220Z] <<< [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/waterbuddy-edcf7/versions/871c70406e5ae93b {"name":"projects/979686341816/sites/waterbuddy-edcf7/versions/871c70406e5ae93b","status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2026-04-16T13:52:24.476450Z","createUser":{"email":"waterbuddyapp.wb@gmail.com"},"finalizeTime":"2026-04-16T13:52:30.964561Z","finalizeUser":{"email":"waterbuddyapp.wb@gmail.com"}}
+[debug] [2026-04-16T13:52:32.220Z] [hosting] finalized version for waterbuddy-edcf7:[object Object]
+[info] +  hosting[waterbuddy-edcf7]: version finalized 
+[info] i  hosting[waterbuddy-edcf7]: releasing new version... 
+[debug] [2026-04-16T13:52:32.222Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:32.222Z] Checked if tokens are valid: true, expires at: 1776349333796
+[debug] [2026-04-16T13:52:32.222Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/waterbuddy-edcf7/channels/live/releases versionName=projects%2F979686341816%2Fsites%2Fwaterbuddy-edcf7%2Fversions%2F871c70406e5ae93b
+[debug] [2026-04-16T13:52:32.222Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/waterbuddy-edcf7/channels/live/releases {}
+[debug] [2026-04-16T13:52:33.047Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/waterbuddy-edcf7/channels/live/releases 200
+[debug] [2026-04-16T13:52:33.047Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/waterbuddy-edcf7/channels/live/releases {"name":"projects/979686341816/sites/waterbuddy-edcf7/channels/live/releases/1776347551127000","version":{"name":"projects/979686341816/sites/waterbuddy-edcf7/versions/871c70406e5ae93b","status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2026-04-16T13:52:24.476450Z","createUser":{"email":"waterbuddyapp.wb@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocL8esoHfngs2y-ih59kou6jaycPrBb_G1dXrbsrXWjdt3ILqg=mo"},"finalizeTime":"2026-04-16T13:52:30.964561Z","finalizeUser":{"email":"waterbuddyapp.wb@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocL8esoHfngs2y-ih59kou6jaycPrBb_G1dXrbsrXWjdt3ILqg=mo"}},"type":"DEPLOY","releaseTime":"2026-04-16T13:52:31.127Z","releaseUser":{"email":"waterbuddyapp.wb@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocL8esoHfngs2y-ih59kou6jaycPrBb_G1dXrbsrXWjdt3ILqg=mo"}}
+[debug] [2026-04-16T13:52:33.047Z] [hosting] release: {"name":"projects/979686341816/sites/waterbuddy-edcf7/channels/live/releases/1776347551127000","version":{"name":"projects/979686341816/sites/waterbuddy-edcf7/versions/871c70406e5ae93b","status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2026-04-16T13:52:24.476450Z","createUser":{"email":"waterbuddyapp.wb@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocL8esoHfngs2y-ih59kou6jaycPrBb_G1dXrbsrXWjdt3ILqg=mo"},"finalizeTime":"2026-04-16T13:52:30.964561Z","finalizeUser":{"email":"waterbuddyapp.wb@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocL8esoHfngs2y-ih59kou6jaycPrBb_G1dXrbsrXWjdt3ILqg=mo"}},"type":"DEPLOY","releaseTime":"2026-04-16T13:52:31.127Z","releaseUser":{"email":"waterbuddyapp.wb@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocL8esoHfngs2y-ih59kou6jaycPrBb_G1dXrbsrXWjdt3ILqg=mo"}}
+[info] +  hosting[waterbuddy-edcf7]: release complete 
+[info] 
+[info] +  Deploy complete! 
+[info] 
+[info] Project Console: https://console.firebase.google.com/project/waterbuddy-edcf7/overview
+[info] Hosting URL: https://waterbuddy-edcf7.web.app
+[debug] [2026-04-16T13:52:40.699Z] Error: Timed out.
+    at Timeout.<anonymous> (C:\Users\Pranav\AppData\Roaming\npm\node_modules\firebase-tools\lib\utils.js:309:49)
+    at listOnTimeout (node:internal/timers:588:17)
+    at process.processTimers (node:internal/timers:523:7)
+[error] 
+[error] Error: An unexpected error has occurred.
