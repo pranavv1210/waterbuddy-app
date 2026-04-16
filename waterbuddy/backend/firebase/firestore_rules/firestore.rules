@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function hasRole(role) {
+      return isSignedIn() && request.auth.token.role == role;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || hasRole("admin");
+      allow delete: if hasRole("admin");
+    }
+
+    match /sellers/{sellerId} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(sellerId) || hasRole("admin");
+      allow delete: if hasRole("admin");
+    }
+
+    match /orders/{orderId} {
+      allow read: if isSignedIn();
+      allow create: if hasRole("customer");
+      allow update: if hasRole("admin")
+        || (hasRole("seller") && resource.data.sellerId == request.auth.uid)
+        || (hasRole("customer") && resource.data.customerId == request.auth.uid);
+      allow delete: if hasRole("admin");
+    }
+
+    match /tracking/{trackingId} {
+      allow read: if isSignedIn();
+      allow create, update: if hasRole("seller") || hasRole("admin");
+      allow delete: if hasRole("admin");
+    }
+
+    match /complaints/{complaintId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if hasRole("admin");
+      allow delete: if hasRole("admin");
+    }
+  }
+}

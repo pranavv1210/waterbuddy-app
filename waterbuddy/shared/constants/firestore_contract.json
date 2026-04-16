@@ -1,0 +1,32 @@
+{
+  "collections": {
+    "users": "users",
+    "sellers": "sellers",
+    "orders": "orders",
+    "tracking": "tracking",
+    "complaints": "complaints"
+  },
+  "orderStatuses": [
+    "SEARCHING",
+    "ASSIGNED",
+    "ON_THE_WAY",
+    "DELIVERED",
+    "CANCELLED"
+  ],
+  "paymentTypes": [
+    "ONLINE",
+    "COD"
+  ],
+  "paymentStatuses": [
+    "PENDING",
+    "PAID",
+    "COD_PENDING",
+    "COMPLETED",
+    "FAILED"
+  ],
+  "roles": [
+    "customer",
+    "seller",
+    "admin"
+  ]
+}

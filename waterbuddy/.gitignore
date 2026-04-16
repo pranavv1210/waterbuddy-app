@@ -1,0 +1,17 @@
+.DS_Store
+.idea/
+.vscode/
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+node_modules/
+.next/
+dist/
+coverage/
+.env.local
+.env
+lib/firebase_options.dart
+backend/firebase/functions/lib/

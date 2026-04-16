@@ -1,0 +1,50 @@
+{
+  "User": {
+    "id": "string",
+    "name": "string",
+    "phone": "string",
+    "role": "customer | seller | admin",
+    "createdAt": "timestamp"
+  },
+  "Seller": {
+    "id": "string",
+    "kycStatus": "pending | approved | rejected",
+    "isOnline": "boolean",
+    "tankSizes": "number[]",
+    "pricing": "map<number, number>",
+    "serviceArea": {
+      "geohash": "string",
+      "label": "string",
+      "radiusKm": "number"
+    }
+  },
+  "Order": {
+    "id": "string",
+    "customerId": "string",
+    "sellerId": "string | null",
+    "tankSize": "number",
+    "status": "SEARCHING | ASSIGNED | ON_THE_WAY | DELIVERED | CANCELLED",
+    "paymentType": "ONLINE | COD",
+    "paymentStatus": "PENDING | PAID | COD_PENDING | COMPLETED | FAILED",
+    "location": {
+      "address": "string",
+      "lat": "number",
+      "lng": "number"
+    },
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+  },
+  "Tracking": {
+    "orderId": "string",
+    "lat": "number",
+    "lng": "number",
+    "timestamp": "timestamp"
+  },
+  "Complaint": {
+    "id": "string",
+    "orderId": "string",
+    "userId": "string",
+    "status": "open | investigating | resolved",
+    "createdAt": "timestamp"
+  }
+}
