@@ -1,6 +1,6 @@
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-import { db } from "./firebase";
+import { db, firebaseInitErrorMessage, isFirebaseReady } from "./firebase";
 import { PaymentDashboardData, PaymentPayoutRecord, PaymentSummary, WeeklyRevenueItem } from "./types";
 
 function toNumber(value: unknown): number {
@@ -140,6 +140,11 @@ export function subscribePaymentDashboard(
   callback: (dashboard: PaymentDashboardData) => void,
   onError: (error: Error) => void,
 ): () => void {
+  if (!isFirebaseReady || !db) {
+    onError(new Error(firebaseInitErrorMessage ?? "Firebase is not configured."));
+    return () => {};
+  }
+
   const paidOrdersQuery = query(collection(db, "orders"), where("paymentStatus", "==", "paid"));
 
   return onSnapshot(

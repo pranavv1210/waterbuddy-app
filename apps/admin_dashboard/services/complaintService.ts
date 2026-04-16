@@ -1,6 +1,6 @@
 import { collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
 
-import { db } from "./firebase";
+import { db, firebaseInitErrorMessage, isFirebaseReady } from "./firebase";
 import { ComplaintRecord } from "./types";
 
 function valueOrDash(value: unknown): string {
@@ -54,6 +54,11 @@ export function subscribeComplaints(
   callback: (complaints: ComplaintRecord[]) => void,
   onError: (error: Error) => void,
 ): () => void {
+  if (!isFirebaseReady || !db) {
+    onError(new Error(firebaseInitErrorMessage ?? "Firebase is not configured."));
+    return () => {};
+  }
+
   const complaintsQuery = query(collection(db, "complaints"), orderBy("createdAt", "desc"));
 
   return onSnapshot(
@@ -80,5 +85,8 @@ export function subscribeComplaints(
 }
 
 export async function setComplaintStatus(complaintId: string, status: string): Promise<void> {
+  if (!isFirebaseReady || !db) {
+    throw new Error(firebaseInitErrorMessage ?? "Firebase is not configured.");
+  }
   await updateDoc(doc(db, "complaints", complaintId), { status });
 }

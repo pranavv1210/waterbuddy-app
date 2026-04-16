@@ -11,8 +11,8 @@ const navigation = [
 ];
 
 const secondaryNav = [
-  { href: "/settings", icon: "settings", label: "Settings" },
-  { href: "/logout", icon: "logout", label: "Logout" },
+  { href: "/customers", icon: "settings", label: "Settings" },
+  { href: "/", icon: "logout", label: "Logout" },
 ];
 
 export function Sidebar() {
@@ -64,6 +64,7 @@ export function Sidebar() {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={false}
             className="flex items-center gap-3 text-white/80 hover:text-white px-4 py-3 rounded-lg hover:bg-white/10 transition-colors duration-200"
           >
             <span className="material-symbols-outlined text-lg">{item.icon}</span>

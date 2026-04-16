@@ -1,6 +1,6 @@
 {
-    "name": "waterbuddy_seller_app",
-    "short_name": "waterbuddy_seller_app",
+    "name": "WaterBuddy Partner",
+    "short_name": "WB Partner",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -13,7 +13,7 @@ class WaterBuddyCustomerApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'WaterBuddy Customer',
+      title: 'WaterBuddy',
       theme: AppTheme.light(),
       routerConfig: router,
     );

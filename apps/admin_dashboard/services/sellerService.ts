@@ -1,6 +1,6 @@
 import { collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
 
-import { db } from "./firebase";
+import { db, firebaseInitErrorMessage, isFirebaseReady } from "./firebase";
 import { SellerRecord } from "./types";
 
 function valueOrDash(value: unknown): string {
@@ -11,6 +11,11 @@ export function subscribeSellers(
   callback: (sellers: SellerRecord[]) => void,
   onError: (error: Error) => void,
 ): () => void {
+  if (!isFirebaseReady || !db) {
+    onError(new Error(firebaseInitErrorMessage ?? "Firebase is not configured."));
+    return () => {};
+  }
+
   const sellersQuery = query(collection(db, "sellers"), orderBy("createdAt", "desc"));
 
   return onSnapshot(
@@ -36,9 +41,15 @@ export function subscribeSellers(
 }
 
 export async function setSellerEnabled(sellerId: string, enabled: boolean): Promise<void> {
+  if (!isFirebaseReady || !db) {
+    throw new Error(firebaseInitErrorMessage ?? "Firebase is not configured.");
+  }
   await updateDoc(doc(db, "sellers", sellerId), { enabled });
 }
 
 export async function setSellerKycStatus(sellerId: string, kycStatus: string): Promise<void> {
+  if (!isFirebaseReady || !db) {
+    throw new Error(firebaseInitErrorMessage ?? "Firebase is not configured.");
+  }
   await updateDoc(doc(db, "sellers", sellerId), { kycStatus });
 }

@@ -11,7 +11,38 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const requiredKeys = [
+  "apiKey",
+  "authDomain",
+  "projectId",
+  "storageBucket",
+  "messagingSenderId",
+  "appId",
+] as const;
 
-export const auth = getAuth(app);
-export const firestore = getFirestore(app);
+const missingKeys = requiredKeys.filter((key) => {
+  const value = firebaseConfig[key];
+  return typeof value !== "string" || value.trim().length === 0;
+});
+
+let firebaseInitErrorMessage: string | null =
+  missingKeys.length > 0
+    ? `Missing Firebase config: ${missingKeys.join(", ")}. Set NEXT_PUBLIC_FIREBASE_* env vars before deploy.`
+    : null;
+
+let app = getApps().length ? getApps()[0] : null;
+
+if (!app && !firebaseInitErrorMessage) {
+  try {
+    app = initializeApp(firebaseConfig);
+  } catch (error) {
+    firebaseInitErrorMessage =
+      error instanceof Error ? error.message : "Failed to initialize Firebase.";
+  }
+}
+
+export { firebaseInitErrorMessage };
+export const isFirebaseReady = app !== null && firebaseInitErrorMessage === null;
+
+export const auth = app ? getAuth(app) : null;
+export const firestore = app ? getFirestore(app) : null;

@@ -1,6 +1,6 @@
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 
-import { db } from "./firebase";
+import { db, firebaseInitErrorMessage, isFirebaseReady } from "./firebase";
 import { OrderRecord } from "./types";
 
 function valueOrDash(value: unknown): string {
@@ -50,6 +50,11 @@ export function subscribeOrders(
   callback: (orders: OrderRecord[]) => void,
   onError: (error: Error) => void,
 ): () => void {
+  if (!isFirebaseReady || !db) {
+    onError(new Error(firebaseInitErrorMessage ?? "Firebase is not configured."));
+    return () => {};
+  }
+
   const ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"));
 
   return onSnapshot(

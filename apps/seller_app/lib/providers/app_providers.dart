@@ -8,6 +8,7 @@ import '../core/services/orders/order_service.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/presentation/auth_gate.dart';
 import '../features/auth/otp_screen.dart';
+import '../features/earnings/presentation/earnings_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/orders/presentation/orders_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
@@ -56,6 +57,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.orders,
         builder: (_, __) => const OrdersScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.earnings,
+        builder: (_, __) => const EarningsScreen(),
       ),
       GoRoute(
         path: RouteNames.tracking,

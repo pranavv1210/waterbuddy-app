@@ -1,6 +1,6 @@
 import { collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
 
-import { db } from "./firebase";
+import { db, firebaseInitErrorMessage, isFirebaseReady } from "./firebase";
 import { UserRecord } from "./types";
 
 function valueOrDash(value: unknown): string {
@@ -11,6 +11,11 @@ export function subscribeUsers(
   callback: (users: UserRecord[]) => void,
   onError: (error: Error) => void,
 ): () => void {
+  if (!isFirebaseReady || !db) {
+    onError(new Error(firebaseInitErrorMessage ?? "Firebase is not configured."));
+    return () => {};
+  }
+
   const usersQuery = query(collection(db, "users"), orderBy("createdAt", "desc"));
 
   return onSnapshot(
@@ -37,5 +42,8 @@ export function subscribeUsers(
 }
 
 export async function setUserBlocked(userId: string, blocked: boolean): Promise<void> {
+  if (!isFirebaseReady || !db) {
+    throw new Error(firebaseInitErrorMessage ?? "Firebase is not configured.");
+  }
   await updateDoc(doc(db, "users", userId), { blocked });
 }

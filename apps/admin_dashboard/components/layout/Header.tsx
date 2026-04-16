@@ -1,6 +1,7 @@
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { auth } from "../../services/firebase/client";
 
 const routeTitleMap: Record<string, string> = {
   "/": "WaterBuddy Admin",
@@ -30,7 +31,10 @@ export function Header() {
     routeSearchPlaceholderMap[router.pathname] ?? "Search orders, sellers, or customers...";
 
   useEffect(() => {
-    const auth = getAuth();
+    if (!auth) {
+      return;
+    }
+
     return onAuthStateChanged(auth, (nextUser: { displayName?: string | null; email?: string | null } | null) => {
       setAdminUser(nextUser);
     });
