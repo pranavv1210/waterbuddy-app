@@ -19,3 +19,5 @@ coverage/
 .env
 lib/firebase_options.dart
 backend/firebase/functions/lib/
+backend/firebase/hosting/
+backend/firebase/.firebase/

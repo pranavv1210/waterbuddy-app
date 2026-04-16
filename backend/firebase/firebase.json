@@ -9,14 +9,14 @@
     "rules": "firestore_rules/firestore.rules"
   },
   "hosting": {
-    "public": "../../apps/admin_dashboard/out",
+    "public": "hosting/admin_dashboard",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
     "predeploy": [
-      "npm --prefix ../../apps/admin_dashboard run build"
+      "node scripts/prepare-admin-hosting.js"
     ],
     "rewrites": [
       {
