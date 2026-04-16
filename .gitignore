@@ -1,3 +1,7 @@
+# Next.js export/build outputs
+apps/admin_dashboard/.next/
+apps/admin_dashboard/out/
+apps/admin_dashboard/tsconfig.tsbuildinfo
 .DS_Store
 .idea/
 .vscode/

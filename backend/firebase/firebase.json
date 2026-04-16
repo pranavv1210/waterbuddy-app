@@ -1,8 +1,28 @@
 {
   "functions": {
-    "source": "functions"
+    "source": "functions",
+    "predeploy": [
+      "npm --prefix functions run build"
+    ]
   },
   "firestore": {
     "rules": "firestore_rules/firestore.rules"
+  },
+  "hosting": {
+    "public": "../../apps/admin_dashboard/out",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "predeploy": [
+      "npm --prefix ../../apps/admin_dashboard run build"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
   }
 }
