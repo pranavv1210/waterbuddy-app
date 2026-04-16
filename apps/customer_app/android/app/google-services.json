@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "979686341816",
+    "project_id": "waterbuddy-edcf7",
+    "storage_bucket": "waterbuddy-edcf7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:979686341816:android:97e8ddabcc303846fec84d",
+        "android_client_info": {
+          "package_name": "com.waterbuddy.customer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDH8TLcO_vfDQ2wl_72bj09UT06PDPsbo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
