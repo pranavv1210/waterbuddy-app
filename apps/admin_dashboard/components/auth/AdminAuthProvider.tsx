@@ -91,6 +91,10 @@ function isAllowedAdminCredential(email: string, password: string): boolean {
   return email.trim().toLowerCase() === ADMIN_LOGIN_EMAIL.toLowerCase() && password === ADMIN_LOGIN_PASSWORD;
 }
 
+function authErrorCode(error: unknown): string {
+  return error && typeof error === "object" && "code" in error ? String((error as { code?: unknown }).code) : "";
+}
+
 export function AdminAuthProvider({ children }: PropsWithChildren) {
   const [currentUser, setCurrentUser] = useState<AdminUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -122,45 +126,44 @@ export function AdminAuthProvider({ children }: PropsWithChildren) {
       try {
         await signInWithEmailAndPassword(auth, ADMIN_LOGIN_EMAIL, ADMIN_LOGIN_PASSWORD);
       } catch (error) {
-        const code = error && typeof error === "object" && "code" in error ? String((error as { code?: unknown }).code) : "";
-
-        if (
-          code === "auth/user-not-found" ||
-          code === "auth/invalid-credential" ||
-          code === "auth/invalid-login-credentials"
-        ) {
-          try {
-            const created = await createUserWithEmailAndPassword(auth, ADMIN_LOGIN_EMAIL, ADMIN_LOGIN_PASSWORD);
-            const nextDisplayName = deriveDisplayName(ADMIN_LOGIN_EMAIL);
-            await updateProfile(created.user, {
-              displayName: nextDisplayName,
-            });
-            setCurrentUser({
-              uid: created.user.uid,
-              email: created.user.email,
-              displayName: nextDisplayName,
-              photoURL: created.user.photoURL,
-            });
-            return;
-          } catch (createError) {
-            const createCode =
-              createError && typeof createError === "object" && "code" in createError
-                ? String((createError as { code?: unknown }).code)
-                : "";
-
-            if (createCode === "auth/email-already-in-use") {
-              throw new Error("The configured dashboard password does not match Firebase Auth. Reset this user password in Firebase to continue.");
-            }
-
-            throw new Error(normalizeAuthError(createError));
-          }
-        }
+        const code = authErrorCode(error);
 
         if (code === "auth/wrong-password") {
           throw new Error("The configured dashboard password does not match Firebase Auth. Reset this user password in Firebase to continue.");
         }
 
-        throw new Error(normalizeAuthError(error));
+        // Some Firebase projects return generic invalid credential for first-time logins.
+        // Attempt create as a fallback whenever sign-in does not clearly indicate wrong password.
+        try {
+          const created = await createUserWithEmailAndPassword(auth, ADMIN_LOGIN_EMAIL, ADMIN_LOGIN_PASSWORD);
+          const nextDisplayName = deriveDisplayName(ADMIN_LOGIN_EMAIL);
+          await updateProfile(created.user, {
+            displayName: nextDisplayName,
+          });
+          setCurrentUser({
+            uid: created.user.uid,
+            email: created.user.email,
+            displayName: nextDisplayName,
+            photoURL: created.user.photoURL,
+          });
+          return;
+        } catch (createError) {
+          const createCode = authErrorCode(createError);
+
+          if (createCode === "auth/operation-not-allowed" || code === "auth/operation-not-allowed") {
+            throw new Error("Enable Email/Password sign-in in Firebase Authentication > Sign-in method.");
+          }
+
+          if (createCode === "auth/email-already-in-use") {
+            throw new Error("The configured dashboard password does not match Firebase Auth. Reset this user password in Firebase to continue.");
+          }
+
+          if (code) {
+            throw new Error(normalizeAuthError(error));
+          }
+
+          throw new Error(normalizeAuthError(createError));
+        }
       }
     };
 
