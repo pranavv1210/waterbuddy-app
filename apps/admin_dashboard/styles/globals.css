@@ -12,7 +12,7 @@ body,
 }
 
 body {
-  @apply bg-cream text-brand-600 antialiased;
+  @apply bg-surface-container-low text-on-surface antialiased;
   font-family: "Inter", sans-serif;
 }
 

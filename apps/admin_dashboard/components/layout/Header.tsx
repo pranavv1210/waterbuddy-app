@@ -1,7 +1,10 @@
-import { onAuthStateChanged } from "firebase/auth";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
-import { auth } from "../../services/firebase/client";
+import { useAdminAuth } from "../auth/AdminAuthProvider";
+
+interface HeaderProps {
+  onToggleSidebar: () => void;
+}
 
 const routeTitleMap: Record<string, string> = {
   "/": "WaterBuddy Admin",
@@ -10,6 +13,7 @@ const routeTitleMap: Record<string, string> = {
   "/customers": "Customers Management",
   "/payments": "Payments Analytics",
   "/complaints": "Complaints Center",
+  "/settings": "Settings",
 };
 
 const routeSearchPlaceholderMap: Record<string, string> = {
@@ -21,40 +25,38 @@ const routeSearchPlaceholderMap: Record<string, string> = {
   "/complaints": "Search complaints by customer or status...",
 };
 
-export function Header() {
+export function Header({ onToggleSidebar }: HeaderProps) {
   const router = useRouter();
+  const { currentUser } = useAdminAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [hasNotification] = useState(true);
-  const [adminUser, setAdminUser] = useState<{ displayName?: string | null; email?: string | null } | null>(null);
   const pageTitle = routeTitleMap[router.pathname] ?? "WaterBuddy Admin";
   const searchPlaceholder =
     routeSearchPlaceholderMap[router.pathname] ?? "Search orders, sellers, or customers...";
 
-  useEffect(() => {
-    if (!auth) {
-      return;
-    }
-
-    return onAuthStateChanged(auth, (nextUser: { displayName?: string | null; email?: string | null } | null) => {
-      setAdminUser(nextUser);
-    });
-  }, []);
-
-  const displayName = adminUser?.displayName || adminUser?.email?.split("@")[0] || "Signed-in Admin";
-  const roleLabel = adminUser?.email ? "Admin" : "System Admin";
+  const displayName = currentUser?.displayName || currentUser?.email?.split("@")[0] || "Signed-in Admin";
+  const roleLabel = currentUser?.email ? "Super Admin" : "System Admin";
   const profileInitial = (displayName || "A").charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-40 flex justify-between items-center px-8 w-full ml-64 bg-white/80 backdrop-blur-xl h-16 shadow-sm border-b border-lilac/20">
+    <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-outline-variant/20 bg-white/80 px-4 shadow-sm backdrop-blur-xl sm:px-6 lg:ml-64 lg:px-8">
       {/* Left Section - Title and Search */}
-      <div className="flex items-center gap-8 flex-1">
-        <div className="hidden md:block text-xl font-black text-brand-600">{pageTitle}</div>
-        <div className="relative w-full max-w-md">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-brand-400 text-sm">
+      <div className="flex flex-1 items-center gap-3 sm:gap-4 lg:gap-8">
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="inline-flex rounded-full p-2 text-primary transition-colors hover:bg-surface-container-low lg:hidden"
+          aria-label="Toggle navigation menu"
+        >
+          <span className="material-symbols-outlined">menu</span>
+        </button>
+        <div className="hidden md:block text-lg font-black text-primary lg:text-xl">{pageTitle}</div>
+        <div className="relative w-full max-w-xs sm:max-w-md">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">
             search
           </span>
           <input
-            className="w-full bg-cream border border-lilac/20 rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 placeholder-brand-300/60 outline-none transition-all"
+            className="w-full rounded-full border border-outline-variant/40 bg-surface-container-low py-2 pl-10 pr-4 text-sm outline-none transition-all placeholder:text-on-surface-variant/60 focus:border-secondary focus:ring-2 focus:ring-secondary/15"
             placeholder={searchPlaceholder}
             type="text"
             value={searchQuery}
@@ -64,30 +66,30 @@ export function Header() {
       </div>
 
       {/* Right Section - Notifications and User */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
         {/* Notification Button */}
-        <button className="hover:bg-cream rounded-full p-2 relative transition-colors">
-          <span className="material-symbols-outlined text-brand-600">notifications</span>
+        <button className="relative rounded-full p-2 transition-colors hover:bg-surface-container-low">
+          <span className="material-symbols-outlined text-primary">notifications</span>
           {hasNotification && (
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
           )}
         </button>
 
         {/* Help Button */}
-        <button className="hover:bg-cream rounded-full p-2 transition-colors">
-          <span className="material-symbols-outlined text-brand-600">help_outline</span>
+        <button className="rounded-full p-2 transition-colors hover:bg-surface-container-low">
+          <span className="material-symbols-outlined text-primary">help_outline</span>
         </button>
 
         {/* Divider */}
-        <div className="h-8 w-[1px] bg-lilac/30 mx-2"></div>
+        <div className="mx-1 hidden h-8 w-[1px] bg-outline-variant/30 sm:mx-2 sm:block"></div>
 
         {/* User Profile */}
         <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-bold text-brand-600">{displayName}</p>
-            <p className="text-[10px] uppercase tracking-tighter text-brand-400">{roleLabel}</p>
+          <div className="hidden text-right sm:block">
+            <p className="text-sm font-bold text-primary">{displayName}</p>
+            <p className="text-[10px] uppercase tracking-tighter text-on-surface-variant">{roleLabel}</p>
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-lilac border-2 border-cream font-bold text-brand-700">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-container-low bg-secondary-container font-bold text-primary-container">
             {profileInitial}
           </div>
         </div>

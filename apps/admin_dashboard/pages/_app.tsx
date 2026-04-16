@@ -1,6 +1,8 @@
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import { Component, ErrorInfo, ReactNode } from "react";
+import { AdminAuthProvider } from "../components/auth/AdminAuthProvider";
+import { AuthGate } from "../components/auth/AuthGate";
 import "../styles/globals.css";
 
 class AppErrorBoundary extends Component<
@@ -29,17 +31,17 @@ class AppErrorBoundary extends Component<
     }
 
     return (
-      <main className="min-h-screen bg-cream p-8 text-brand-700">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-lilac/30 bg-white p-6 shadow-sm">
-          <h1 className="text-xl font-bold text-brand-600">Application Issue</h1>
-          <p className="mt-2 text-sm text-brand-500">
+      <main className="min-h-screen bg-surface-container-low p-8 text-on-surface">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm">
+          <h1 className="text-xl font-bold text-primary">Application Issue</h1>
+          <p className="mt-2 text-sm text-on-surface-variant">
             A runtime error occurred while loading the admin dashboard.
           </p>
-          <p className="mt-4 rounded-lg bg-cream p-3 text-xs text-brand-600">
+          <p className="mt-4 rounded-lg bg-surface-container-low p-3 text-xs text-primary">
             {this.state.errorMessage}
           </p>
-          <p className="mt-4 text-xs text-brand-400">
-            Check browser console for details and verify Firebase env variables.
+          <p className="mt-4 text-xs text-on-surface-variant">
+            Check the browser console for details.
           </p>
         </div>
       </main>
@@ -54,11 +56,15 @@ export default function App({ Component, pageProps }: AppProps) {
         <link rel="icon" type="image/png" sizes="32x32" href="/logo.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/logo.png" />
         <link rel="apple-touch-icon" href="/logo.png" />
-        <meta name="theme-color" content="#4b174a" />
+        <meta name="theme-color" content="#1e3a8a" />
       </Head>
-      <AppErrorBoundary>
-        <Component {...pageProps} />
-      </AppErrorBoundary>
+      <AdminAuthProvider>
+        <AuthGate>
+          <AppErrorBoundary>
+            <Component {...pageProps} />
+          </AppErrorBoundary>
+        </AuthGate>
+      </AdminAuthProvider>
     </>
   );
 }

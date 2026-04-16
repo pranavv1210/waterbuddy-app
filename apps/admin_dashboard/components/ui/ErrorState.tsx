@@ -4,7 +4,7 @@ interface ErrorStateProps {
 
 export function ErrorState({ message }: ErrorStateProps) {
   return (
-    <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
+    <div className="rounded-xl border border-error/20 bg-error-container p-6 text-sm text-on-error-container">
       {message}
     </div>
   );
