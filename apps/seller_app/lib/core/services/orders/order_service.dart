@@ -30,10 +30,28 @@ class OrderService {
   }
 
   Future<void> acceptOrder(String orderId, String sellerId) async {
-    await _firestore.collection('orders').doc(orderId).update({
-      'status': 'ASSIGNED',
-      'sellerId': sellerId,
-      'updatedAt': FieldValue.serverTimestamp(),
+    await _firestore.runTransaction((transaction) async {
+      final orderRef = _firestore.collection('orders').doc(orderId);
+      final snapshot = await transaction.get(orderRef);
+
+      if (!snapshot.exists) {
+        throw Exception('Order does not exist');
+      }
+
+      final data = snapshot.data() as Map<String, dynamic>;
+      final currentStatus = data['status'] as String? ?? 'SEARCHING';
+
+      // Only allow acceptance if order is still searching
+      if (currentStatus != 'SEARCHING') {
+        throw Exception('Order is no longer available for acceptance');
+      }
+
+      // Update order atomically
+      transaction.update(orderRef, {
+        'status': 'ASSIGNED',
+        'sellerId': sellerId,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     });
   }
 }

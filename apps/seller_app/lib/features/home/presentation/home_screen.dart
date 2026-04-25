@@ -787,13 +787,68 @@ class _SearchingOrdersSection extends ConsumerWidget {
   }
 }
 
-class _OrderCard extends ConsumerWidget {
+class _OrderCard extends ConsumerStatefulWidget {
   const _OrderCard({required this.order});
 
   final Order order;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_OrderCard> createState() => _OrderCardState();
+}
+
+class _OrderCardState extends ConsumerState<_OrderCard> {
+  bool _isAccepting = false;
+  String? _errorMessage;
+
+  Future<void> _acceptOrder() async {
+    setState(() {
+      _isAccepting = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final auth = ref.watch(firebaseAuthProvider);
+      final sellerId = auth.currentUser?.uid;
+      if (sellerId == null) {
+        setState(() {
+          _errorMessage = 'Not authenticated';
+          _isAccepting = false;
+        });
+        return;
+      }
+
+      final orderService = ref.watch(orderServiceProvider);
+      await orderService.acceptOrder(widget.order.id, sellerId);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Order accepted successfully!'),
+            backgroundColor: Color(0xFF71F8E4),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
+        _isAccepting = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_errorMessage ?? 'Failed to accept order'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -809,7 +864,7 @@ class _OrderCard extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${order.tankSize}L Tank',
+                '${widget.order.tankSize}L Tank',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -835,7 +890,7 @@ class _OrderCard extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Payment: ${order.paymentType}',
+            'Payment: ${widget.order.paymentType}',
             style: const TextStyle(
               fontSize: 12,
               color: Color(0xFF757682),
@@ -846,14 +901,7 @@ class _OrderCard extends ConsumerWidget {
             width: double.infinity,
             height: 44,
             child: FilledButton(
-              onPressed: () async {
-                final auth = ref.watch(firebaseAuthProvider);
-                final sellerId = auth.currentUser?.uid;
-                if (sellerId == null) return;
-
-                final orderService = ref.watch(orderServiceProvider);
-                await orderService.acceptOrder(order.id, sellerId);
-              },
+              onPressed: _isAccepting ? null : _acceptOrder,
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF00236F),
                 foregroundColor: Colors.white,
@@ -861,13 +909,22 @@ class _OrderCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Accept Order',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              child: _isAccepting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      'Accept Order',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
             ),
           ),
         ],
