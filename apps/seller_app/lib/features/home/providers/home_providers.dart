@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../core/services/seller/seller_availability_service.dart';
 import '../../../providers/app_providers.dart';
 import '../data/mock_seller_dashboard_repository.dart';
 import '../models/seller_dashboard.dart';
