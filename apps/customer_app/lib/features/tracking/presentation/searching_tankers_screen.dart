@@ -79,6 +79,15 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
       );
     }
 
+    // Show timeout UI with retry button
+    if (searchingState.hasTimedOut) {
+      return _TimeoutView(
+        onRetry: () {
+          context.go(RouteNames.home);
+        },
+      );
+    }
+
     // Navigate to tracking screen when order is assigned
     if (searchingState.orderStatus == 'ASSIGNED' && searchingState.orderId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -493,6 +502,98 @@ class _StatusCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TimeoutView extends StatelessWidget {
+  const _TimeoutView({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F9FB),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEE2E2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.access_time_rounded,
+                    size: 48,
+                    color: Color(0xFFDC2626),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'No tankers available nearby',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF191C1E),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'We couldn\'t find any available sellers in your area. Please try again.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF757682),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: FilledButton(
+                    onPressed: onRetry,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF00236F),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: const Text(
+                      'Retry',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: onRetry,
+                  child: const Text(
+                    'Back to Home',
+                    style: TextStyle(
+                      color: Color(0xFF757682),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
