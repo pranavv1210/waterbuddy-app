@@ -10,6 +10,7 @@ class Order {
     required this.paymentType,
     required this.paymentStatus,
     required this.location,
+    this.tracking,
   });
 
   factory Order.fromDocument(DocumentSnapshot<Map<String, dynamic>> document) {
@@ -23,6 +24,9 @@ class Order {
       paymentType: data['paymentType'] as String? ?? 'COD',
       paymentStatus: data['paymentStatus'] as String? ?? 'PENDING',
       location: Map<String, dynamic>.from(data['location'] as Map? ?? const {}),
+      tracking: data['tracking'] != null
+          ? TrackingData.fromMap(data['tracking'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -34,4 +38,25 @@ class Order {
   final String paymentType;
   final String paymentStatus;
   final Map<String, dynamic> location;
+  final TrackingData? tracking;
+}
+
+class TrackingData {
+  const TrackingData({
+    required this.lat,
+    required this.lng,
+    required this.updatedAt,
+  });
+
+  factory TrackingData.fromMap(Map<String, dynamic> map) {
+    return TrackingData(
+      lat: (map['lat'] as num?)?.toDouble() ?? 0.0,
+      lng: (map['lng'] as num?)?.toDouble() ?? 0.0,
+      updatedAt: map['updatedAt'] as Timestamp?,
+    );
+  }
+
+  final double lat;
+  final double lng;
+  final Timestamp? updatedAt;
 }

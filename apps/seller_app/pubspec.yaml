@@ -14,6 +14,7 @@ dependencies:
   firebase_auth: ^5.1.0
   cloud_firestore: ^5.0.1
   firebase_messaging: ^15.0.1
+  geolocator: ^12.0.0
 
 dev_dependencies:
   flutter_test:

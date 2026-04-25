@@ -928,10 +928,14 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       final orderService = ref.watch(orderServiceProvider);
       await orderService.updateOrderStatus(widget.order.id, 'ON_THE_WAY');
       
+      // Start location tracking
+      final locationService = ref.read(locationTrackingServiceProvider);
+      locationService.startTracking(widget.order.id);
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Delivery started!'),
+            content: Text('Delivery started! Location tracking enabled.'),
             backgroundColor: Color(0xFF71F8E4),
             duration: Duration(seconds: 2),
           ),
@@ -964,6 +968,10 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     try {
       final orderService = ref.watch(orderServiceProvider);
       await orderService.updateOrderStatus(widget.order.id, 'DELIVERED');
+      
+      // Stop location tracking
+      final locationService = ref.read(locationTrackingServiceProvider);
+      locationService.stopTracking();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

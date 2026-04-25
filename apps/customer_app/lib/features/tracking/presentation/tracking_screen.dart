@@ -7,15 +7,67 @@ import '../../../widgets/async_state_view.dart';
 import '../models/assigned_order_tracking.dart';
 import '../providers/tracking_providers.dart';
 
-class TrackingScreen extends ConsumerWidget {
+class TrackingScreen extends ConsumerStatefulWidget {
   const TrackingScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final trackingState = ref.watch(assignedOrderTrackingProvider);
+  ConsumerState<TrackingScreen> createState() => _TrackingScreenState();
+}
 
-    return trackingState.when(
-      data: (state) => _TrackingScreenBody(state: state),
+class _TrackingScreenState extends ConsumerState<TrackingScreen> {
+  @override
+  void initState() {
+    super.initState();
+    
+    // Get orderId from query params and start watching
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final orderId = GoRouterState.of(context).uri.queryParameters['orderId'];
+      if (orderId != null) {
+        ref.read(trackingControllerProvider.notifier).startWatchingOrder(orderId);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final trackingState = ref.watch(trackingControllerProvider);
+    final uiState = ref.watch(assignedOrderTrackingProvider);
+
+    if (trackingState.errorMessage != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF7F9FB),
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error: ${trackingState.errorMessage}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Color(0xFF191C1E)),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () {
+                      ref.read(trackingControllerProvider.notifier).clearError();
+                      context.go(RouteNames.home);
+                    },
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return uiState.when(
+      data: (state) => _TrackingScreenBody(state: state, trackingState: trackingState),
       error: (_, __) => const AsyncStateView(
         isLoading: false,
         hasError: true,
@@ -31,12 +83,17 @@ class TrackingScreen extends ConsumerWidget {
 }
 
 class _TrackingScreenBody extends StatelessWidget {
-  const _TrackingScreenBody({required this.state});
+  const _TrackingScreenBody({required this.state, required this.trackingState});
 
   final AssignedOrderTracking state;
+  final TrackingState trackingState;
 
   @override
   Widget build(BuildContext context) {
+    // Update status based on real-time order status
+    final statusTitle = _getStatusTitle(trackingState.orderStatus);
+    final statusSubtitle = _getStatusSubtitle(trackingState.orderStatus);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FB),
       body: Column(
@@ -126,7 +183,7 @@ class _TrackingScreenBody extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          state.orderId,
+                          trackingState.orderId ?? state.orderId,
                           style: const TextStyle(
                             color: Color(0xFF00236F),
                             fontSize: 13,
@@ -299,7 +356,7 @@ class _TrackingScreenBody extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            state.statusTitle,
+                            statusTitle,
                             style: const TextStyle(
                               color: Color(0xFF00236F),
                               fontSize: 30,
@@ -308,13 +365,24 @@ class _TrackingScreenBody extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            state.statusSubtitle,
+                            statusSubtitle,
                             style: const TextStyle(
                               color: Color(0xFF64748B),
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
+                          if (trackingState.tracking != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'Location: ${trackingState.tracking!.lat.toStringAsFixed(4)}, ${trackingState.tracking!.lng.toStringAsFixed(4)}',
+                              style: const TextStyle(
+                                color: Color(0xFF757682),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -529,6 +597,32 @@ class _TrackingScreenBody extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _getStatusTitle(String status) {
+    switch (status) {
+      case 'ASSIGNED':
+        return 'Driver assigned';
+      case 'ON_THE_WAY':
+        return 'Driver on the way';
+      case 'DELIVERED':
+        return 'Delivered';
+      default:
+        return 'Tracking';
+    }
+  }
+
+  String _getStatusSubtitle(String status) {
+    switch (status) {
+      case 'ASSIGNED':
+        return 'Your water tanker has been assigned';
+      case 'ON_THE_WAY':
+        return 'Your water tanker is heading to your location';
+      case 'DELIVERED':
+        return 'Your water has been delivered';
+      default:
+        return 'Tracking your order';
+    }
   }
 }
 
