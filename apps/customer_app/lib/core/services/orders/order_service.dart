@@ -7,6 +7,48 @@ class OrderService {
 
   final FirebaseFirestore _firestore;
 
+  // Valid state transitions
+  static const Map<String, Set<String>> _validTransitions = {
+    'SEARCHING': {'ASSIGNED', 'CANCELLED'},
+    'ASSIGNED': {'ON_THE_WAY', 'CANCELLED'},
+    'ON_THE_WAY': {'DELIVERED', 'CANCELLED'},
+    'DELIVERED': {}, // Terminal state
+    'CANCELLED': {}, // Terminal state
+  };
+
+  bool _isValidTransition(String currentStatus, String newStatus) {
+    final allowedNextStates = _validTransitions[currentStatus];
+    return allowedNextStates != null && allowedNextStates.contains(newStatus);
+  }
+
+  Future<void> updateOrderStatus(String orderId, String newStatus) async {
+    await _firestore.runTransaction((transaction) async {
+      final orderRef = _firestore.collection('orders').doc(orderId);
+      final snapshot = await transaction.get(orderRef);
+
+      if (!snapshot.exists) {
+        throw Exception('Order does not exist');
+      }
+
+      final data = snapshot.data() as Map<String, dynamic>;
+      final currentStatus = data['status'] as String? ?? 'SEARCHING';
+
+      // Validate state transition
+      if (!_isValidTransition(currentStatus, newStatus)) {
+        throw Exception(
+          'Invalid state transition: $currentStatus → $newStatus. '
+          'Valid transitions from $currentStatus: ${_validTransitions[currentStatus]?.join(", ") ?? "none"}',
+        );
+      }
+
+      // Update order atomically
+      transaction.update(orderRef, {
+        'status': newStatus,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
   Future<String> createOrder({
     required String customerId,
     required String customerName,
