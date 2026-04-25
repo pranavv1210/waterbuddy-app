@@ -710,8 +710,59 @@ class _SearchingOrdersSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isOnline = ref.watch(sellerAvailabilityProvider);
+
     return searchingOrders.when(
       data: (orders) {
+        if (!isOnline) {
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0A000000),
+                  blurRadius: 24,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEE2E2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.offline_bolt,
+                        color: Color(0xFFDC2626),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Go online to receive orders',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }
+
         if (orders.isEmpty) {
           return const SizedBox.shrink();
         }
@@ -811,9 +862,28 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       final sellerId = auth.currentUser?.uid;
       if (sellerId == null) {
         setState(() {
-          _errorMessage = 'Not authenticated';
           _isAccepting = false;
+          _errorMessage = 'Seller not authenticated';
         });
+        return;
+      }
+
+      // Check if seller is online before accepting
+      final isOnline = ref.read(sellerAvailabilityProvider);
+      if (!isOnline) {
+        setState(() {
+          _isAccepting = false;
+          _errorMessage = 'You must be online to accept orders';
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Go online to accept orders'),
+              backgroundColor: Color(0xFFDC2626),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
         return;
       }
 
@@ -831,8 +901,8 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       }
     } catch (e) {
       setState(() {
-        _errorMessage = e.toString().replaceAll('Exception: ', '');
         _isAccepting = false;
+        _errorMessage = e.toString();
       });
       
       if (mounted) {

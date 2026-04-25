@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/services/auth/auth_service.dart';
 import '../core/services/orders/order_service.dart';
+import '../core/services/seller/seller_availability_service.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/presentation/auth_gate.dart';
 import '../features/auth/otp_screen.dart';
@@ -33,6 +34,13 @@ final authControllerProvider =
 
 final orderServiceProvider =
     Provider<OrderService>((ref) => OrderService(ref.watch(firestoreProvider)));
+
+final sellerAvailabilityServiceProvider = Provider<SellerAvailabilityService>(
+  (ref) => SellerAvailabilityService(
+    ref.watch(firebaseAuthProvider),
+    ref.watch(firestoreProvider),
+  ),
+);
 
 final authStateProvider = StreamProvider<User?>(
   (ref) => ref.watch(authServiceProvider).authStateChanges(),

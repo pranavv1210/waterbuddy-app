@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../providers/app_providers.dart';
 import '../data/mock_seller_dashboard_repository.dart';
@@ -14,14 +15,35 @@ final sellerDashboardProvider = FutureProvider<SellerDashboard>((ref) {
 });
 
 class SellerAvailabilityController extends StateNotifier<bool> {
-  SellerAvailabilityController() : super(true);
+  SellerAvailabilityController(this._auth, this._availabilityService)
+      : super(false) {
+    _init();
+  }
 
-  void setOnline(bool value) => state = value;
+  final FirebaseAuth _auth;
+  final SellerAvailabilityService _availabilityService;
+
+  void _init() {
+    final user = _auth.currentUser;
+    if (user != null) {
+      _availabilityService.watchAvailability(user.uid).listen((isOnline) {
+        state = isOnline;
+      });
+    }
+  }
+
+  Future<void> setOnline(bool value) async {
+    state = value;
+    await _availabilityService.setAvailability(value);
+  }
 }
 
 final sellerAvailabilityProvider =
     StateNotifierProvider<SellerAvailabilityController, bool>(
-  (ref) => SellerAvailabilityController(),
+  (ref) => SellerAvailabilityController(
+    ref.watch(firebaseAuthProvider),
+    ref.watch(sellerAvailabilityServiceProvider),
+  ),
 );
 
 final searchingOrdersProvider = StreamProvider.autoDispose((ref) {
