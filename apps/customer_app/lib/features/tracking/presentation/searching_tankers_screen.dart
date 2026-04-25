@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../routes/route_names.dart';
-import '../../../widgets/async_state_view.dart';
 import '../models/searching_tankers_state.dart';
 import '../providers/searching_providers.dart';
 
@@ -26,6 +25,14 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat();
+    
+    // Get orderId from query params and start watching
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final orderId = GoRouterState.of(context).uri.queryParameters['orderId'];
+      if (orderId != null) {
+        ref.read(searchingControllerProvider.notifier).startWatchingOrder(orderId);
+      }
+    });
   }
 
   @override
@@ -36,23 +43,52 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
 
   @override
   Widget build(BuildContext context) {
-    final searchingState = ref.watch(searchingTankersProvider);
+    final searchingState = ref.watch(searchingControllerProvider);
+    final uiState = ref.watch(searchingTankersProvider);
 
-    return searchingState.when(
-      data: (state) => _SearchingBody(
-        state: state,
-        animation: _controller,
-      ),
-      error: (_, __) => const AsyncStateView(
-        isLoading: false,
-        hasError: true,
-        child: SizedBox.shrink(),
-      ),
-      loading: () => const AsyncStateView(
-        isLoading: true,
-        hasError: false,
-        child: SizedBox.shrink(),
-      ),
+    if (searchingState.errorMessage != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF7F9FB),
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error: ${searchingState.errorMessage}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Color(0xFF191C1E)),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () {
+                      ref.read(searchingControllerProvider.notifier).clearError();
+                      context.go(RouteNames.home);
+                    },
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Navigate to tracking screen when order is assigned
+    if (searchingState.orderStatus == 'ASSIGNED' && searchingState.orderId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go('${RouteNames.tracking}?orderId=${searchingState.orderId}');
+      });
+    }
+
+    return _SearchingBody(
+      state: uiState,
+      animation: _controller,
     );
   }
 }

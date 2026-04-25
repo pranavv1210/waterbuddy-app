@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../models/order.dart';
+import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/async_state_view.dart';
 import '../models/seller_dashboard.dart';
@@ -13,9 +15,13 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardState = ref.watch(sellerDashboardProvider);
+    final searchingOrders = ref.watch(searchingOrdersProvider);
 
     return dashboardState.when(
-      data: (dashboard) => _SellerDashboardView(dashboard: dashboard),
+      data: (dashboard) => _SellerDashboardView(
+        dashboard: dashboard,
+        searchingOrders: searchingOrders,
+      ),
       loading: () => const Scaffold(
         body: SafeArea(
           child: AsyncStateView(
@@ -39,9 +45,13 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _SellerDashboardView extends ConsumerWidget {
-  const _SellerDashboardView({required this.dashboard});
+  const _SellerDashboardView({
+    required this.dashboard,
+    required this.searchingOrders,
+  });
 
   final SellerDashboard dashboard;
+  final AsyncValue<List<Order>> searchingOrders;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -78,6 +88,8 @@ class _SellerDashboardView extends ConsumerWidget {
                   _EarningsOverview(dashboard: currentDashboard, colors: colors),
                   const SizedBox(height: 28),
                   _StatusArea(dashboard: currentDashboard),
+                  const SizedBox(height: 28),
+                  _SearchingOrdersSection(searchingOrders: searchingOrders),
                 ],
               ),
             ),
@@ -457,9 +469,10 @@ class _MiniStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AspectRatio(
       aspectRatio: 1,
-      padding: const EdgeInsets.all(20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
@@ -506,6 +519,7 @@ class _MiniStatCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }
@@ -684,6 +698,179 @@ class _NavItem extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SearchingOrdersSection extends ConsumerWidget {
+  const _SearchingOrdersSection({required this.searchingOrders});
+
+  final AsyncValue<List<Order>> searchingOrders;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return searchingOrders.when(
+      data: (orders) {
+        if (orders.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0A000000),
+                blurRadius: 24,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF71F8E4).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.local_shipping,
+                      color: Color(0xFF00687A),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'New Orders',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F2E74),
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF71F8E4),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${orders.length}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF004E5C),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ...orders.take(3).map((order) => _OrderCard(order: order)),
+            ],
+          ),
+        );
+      },
+      loading: () => const Center(
+        child: CircularProgressIndicator(),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _OrderCard extends ConsumerWidget {
+  const _OrderCard({required this.order});
+
+  final Order order;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F9FB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFECEEF0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${order.tankSize}L Tank',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F2E74),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF71F8E4).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'SEARCHING',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF00687A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Payment: ${order.paymentType}',
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFF757682),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: FilledButton(
+              onPressed: () async {
+                final auth = ref.watch(firebaseAuthProvider);
+                final sellerId = auth.currentUser?.uid;
+                if (sellerId == null) return;
+
+                final orderService = ref.watch(orderServiceProvider);
+                await orderService.acceptOrder(order.id, sellerId);
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF00236F),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Accept Order',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

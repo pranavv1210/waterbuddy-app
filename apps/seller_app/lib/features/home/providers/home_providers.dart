@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../providers/app_providers.dart';
 import '../data/mock_seller_dashboard_repository.dart';
 import '../models/seller_dashboard.dart';
 
@@ -22,3 +23,8 @@ final sellerAvailabilityProvider =
     StateNotifierProvider<SellerAvailabilityController, bool>(
   (ref) => SellerAvailabilityController(),
 );
+
+final searchingOrdersProvider = StreamProvider.autoDispose((ref) {
+  final orderService = ref.watch(orderServiceProvider);
+  return orderService.watchSearchingOrders();
+});

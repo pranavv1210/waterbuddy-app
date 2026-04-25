@@ -6,6 +6,7 @@ import '../../../routes/route_names.dart';
 import '../../../widgets/async_state_view.dart';
 import '../models/home_dashboard.dart';
 import '../providers/home_providers.dart';
+import '../providers/order_creation_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -50,7 +51,7 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _HomeScreenBody extends StatelessWidget {
+class _HomeScreenBody extends ConsumerWidget {
   const _HomeScreenBody({
     required this.state,
     required this.selectedTankId,
@@ -62,7 +63,7 @@ class _HomeScreenBody extends StatelessWidget {
   final ValueChanged<String> onTankSelected;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const primary = Color(0xFF00236F);
     const primaryContainer = Color(0xFF1E3A8A);
     const secondary = Color(0xFF00687A);
@@ -345,7 +346,28 @@ class _HomeScreenBody extends StatelessWidget {
                             width: double.infinity,
                             height: 60,
                             child: FilledButton(
-                              onPressed: () => context.go(RouteNames.searching),
+                              onPressed: () async {
+                                final orderController = ref.read(orderCreationControllerProvider.notifier);
+                                final selectedTank = state.tankOptions.firstWhere(
+                                  (t) => t.id == selectedTankId,
+                                );
+                                
+                                // Parse capacity from label (e.g., "20L" -> 20)
+                                final capacityValue = double.tryParse(
+                                  selectedTank.capacityLabel.replaceAll(RegExp(r'[^0-9.]'), '')
+                                ) ?? 20.0;
+                                
+                                final orderId = await orderController.createOrder(
+                                  tankSize: capacityValue,
+                                  tankLabel: selectedTank.label,
+                                  location: {'latitude': 0.0, 'longitude': 0.0}, // TODO: Get real location
+                                  paymentType: 'COD',
+                                );
+                                
+                                if (orderId != null && context.mounted) {
+                                  context.go('${RouteNames.searching}?orderId=$orderId');
+                                }
+                              },
                               style: FilledButton.styleFrom(
                                 backgroundColor: accent,
                                 foregroundColor: Colors.white,
