@@ -285,11 +285,46 @@ WaterBuddy welcomes contributions from the development community. To contribute:
 
 This project is proprietary software. All rights are reserved by WaterBuddy. Unauthorized copying, distribution, or modification of this code is strictly prohibited.
 
-For licensing inquiries, contact: [license@waterbuddy.com](mailto:license@waterbuddy.com)
+For licensing inquiries, contact: [waterbuddyapp.wb@gmail.com](mailto:waterbuddyapp.wb@gmail.com)
 
 ## Support
 
 For technical support or questions:
-- Email: [support@waterbuddy.com](mailto:support@waterbuddy.com)
+- Email: [waterbuddyapp.wb@gmail.com](mailto:waterbuddyapp.wb@gmail.com)
 - Documentation: [docs.waterbuddy.com](https://docs.waterbuddy.com)
 - Issue Tracker: [GitHub Issues](https://github.com/pranavv1210/waterbuddy-app/issues)
+
+## Legal & Compliance
+
+### Licenses and Registrations
+
+WaterBuddy operates under the following legal framework:
+
+- **Business Registration**: Registered as WaterBuddy Technologies Pvt. Ltd.
+- **GST Registration**: GSTIN - [To be updated with actual GST number]
+- **MSME Registration**: Udyam Registration - [To be updated]
+- **Trade License**: Valid trade license for water delivery services
+
+### Data Protection Compliance
+
+- **Privacy Policy**: Compliant with Information Technology Act, 2000 (India)
+- **Data Localization**: All user data stored within Indian jurisdiction
+- **GDPR Readiness**: Framework prepared for international data protection standards
+
+### Intellectual Property
+
+- **Trademark**: WaterBuddy name and logo are registered trademarks
+- **Copyright**: All source code, designs, and content are protected under Indian Copyright Act, 1957
+- **Patents**: Patent pending for automated water tanker matching algorithm
+
+### Certifications (In Progress)
+
+- **ISO 27001**: Information Security Management (Planned)
+- **ISO 9001**: Quality Management System (Planned)
+- **SOC 2 Type II**: Service Organization Control (Planned)
+
+### Regulatory Compliance
+
+- **Food Safety**: Compliant with FSSAI guidelines for water transportation
+- **Vehicle Compliance**: All registered sellers must have valid commercial vehicle permits
+- **Environmental**: Adherence to water conservation and environmental protection norms
