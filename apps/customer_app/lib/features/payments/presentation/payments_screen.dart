@@ -7,15 +7,76 @@ import '../../../widgets/async_state_view.dart';
 import '../models/payment_checkout.dart';
 import '../providers/payment_providers.dart';
 
-class PaymentsScreen extends ConsumerWidget {
+class PaymentsScreen extends ConsumerStatefulWidget {
   const PaymentsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PaymentsScreen> createState() => _PaymentsScreenState();
+}
+
+class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
+  String? _orderId;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Get orderId from query params
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final orderId = GoRouterState.of(context).uri.queryParameters['orderId'];
+      setState(() {
+        _orderId = orderId;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final checkout = ref.watch(paymentCheckoutProvider);
+    final paymentState = ref.watch(paymentControllerProvider);
+
+    // Navigate to tracking after payment is completed
+    if (paymentState.paymentCompleted && _orderId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go('${RouteNames.tracking}?orderId=$_orderId');
+      });
+    }
+
+    // Show error if any
+    if (paymentState.errorMessage != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF7F9FB),
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error: ${paymentState.errorMessage}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Color(0xFF191C1E)),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () {
+                      ref.read(paymentControllerProvider.notifier).clearError();
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return checkout.when(
-      data: (state) => _PaymentsScreenBody(state: state),
+      data: (state) => _PaymentsScreenBody(state: state, paymentState: paymentState, orderId: _orderId),
       error: (_, __) => const AsyncStateView(
         isLoading: false,
         hasError: true,
@@ -31,9 +92,15 @@ class PaymentsScreen extends ConsumerWidget {
 }
 
 class _PaymentsScreenBody extends ConsumerWidget {
-  const _PaymentsScreenBody({required this.state});
+  const _PaymentsScreenBody({
+    required this.state,
+    required this.paymentState,
+    required this.orderId,
+  });
 
   final PaymentCheckout state;
+  final PaymentState paymentState;
+  final String? orderId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -214,9 +281,12 @@ class _PaymentsScreenBody extends ConsumerWidget {
                       child: SizedBox(
                         height: 58,
                         child: FilledButton(
-                          onPressed: () {
-                            context.go(RouteNames.orders);
-                          },
+                          onPressed: paymentState.isProcessing || orderId == null
+                              ? null
+                              : () async {
+                                  final paymentType = selectedMethod == 'cash' ? 'COD' : 'ONLINE';
+                                  await ref.read(paymentControllerProvider.notifier).selectPaymentMethod(orderId!, paymentType);
+                                },
                           style: FilledButton.styleFrom(
                             backgroundColor: const Color(0xFF004941),
                             foregroundColor: Colors.white,
@@ -224,20 +294,29 @@ class _PaymentsScreenBody extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(18),
                             ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                state.payButtonLabel,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
+                          child: paymentState.isProcessing
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      state.payButtonLabel,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Icon(Icons.arrow_forward_rounded),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.arrow_forward_rounded),
-                            ],
-                          ),
                         ),
                       ),
                     ),

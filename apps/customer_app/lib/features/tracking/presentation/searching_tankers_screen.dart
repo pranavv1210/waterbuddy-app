@@ -88,10 +88,10 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
       );
     }
 
-    // Navigate to tracking screen when order is assigned
+    // Navigate to payment screen when order is assigned
     if (searchingState.orderStatus == 'ASSIGNED' && searchingState.orderId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('${RouteNames.tracking}?orderId=${searchingState.orderId}');
+        context.go('${RouteNames.payments}?orderId=${searchingState.orderId}');
       });
     }
 

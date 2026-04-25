@@ -96,4 +96,14 @@ class OrderService {
         .map((snapshot) =>
             snapshot.docs.map(app_order.Order.fromDocument).toList());
   }
+
+  Future<void> updateOrderPayment(String orderId, String paymentType) async {
+    debugPrint('Updating payment for order: $orderId to $paymentType');
+    await _firestore.collection('orders').doc(orderId).update({
+      'paymentType': paymentType,
+      'paymentStatus': 'PENDING',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    debugPrint('Payment updated successfully');
+  }
 }
