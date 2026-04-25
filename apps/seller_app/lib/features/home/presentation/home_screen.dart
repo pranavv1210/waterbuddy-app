@@ -849,6 +849,7 @@ class _OrderCard extends ConsumerStatefulWidget {
 
 class _OrderCardState extends ConsumerState<_OrderCard> {
   bool _isAccepting = false;
+  bool _isUpdating = false;
   String? _errorMessage;
 
   Future<void> _acceptOrder() async {
@@ -917,8 +918,84 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     }
   }
 
+  Future<void> _startDelivery() async {
+    setState(() {
+      _isUpdating = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final orderService = ref.watch(orderServiceProvider);
+      await orderService.updateOrderStatus(widget.order.id, 'ON_THE_WAY');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Delivery started!'),
+            backgroundColor: Color(0xFF71F8E4),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isUpdating = false;
+        _errorMessage = e.toString();
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_errorMessage ?? 'Failed to start delivery'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _markDelivered() async {
+    setState(() {
+      _isUpdating = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final orderService = ref.watch(orderServiceProvider);
+      await orderService.updateOrderStatus(widget.order.id, 'DELIVERED');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Order marked as delivered!'),
+            backgroundColor: Color(0xFF10B981),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isUpdating = false;
+        _errorMessage = e.toString();
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_errorMessage ?? 'Failed to mark as delivered'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final status = widget.order.status;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -944,15 +1021,15 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF71F8E4).withOpacity(0.2),
+                  color: _getStatusColor(status).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  'SEARCHING',
+                child: Text(
+                  status,
                   style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF00687A),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _getStatusColor(status),
                   ),
                 ),
               ),
@@ -967,38 +1044,130 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
             ),
           ),
           const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            height: 44,
-            child: FilledButton(
-              onPressed: _isAccepting ? null : _acceptOrder,
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF00236F),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: _isAccepting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Text(
-                      'Accept Order',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-            ),
-          ),
+          _buildActionButton(status),
         ],
       ),
     );
+  }
+
+  Widget _buildActionButton(String status) {
+    switch (status) {
+      case 'SEARCHING':
+        return FilledButton(
+          onPressed: _isAccepting ? null : _acceptOrder,
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF00236F),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: _isAccepting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Text(
+                  'Accept Order',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+        );
+      case 'ASSIGNED':
+        return FilledButton(
+          onPressed: _isUpdating ? null : _startDelivery,
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFFF59E0B),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: _isUpdating
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Text(
+                  'Start Delivery',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+        );
+      case 'ON_THE_WAY':
+        return FilledButton(
+          onPressed: _isUpdating ? null : _markDelivered,
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF10B981),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: _isUpdating
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Text(
+                  'Mark Delivered',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+        );
+      case 'DELIVERED':
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF10B981).withOpacity(0.2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Text(
+            'Completed',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF10B981),
+            ),
+          ),
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'SEARCHING':
+        return const Color(0xFF71F8E4);
+      case 'ASSIGNED':
+        return const Color(0xFF3B82F6);
+      case 'ON_THE_WAY':
+        return const Color(0xFFF59E0B);
+      case 'DELIVERED':
+        return const Color(0xFF10B981);
+      case 'CANCELLED':
+        return const Color(0xFFEF4444);
+      default:
+        return const Color(0xFF6B7280);
+    }
   }
 }
