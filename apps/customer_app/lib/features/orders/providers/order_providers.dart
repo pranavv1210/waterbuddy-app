@@ -1,14 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/mock_completed_order_repository.dart';
-import '../models/completed_order.dart';
+import '../../../models/order.dart';
+import '../../../providers/app_providers.dart';
 
-final completedOrderRepositoryProvider = Provider<MockCompletedOrderRepository>(
-  (ref) => MockCompletedOrderRepository(),
-);
-
-final completedOrderProvider = FutureProvider<CompletedOrder>(
-  (ref) => ref.watch(completedOrderRepositoryProvider).getCompletedOrder(),
-);
+final completedOrdersProvider = StreamProvider.autoDispose<List<Order>>((ref) {
+  final auth = ref.watch(firebaseAuthProvider);
+  final orderService = ref.watch(orderServiceProvider);
+  final user = auth.currentUser;
+  
+  if (user == null) {
+    return Stream.value([]);
+  }
+  
+  return orderService.watchCustomerOrders(user.uid);
+});
 
 final selectedRatingProvider = StateProvider<int>((ref) => 0);

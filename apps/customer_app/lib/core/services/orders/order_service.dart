@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../models/order.dart' as app_order;
 
@@ -58,6 +59,7 @@ class OrderService {
     required Map<String, dynamic> location,
     required String paymentType,
   }) async {
+    debugPrint('Creating order for customer: $customerId');
     final docRef = await _firestore.collection('orders').add({
       'customerId': customerId,
       'customerName': customerName,
@@ -72,6 +74,7 @@ class OrderService {
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+    debugPrint('Order created successfully: ${docRef.id}');
     return docRef.id;
   }
 

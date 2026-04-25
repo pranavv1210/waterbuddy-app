@@ -22,6 +22,32 @@ class HomeDashboard {
   final String capacitySubtitle;
   final List<TankOption> tankOptions;
   final List<BottomNavItemData> bottomNavItems;
+
+  HomeDashboard copyWith({
+    String? brandName,
+    String? userName,
+    String? userAvatarUrl,
+    String? heroBadgeLabel,
+    String? mapImageUrl,
+    String? mapImageAlt,
+    String? capacityTitle,
+    String? capacitySubtitle,
+    List<TankOption>? tankOptions,
+    List<BottomNavItemData>? bottomNavItems,
+  }) {
+    return HomeDashboard(
+      brandName: brandName ?? this.brandName,
+      userName: userName ?? this.userName,
+      userAvatarUrl: userAvatarUrl ?? this.userAvatarUrl,
+      heroBadgeLabel: heroBadgeLabel ?? this.heroBadgeLabel,
+      mapImageUrl: mapImageUrl ?? this.mapImageUrl,
+      mapImageAlt: mapImageAlt ?? this.mapImageAlt,
+      capacityTitle: capacityTitle ?? this.capacityTitle,
+      capacitySubtitle: capacitySubtitle ?? this.capacitySubtitle,
+      tankOptions: tankOptions ?? this.tankOptions,
+      bottomNavItems: bottomNavItems ?? this.bottomNavItems,
+    );
+  }
 }
 
 class TankOption {

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../routes/route_names.dart';
-import '../../../widgets/async_state_view.dart';
 import '../models/home_dashboard.dart';
 import '../providers/home_providers.dart';
 import '../providers/order_creation_provider.dart';
@@ -14,30 +13,15 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(homeDashboardProvider);
+    final selectedTankId =
+        ref.watch(selectedTankIdProvider) ?? _defaultTankId(dashboard);
 
-    return dashboard.when(
-      data: (state) {
-        final selectedTankId =
-            ref.watch(selectedTankIdProvider) ?? _defaultTankId(state);
-
-        return _HomeScreenBody(
-          state: state,
-          selectedTankId: selectedTankId,
-          onTankSelected: (tankId) {
-            ref.read(selectedTankIdProvider.notifier).state = tankId;
-          },
-        );
+    return _HomeScreenBody(
+      state: dashboard,
+      selectedTankId: selectedTankId,
+      onTankSelected: (tankId) {
+        ref.read(selectedTankIdProvider.notifier).state = tankId;
       },
-      error: (_, __) => const AsyncStateView(
-        isLoading: false,
-        hasError: true,
-        child: SizedBox.shrink(),
-      ),
-      loading: () => const AsyncStateView(
-        isLoading: true,
-        hasError: false,
-        child: SizedBox.shrink(),
-      ),
     );
   }
 

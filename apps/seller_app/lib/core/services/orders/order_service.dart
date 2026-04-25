@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../models/order.dart' as app_order;
 
@@ -72,6 +73,7 @@ class OrderService {
   }
 
   Future<void> acceptOrder(String orderId, String sellerId) async {
+    debugPrint('Seller $sellerId attempting to accept order: $orderId');
     await _firestore.runTransaction((transaction) async {
       final orderRef = _firestore.collection('orders').doc(orderId);
       final snapshot = await transaction.get(orderRef);
@@ -85,6 +87,7 @@ class OrderService {
 
       // Only allow acceptance if order is still searching
       if (currentStatus != 'SEARCHING') {
+        debugPrint('Order $orderId is no longer available (status: $currentStatus)');
         throw Exception('Order is no longer available for acceptance');
       }
 
@@ -94,6 +97,7 @@ class OrderService {
         'sellerId': sellerId,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      debugPrint('Order $orderId accepted successfully by seller $sellerId');
     });
   }
 }
