@@ -12,7 +12,12 @@
           "package_name": "com.waterbuddy.customer"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "979686341816-gi2haph462optrduomb8m8rqm99jfc54.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBDH8TLcO_vfDQ2wl_72bj09UT06PDPsbo"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "979686341816-gi2haph462optrduomb8m8rqm99jfc54.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -31,7 +41,12 @@
           "package_name": "com.waterbuddy.seller"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "979686341816-gi2haph462optrduomb8m8rqm99jfc54.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBDH8TLcO_vfDQ2wl_72bj09UT06PDPsbo"
@@ -39,7 +54,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "979686341816-gi2haph462optrduomb8m8rqm99jfc54.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
