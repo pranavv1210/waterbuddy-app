@@ -17,24 +17,49 @@ class AuthGate extends ConsumerWidget {
     return authState.when(
       data: (user) {
         if (user != null) {
+          // Navigate to home after frame is built
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) {
               context.go(RouteNames.home);
             }
           });
+          // Show loading while navigating
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
         }
 
         return AsyncStateView(
           isLoading: false,
           hasError: false,
-          child: user == null ? const LoginScreen() : const SizedBox.shrink(),
+          child: const LoginScreen(),
         );
       },
-      error: (_, __) => const AsyncStateView(
-        isLoading: false,
-        hasError: true,
-        child: SizedBox.shrink(),
-      ),
+      error: (error, stack) {
+        print('[AUTH GATE ERROR] $error');
+        print('[AUTH GATE STACK] $stack');
+        return AsyncStateView(
+          isLoading: false,
+          hasError: true,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                const SizedBox(height: 16),
+                Text('Error: $error'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref.refresh(authStateProvider),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
       loading: () => const AsyncStateView(
         isLoading: true,
         hasError: false,

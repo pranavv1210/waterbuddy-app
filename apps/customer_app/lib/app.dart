@@ -16,6 +16,14 @@ class WaterBuddyCustomerApp extends ConsumerWidget {
       title: 'WaterBuddy',
       theme: AppTheme.light(),
       routerConfig: router,
+      builder: (context, child) {
+        // Ensure we always have a child to display
+        return child ?? const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      },
     );
   }
 }
