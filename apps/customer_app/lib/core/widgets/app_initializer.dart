@@ -52,7 +52,56 @@ class _AppInitializerState extends State<AppInitializer> {
 
   @override
   Widget build(BuildContext context) {
-    // Always show child immediately - Firebase runs in background
+    // Show loading while Firebase initializes
+    if (!_initialized && !_error) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Loading...'),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    
+    // Show error if Firebase failed
+    if (_error) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: Colors.red, size: 48),
+                SizedBox(height: 16),
+                Text('Error: $_errorMessage'),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _error = false;
+                      _errorMessage = null;
+                    });
+                    _initialize();
+                  },
+                  child: Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    
+    // Firebase ready - show actual app
     return widget.child;
   }
 }

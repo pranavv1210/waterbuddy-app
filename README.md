@@ -1,53 +1,280 @@
-# WaterBuddy
+<div align="center">
 
-On-demand water tanker delivery platform connecting customers with verified water suppliers in real-time.
+<h1 style="display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0; line-height: 1.1;">
+  <img src="https://cdn-icons-png.flaticon.com/512/3105/3105807.png" alt="WaterBuddy Logo" width="40" style="display: block;" />
+  <span style="display: block;">WaterBuddy - On-Demand Water Delivery</span>
+</h1>
 
-## Overview
+<p>
+  <a href="#features">Features</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#project-structure">Project Structure</a> •
+  <a href="#setup">Setup</a> •
+  <a href="#legal">Legal</a>
+</p>
 
-WaterBuddy is a two-sided marketplace platform that revolutionizes water delivery services in India. The platform enables customers to book water tankers instantly through a mobile application, while connecting them with nearby verified tanker providers (sellers). Built on a real-time architecture, WaterBuddy eliminates the inefficiencies of traditional water booking through automated matching, live tracking, and transparent pricing.
+<img src="https://images.unsplash.com/photo-1616348436168-de43ad0db179?w=800&h=400&fit=crop" alt="WaterBuddy Banner" width="85%" />
 
-The system operates as a complete ecosystem comprising a customer mobile app, a seller/partner mobile app, and an administrative web dashboard. All components are synchronized through Firebase's real-time database, ensuring instant updates across the platform.
+<br/>
 
-## Problem Statement
+<img alt="Flutter" src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" />
+<img alt="Dart" src="https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white" />
+<img alt="Firebase" src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" />
+<img alt="Android" src="https://img.shields.io/badge/Android-34A853?style=for-the-badge&logo=android&logoColor=white" />
+<img alt="iOS" src="https://img.shields.io/badge/iOS-111827?style=for-the-badge&logo=apple&logoColor=white" />
+<img alt="Real-time" src="https://img.shields.io/badge/Real--Time-00687A?style=for-the-badge&logo=googleanalytics&logoColor=white" />
 
-Traditional water delivery in India faces significant operational challenges:
+</div>
 
-- Manual Coordination: Customers must call multiple suppliers to check availability and negotiate prices, leading to time-consuming processes and uncertainty.
-- Price Opacity: Lack of standardized pricing creates confusion and potential overcharging, with customers unable to compare rates across providers.
-- Unreliable Delivery: No guaranteed delivery windows or real-time tracking, leaving customers uncertain about arrival times.
-- Limited Visibility: Customers cannot verify supplier credentials or track delivery progress, reducing trust in the service.
-- Operational Inefficiency: Suppliers struggle with manual order management, leading to missed opportunities and poor resource utilization.
+---
 
-## Solution
+WaterBuddy is a production-ready on-demand water tanker delivery platform connecting customers with verified water suppliers in real-time.
 
-WaterBuddy addresses these challenges through a comprehensive digital platform:
+## Quick Links
+- [Features](#features)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Setup](#setup)
+- [Firebase Setup](#firebase-setup)
+- [Android Signing](#android-signing)
+- [License](#license)
 
-- Automated Booking: Customers can book water tankers in seconds through the mobile app, eliminating manual calls and negotiations.
-- Transparent Pricing: Standardized rates based on tank size and distance are displayed upfront, ensuring price transparency and fairness.
-- Real-Time Tracking: GPS-enabled tracking allows customers to monitor their delivery in real-time, providing accurate arrival estimates.
-- Verified Suppliers: All sellers undergo KYC verification and quality checks, ensuring reliable service delivery.
-- Smart Matching: The system automatically matches customers with nearby available sellers, optimizing delivery times and reducing wait times.
-- Digital Payments: Multiple payment options including Cash on Delivery and online payments provide flexibility and convenience.
+## Features
 
-## Key Features
+### Customer App
+- Phone OTP authentication via Firebase
+- Instant tanker booking with tank size selection
+- Real-time order tracking with GPS
+- Multiple payment options (COD, Online)
+- Order history and management
+- Live seller location tracking
+- Search timeout handling with retry
 
-### Customer Mobile App
+### Seller App
+- Availability toggle for online/offline status
+- Real-time order alerts for nearby requests
+- Order acceptance/decline workflow
+- Delivery status updates (ASSIGNED → ON_THE_WAY → DELIVERED)
+- GPS location tracking during delivery
+- Earnings dashboard and performance metrics
 
-- Instant Booking: Book water tankers with a few taps, selecting tank size and delivery location
-- Tank Size Selection: Choose from multiple tank capacities (500L, 1000L, 2000L, 5000L) based on requirements
-- Real-Time Tracking: Monitor delivery progress with live GPS tracking and estimated arrival times
-- Payment Options: Pay securely via Cash on Delivery or online payment methods
-- Order History: View past orders, track current orders, and manage bookings
-- Seller Ratings: Rate and review sellers based on delivery experience
+### Admin Dashboard (Planned)
+- Order monitoring and management
+- Seller verification and KYC
+- Revenue tracking and analytics
+- Complaint handling system
 
-### Seller Mobile App
+## Architecture
 
-- Availability Toggle: Go online/offline to control order availability based on schedule
-- Real-Time Order Alerts: Receive instant notifications when orders are available in the service area
-- Order Acceptance System: Review order details and accept or decline requests based on availability
-- Delivery Status Updates: Update order status through delivery stages (Assigned, On the Way, Delivered)
-- Earnings Dashboard: Track daily earnings, completed orders, and performance metrics
-- Location Tracking: Automatic GPS updates provide customers with real-time delivery tracking
+- **Client**: Flutter (Dart) with Riverpod state management
+- **Backend**: Firebase (Authentication, Firestore, Cloud Messaging)
+- **Auth**: Firebase Phone Authentication (OTP)
+- **Database**: Cloud Firestore (Real-time)
+- **Maps**: Placeholder for future map integration
+- **Location**: `geolocator` package
+- **Routing**: `go_router` for navigation
+- **State**: `flutter_riverpod` for reactive state management
+
+## Project Structure
+
+```text
+waterbuddy-app/
+├── apps/
+│   ├── customer_app/
+│   │   └── lib/
+│   │       ├── main.dart
+│   │       ├── app.dart
+│   │       ├── firebase_options.dart
+│   │       ├── core/
+│   │       │   ├── services/
+│   │       │   │   ├── auth/
+│   │       │   │   ├── orders/
+│   │       │   │   └── location/
+│   │       │   └── widgets/
+│   │       ├── features/
+│   │       │   ├── auth/
+│   │       │   ├── home/
+│   │       │   ├── tracking/
+│   │       │   └── payments/
+│   │       ├── models/
+│   │       ├── providers/
+│   │       └── routes/
+│   │
+│   ├── seller_app/
+│   │   └── lib/
+│   │       ├── main.dart
+│   │       ├── app.dart
+│   │       ├── firebase_options.dart
+│   │       ├── core/
+│   │       │   ├── services/
+│   │       │   │   ├── auth/
+│   │       │   │   ├── orders/
+│   │       │   │   ├── seller/
+│   │       │   │   └── location/
+│   │       │   └── widgets/
+│   │       ├── features/
+│   │       │   ├── auth/
+│   │       │   ├── home/
+│   │       │   ├── orders/
+│   │       │   └── earnings/
+│   │       ├── models/
+│   │       ├── providers/
+│   │       └── routes/
+│   │
+│   └── admin_dashboard/ (planned)
+│
+├── backend/
+│   └── firebase/
+│       └── firestore.rules
+│
+└── shared/ (planned)
+```
+
+## Setup
+
+### 1. Install Dependencies
+
+```bash
+# Customer App
+cd apps/customer_app
+flutter pub get
+
+# Seller App
+cd apps/seller_app
+flutter pub get
+```
+
+### 2. Firebase Setup
+
+1. Create a Firebase project at https://console.firebase.google.com
+2. Enable Phone Authentication
+3. Create Firestore database
+4. Add Android apps for both customer and seller
+5. Download `google-services.json` and place in:
+   - `apps/customer_app/android/app/`
+   - `apps/seller_app/android/app/`
+6. Run `flutterfire configure` to generate `firebase_options.dart`
+
+### 3. Run in Debug Mode
+
+```bash
+# Customer App
+cd apps/customer_app
+flutter run
+
+# Seller App
+cd apps/seller_app
+flutter run
+```
+
+### 4. Build Release APKs
+
+```bash
+# Customer App
+cd apps/customer_app
+flutter build apk --release --build-name=1.0.0 --build-number=1
+
+# Seller App
+cd apps/seller_app
+flutter build apk --release --build-name=1.0.0 --build-number=1
+```
+
+## Firebase Setup
+
+### Required Services
+- **Authentication**: Enable Phone provider for OTP-based auth
+- **Firestore**: Create database in production mode
+- **Cloud Messaging**: Enable for push notifications (optional)
+
+### Firestore Rules
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /orders/{orderId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    match /sellers/{sellerId} {
+      allow read, write: if request.auth != null && request.auth.uid == sellerId;
+    }
+  }
+}
+```
+
+## Android Signing
+
+For release signing, configure `android/app/build.gradle`:
+
+```gradle
+android {
+    signingConfigs {
+        release {
+            storeFile file("your_keystore.jks")
+            storePassword "your_password"
+            keyAlias "your_alias"
+            keyPassword "your_key_password"
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+        }
+    }
+}
+```
+
+## Order Lifecycle
+
+Orders progress through the following states:
+
+1. **SEARCHING**: Order created, visible to nearby online sellers
+2. **ASSIGNED**: Seller accepted, customer navigates to payment
+3. **ON_THE_WAY**: Delivery started, GPS tracking active
+4. **DELIVERED**: Order complete, payment processed
+
+## Tech Stack
+
+### Mobile Apps
+- **Flutter 3.3+**: Cross-platform framework
+- **Riverpod 2.5+**: State management
+- **GoRouter 14.2+**: Declarative routing
+- **Firebase SDK 3.1+**: Backend services
+- **Geolocator 12.0+**: GPS tracking
+
+### Backend
+- **Firebase Authentication**: Phone OTP
+- **Cloud Firestore**: Real-time database
+- **Firebase Cloud Messaging**: Push notifications
+
+## Legal & Compliance
+
+### Contact
+- **Email**: waterbuddyapp.wb@gmail.com
+- **Support**: waterbuddyapp.wb@gmail.com
+
+### Licenses and Registrations
+- Business Registration: WaterBuddy Technologies Pvt. Ltd.
+- GST Registration: [To be updated]
+- Trade License: Valid for water delivery services
+
+### Data Protection
+- Privacy Policy: Compliant with IT Act, 2000 (India)
+- Data Localization: All data stored within Indian jurisdiction
+- GDPR Readiness: Framework prepared
+
+### Intellectual Property
+- Trademark: WaterBuddy name and logo are registered
+- Copyright: Protected under Indian Copyright Act, 1957
+
+## License
+
+This project is proprietary software. All rights are reserved by WaterBuddy.
+
+For licensing inquiries, contact: waterbuddyapp.wb@gmail.com
 
 ### Admin Dashboard
 
