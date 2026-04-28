@@ -476,19 +476,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   // ── Google button ──
   Widget _buildGoogleButton() {
+    final authState = ref.watch(authControllerProvider);
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: OutlinedButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              const SnackBar(
-                content: Text('Google sign-in will be connected next.'),
-              ),
-            );
-        },
+        onPressed: authState.isLoading
+            ? null
+            : () {
+                ref.read(authControllerProvider.notifier).signInWithGoogle();
+              },
         style: OutlinedButton.styleFrom(
           backgroundColor: _Colors.googleBtnBg,
           foregroundColor: _Colors.textPrimary,
@@ -498,24 +495,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ),
           elevation: 0,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CustomPaint(painter: _GoogleLogoPainter()),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Continue with Google',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+        child: authState.isLoading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(_Colors.accent),
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CustomPaint(painter: _GoogleLogoPainter()),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Continue with Google',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
