@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -24,31 +25,42 @@ class AuthService {
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
+      // 1. Check GoogleSignIn implementation:
+      // Ensure: final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null;
+      
+      // Handle cancellation gracefully
+      if (googleUser == null) {
+        debugPrint('Google Sign-In cancelled by user.');
+        return null;
+      }
 
+      // 2. Then:
+      // final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
+
+      // 3. Then:
+      // final credential = GoogleAuthProvider.credential(accessToken: googleAuth.accessToken, idToken: googleAuth.idToken,);
+      final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
+      // 4. Then:
+      // await FirebaseAuth.instance.signInWithCredential(credential);
       final userCredential = await _auth.signInWithCredential(credential);
+      
       final user = userCredential.user;
-
       if (user != null) {
-        await createUserInFirestore(
-          uid: user.uid,
-          name: user.displayName,
-          email: user.email,
-          photoUrl: user.photoURL,
-        );
+        await createUserInFirestore();
       }
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
+      debugPrint(e.toString());
       throw AuthFailure(_authErrorMessage(e));
     } catch (e) {
+      debugPrint(e.toString());
       throw AuthFailure('Google sign-in failed. Please try again.');
     }
   }
@@ -125,10 +137,7 @@ class AuthService {
       final user = userCredential.user;
       
       if (user != null) {
-        await createUserInFirestore(
-          uid: user.uid,
-          phone: user.phoneNumber,
-        );
+        await createUserInFirestore();
       }
       
       return userCredential;
@@ -137,39 +146,66 @@ class AuthService {
     }
   }
 
-  Future<void> createUserInFirestore({
-    required String uid,
-    String? phone,
-    String? name,
-    String? email,
-    String? photoUrl,
-  }) async {
+  Future<void> createUserInFirestore() async {
     try {
+      // 1. Get current user
+      final user = _auth.currentUser;
+      if (user == null) {
+        debugPrint('No authenticated user found');
+        return;
+      }
+
+      final uid = user.uid;
+
+      // 2. Check Firestore
       final userRef = _firestore.collection('users').doc(uid);
       final snapshot = await userRef.get();
-      
-      // Update or create data based on what's provided
-      final Map<String, dynamic> userData = {
-        'uid': uid,
-        if (phone != null) 'phone': phone,
-        if (name != null) 'name': name,
-        if (email != null) 'email': email,
-        if (photoUrl != null) 'photoUrl': photoUrl,
-      };
 
+      // 3. IF document does NOT exist: Create user
       if (!snapshot.exists) {
-        userData['createdAt'] = FieldValue.serverTimestamp();
+        final userData = {
+          'uid': uid,
+          'phone': user.phoneNumber,
+          'email': user.email,
+          'name': user.displayName,
+          'photoUrl': user.photoURL,
+          'createdAt': FieldValue.serverTimestamp(),
+        };
+
         await userRef.set(userData);
+        debugPrint('User created');
       } else {
-        // If user exists, we might want to update fields but the requirement says 
-        // "If NOT: create user document". So I will only set if missing.
-        // However, for Google Login, it might be the first time they are adding name/email.
-        await userRef.set(userData, SetOptions(merge: true));
+        // 4. IF document exists: Do NOT overwrite, optionally update missing fields
+        final existingData = snapshot.data() ?? {};
+        final Map<String, dynamic> updates = {};
+
+        // Only update fields that are missing in Firestore but available in Auth
+        if (existingData['phone'] == null && user.phoneNumber != null) {
+          updates['phone'] = user.phoneNumber;
+        }
+        if (existingData['email'] == null && user.email != null) {
+          updates['email'] = user.email;
+        }
+        if (existingData['name'] == null && user.displayName != null) {
+          updates['name'] = user.displayName;
+        }
+        if (existingData['photoUrl'] == null && user.photoURL != null) {
+          updates['photoUrl'] = user.photoURL;
+        }
+
+        if (updates.isNotEmpty) {
+          await userRef.update(updates);
+        }
+        debugPrint('User exists');
       }
     } on FirebaseException catch (exception) {
+      debugPrint('Firestore error: ${exception.message}');
       throw AuthFailure(
         exception.message ?? 'Unable to save user profile. Please try again.',
       );
+    } catch (e) {
+      debugPrint('Unexpected error in createUserInFirestore: $e');
+      throw AuthFailure('Unable to save user profile. Please try again.');
     }
   }
 
@@ -178,7 +214,7 @@ class AuthService {
     required String phone,
     required String role,
   }) async {
-    await createUserInFirestore(uid: uid, phone: phone);
+    await createUserInFirestore();
   }
 
   Future<void> signOut() => _auth.signOut();

@@ -1,4 +1,4 @@
-package com.example.waterbuddy_customer_app
+package com.waterbuddy.customer
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../routes/route_names.dart';
 import '../models/home_dashboard.dart';
@@ -170,6 +171,9 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Greeting with user name
+                  _UserGreeting(user: user),
+                  const SizedBox(height: 16),
                   const Text(
                     'Choose Tank Size',
                     style: TextStyle(
@@ -366,6 +370,73 @@ class _TopIconButton extends StatelessWidget {
         icon: Icon(icon, color: const Color(0xFF64748B)),
         onPressed: onPressed,
       ),
+    );
+  }
+}
+
+class _UserGreeting extends StatelessWidget {
+  const _UserGreeting({this.user});
+
+  final User? user;
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = user?.uid;
+
+    if (uid == null) {
+      return const Text(
+        'Hi there!',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF0F2B5B),
+        ),
+      );
+    }
+
+    // Try displayName from Auth first
+    final authName = user?.displayName;
+    if (authName != null && authName.isNotEmpty) {
+      return Text(
+        'Hi, $authName',
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF0F2B5B),
+        ),
+      );
+    }
+
+    // Fetch from Firestore
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData && snapshot.data != null && snapshot.data!.exists) {
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
+          final name = data?['name'] as String?;
+
+          if (name != null && name.isNotEmpty) {
+            return Text(
+              'Hi, $name',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0F2B5B),
+              ),
+            );
+          }
+        }
+
+        // Fallback
+        return const Text(
+          'Hi there!',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0F2B5B),
+          ),
+        );
+      },
     );
   }
 }

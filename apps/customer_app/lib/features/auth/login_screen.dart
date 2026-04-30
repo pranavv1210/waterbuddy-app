@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -357,23 +358,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     right: BorderSide(color: _Colors.inputBorder),
                   ),
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '🇮🇳',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      '+91',
-                      style: TextStyle(
-                        color: _Colors.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                child: const Text(
+                  '+91',
+                  style: TextStyle(
+                    color: _Colors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               // Input
@@ -507,10 +498,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
+                  SvgPicture.asset(
+                    'assets/images/google_logo.svg',
                     width: 20,
                     height: 20,
-                    child: CustomPaint(painter: _GoogleLogoPainter()),
                   ),
                   const SizedBox(width: 12),
                   const Text(
@@ -585,43 +576,3 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 }
 
-// ─────────────────────────────────────────────
-//  Google "G" logo painter
-// ─────────────────────────────────────────────
-class _GoogleLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final center = Offset(size.width / 2, size.height / 2);
-    final r = size.width / 2;
-
-    paint.color = const Color(0xFF4285F4);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: r), -0.35, 1.4, true, paint);
-
-    paint.color = const Color(0xFF34A853);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: r), 1.05, 1.2, true, paint);
-
-    paint.color = const Color(0xFFFBBC05);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: r), 2.2, 1.15, true, paint);
-
-    paint.color = const Color(0xFFEA4335);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: r), 3.15, 1.25, true, paint);
-
-    paint.color = Colors.white;
-    canvas.drawCircle(center, r * 0.46, paint);
-    canvas.drawRect(
-      Rect.fromLTWH(
-        size.width * 0.5, size.height * 0.42,
-        size.width * 0.3, size.height * 0.16,
-      ),
-      Paint()..color = const Color(0xFF4285F4),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
