@@ -19,7 +19,9 @@ class AuthService {
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+  );
 
   Stream<User?> authStateChanges() => _auth.authStateChanges();
 
@@ -57,10 +59,10 @@ class AuthService {
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      debugPrint(e.toString());
+      debugPrint("GOOGLE SIGN IN ERROR: $e");
       throw AuthFailure(_authErrorMessage(e));
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint("GOOGLE SIGN IN ERROR: $e");
       throw AuthFailure('Google sign-in failed. Please try again.');
     }
   }
