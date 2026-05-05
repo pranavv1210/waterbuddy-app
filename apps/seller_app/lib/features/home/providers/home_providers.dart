@@ -79,7 +79,7 @@ final onlineSellersProvider = StreamProvider.autoDispose((ref) {
           }).toList());
 });
 
-final searchingOrdersProvider = StreamProvider.autoDispose((ref) {
+final searchingOrdersProvider = StreamProvider.autoDispose<List<Order>>((ref) {
   final isOnline = ref.watch(sellerAvailabilityProvider);
 
   if (!isOnline) {
@@ -155,7 +155,7 @@ final searchingOrdersProvider = StreamProvider.autoDispose((ref) {
   });
 });
 
-final activeOrdersProvider = StreamProvider.autoDispose((ref) {
+final activeOrdersProvider = StreamProvider.autoDispose<List<Order>>((ref) {
   final auth = ref.watch(firebaseAuthProvider);
   final sellerId = auth.currentUser?.uid;
 
