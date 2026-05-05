@@ -2,8 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 
 import '../../profile/data/seller_availability_service.dart';
+import '../../../models/order.dart';
 import '../../../providers/app_providers.dart';
 import '../data/mock_seller_dashboard_repository.dart';
 import '../models/seller_dashboard.dart';

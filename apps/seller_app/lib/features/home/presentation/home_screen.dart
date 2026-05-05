@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 
 import '../../../models/order.dart';
 import '../../../providers/app_providers.dart';
@@ -910,7 +910,7 @@ class _SearchingOrdersSection extends ConsumerWidget {
 }
 
 class _OrderCard extends ConsumerStatefulWidget {
-  const _OrderCard({required this.order});
+  const _OrderCard({super.key, required this.order});
 
   final Order order;
 
