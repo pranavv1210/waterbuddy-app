@@ -253,7 +253,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
 
           // 3. FLOATING LOCATION BUTTON
           Positioned(
-            bottom: 310, // Adjusted to be above the bottom sheet
+            bottom: 380, // Above bottom sheet + nav bar
             right: 16,
             child: FloatingActionButton(
               onPressed: _determinePosition,
@@ -347,21 +347,31 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         children: [
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF64748B)),
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No new notifications'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
           ),
           const SizedBox(width: 4),
-          Container(
-            width: 36,
-            height: 36,
-            margin: const EdgeInsets.only(right: 4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF0EA5E9).withOpacity(0.1),
-            ),
-            child: ClipOval(
-              child: user?.photoURL != null
-                  ? Image.network(user!.photoURL!, fit: BoxFit.cover)
-                  : const Icon(Icons.person_rounded, color: Color(0xFF0EA5E9), size: 20),
+          GestureDetector(
+            onTap: () => context.go(RouteNames.profile),
+            child: Container(
+              width: 36,
+              height: 36,
+              margin: const EdgeInsets.only(right: 4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF0EA5E9).withOpacity(0.1),
+              ),
+              child: ClipOval(
+                child: user?.photoURL != null
+                    ? Image.network(user!.photoURL!, fit: BoxFit.cover)
+                    : const Icon(Icons.person_rounded, color: Color(0xFF0EA5E9), size: 20),
+              ),
             ),
           ),
         ],
@@ -432,7 +442,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                     ),
                     const SizedBox(height: 12),
                     ...tankOptionsData.map((data) => _buildTankListItem(data, primary)),
-                    const SizedBox(height: 80), // Space for fixed button
+                    const SizedBox(height: 80), // Space for fixed button + nav bar
                   ],
                 ),
               ),

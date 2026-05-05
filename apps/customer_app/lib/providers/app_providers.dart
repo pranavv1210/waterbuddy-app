@@ -10,6 +10,7 @@ import '../features/auth/auth_controller.dart';
 import '../features/auth/presentation/auth_gate.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/auth/otp_screen.dart';
+import '../features/orders/presentation/order_details_screen.dart';
 import '../features/orders/presentation/orders_screen.dart';
 import '../features/payments/presentation/payments_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
@@ -18,6 +19,7 @@ import '../features/tracking/presentation/order_complete_screen.dart';
 import '../features/tracking/presentation/searching_tankers_screen.dart';
 import '../features/tracking/presentation/tracking_screen.dart';
 import '../routes/route_names.dart';
+import '../widgets/main_shell.dart';
 
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) => FirebaseAuth.instance);
 final firestoreProvider =
@@ -64,6 +66,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: RouteNames.splash,
     routes: [
+      // ── Standalone screens (no nav bar) ────────────────────────────
       GoRoute(
         path: RouteNames.splash,
         builder: (_, __) => const SplashScreen(),
@@ -77,32 +80,46 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const OtpScreen(),
       ),
       GoRoute(
-        path: RouteNames.home,
-        builder: (_, __) => const HomeScreen(),
-      ),
-      GoRoute(
         path: RouteNames.searching,
         builder: (_, __) => const SearchingTankersScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.orders,
-        builder: (_, __) => const OrdersScreen(),
       ),
       GoRoute(
         path: RouteNames.tracking,
         builder: (_, __) => const TrackingScreen(),
       ),
       GoRoute(
-        path: RouteNames.profile,
-        builder: (_, __) => const ProfileScreen(),
+        path: RouteNames.orderComplete,
+        builder: (_, __) => const OrderCompleteScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.orderDetails,
+        builder: (_, __) => const OrderDetailsScreen(),
       ),
       GoRoute(
         path: RouteNames.payments,
         builder: (_, __) => const PaymentsScreen(),
       ),
-      GoRoute(
-        path: RouteNames.orderComplete,
-        builder: (_, __) => const OrderCompleteScreen(),
+
+      // ── Main tabs wrapped with bottom nav bar ───────────────────────
+      ShellRoute(
+        builder: (context, state, child) => MainShell(
+          location: state.uri.toString(),
+          child: child,
+        ),
+        routes: [
+          GoRoute(
+            path: RouteNames.home,
+            builder: (_, __) => const HomeScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.orders,
+            builder: (_, __) => const OrdersScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.profile,
+            builder: (_, __) => const ProfileScreen(),
+          ),
+        ],
       ),
     ],
   );

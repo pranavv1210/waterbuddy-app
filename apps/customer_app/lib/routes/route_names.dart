@@ -8,5 +8,6 @@ class RouteNames {
   static const tracking = '/tracking';
   static const profile = '/profile';
   static const payments = '/payments';
+  static const orderDetails = '/order-details';
   static const orderComplete = '/order-complete';
 }

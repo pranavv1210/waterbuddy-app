@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,18 +17,31 @@ class PaymentsScreen extends ConsumerStatefulWidget {
 
 class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   String? _orderId;
+  int _amountInPaise = 0; // extracted from query params
 
   @override
   void initState() {
     super.initState();
-    
-    // Get orderId from query params
+
+    // Init Razorpay SDK
+    ref.read(razorpayServiceProvider).init();
+
+    // Get orderId + amount from query params
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final orderId = GoRouterState.of(context).uri.queryParameters['orderId'];
+      final params = GoRouterState.of(context).uri.queryParameters;
+      final orderId = params['orderId'];
+      final amount = int.tryParse(params['amount'] ?? '') ?? 0;
       setState(() {
         _orderId = orderId;
+        _amountInPaise = amount * 100; // convert ₹ → paise
       });
     });
+  }
+
+  @override
+  void dispose() {
+    ref.read(razorpayServiceProvider).dispose();
+    super.dispose();
   }
 
   @override
@@ -76,7 +90,12 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     }
 
     return checkout.when(
-      data: (state) => _PaymentsScreenBody(state: state, paymentState: paymentState, orderId: _orderId),
+      data: (state) => _PaymentsScreenBody(
+        state: state,
+        paymentState: paymentState,
+        orderId: _orderId,
+        amountInPaise: _amountInPaise,
+      ),
       error: (_, __) => const AsyncStateView(
         isLoading: false,
         hasError: true,
@@ -96,11 +115,13 @@ class _PaymentsScreenBody extends ConsumerWidget {
     required this.state,
     required this.paymentState,
     required this.orderId,
+    required this.amountInPaise,
   });
 
   final PaymentCheckout state;
   final PaymentState paymentState;
   final String? orderId;
+  final int amountInPaise;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -284,8 +305,29 @@ class _PaymentsScreenBody extends ConsumerWidget {
                           onPressed: paymentState.isProcessing || orderId == null
                               ? null
                               : () async {
-                                  final paymentType = selectedMethod == 'cash' ? 'COD' : 'ONLINE';
-                                  await ref.read(paymentControllerProvider.notifier).selectPaymentMethod(orderId!, paymentType);
+                                  final controller = ref.read(paymentControllerProvider.notifier);
+                                  final user = FirebaseAuth.instance.currentUser;
+
+                                  if (selectedMethod == 'cash') {
+                                    // ── COD: write directly to Firestore ────
+                                    await controller.selectCod(orderId!);
+                                  } else {
+                                    // ── Online: open Razorpay sheet ─────────
+                                    final method = selectedMethod == 'card'
+                                        ? 'card'
+                                        : 'upi';
+                                    await controller.startOnlinePayment(
+                                      orderId: orderId!,
+                                      amountInPaise: amountInPaise > 0
+                                          ? amountInPaise
+                                          : 50000, // fallback ₹500 = 50000 paise
+                                      method: method,
+                                      customerName: user?.displayName ?? 'Customer',
+                                      customerPhone: user?.phoneNumber ?? '',
+                                      customerEmail: user?.email ?? '',
+                                      description: 'Water Delivery - ${state.summary.productTitle}',
+                                    );
+                                  }
                                 },
                           style: FilledButton.styleFrom(
                             backgroundColor: const Color(0xFF004941),

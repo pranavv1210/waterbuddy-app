@@ -11,6 +11,7 @@ class Order {
     required this.paymentStatus,
     required this.location,
     this.tracking,
+    this.createdAt,
   });
 
   factory Order.fromDocument(DocumentSnapshot<Map<String, dynamic>> document) {
@@ -27,6 +28,7 @@ class Order {
       tracking: data['tracking'] != null
           ? TrackingData.fromMap(data['tracking'] as Map<String, dynamic>)
           : null,
+      createdAt: data['createdAt'] as Timestamp?,
     );
   }
 
@@ -39,6 +41,7 @@ class Order {
   final String paymentStatus;
   final Map<String, dynamic> location;
   final TrackingData? tracking;
+  final Timestamp? createdAt;
 }
 
 class TrackingData {

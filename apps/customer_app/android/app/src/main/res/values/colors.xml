@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- WaterBuddy navy — used as FCM notification accent color -->
+    <color name="notification_color">#0F2B5B</color>
+</resources>

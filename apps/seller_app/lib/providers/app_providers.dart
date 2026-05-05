@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/services/auth/auth_service.dart';
 import '../core/services/orders/order_service.dart';
-import '../core/services/seller/seller_availability_service.dart';
+import '../features/profile/data/seller_availability_service.dart';
 import '../core/services/location/location_tracking_service.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/presentation/auth_gate.dart';

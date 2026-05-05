@@ -9,7 +9,7 @@ class LocationTrackingService {
   final FirebaseFirestore _firestore;
   Timer? _locationUpdateTimer;
   StreamSubscription<Position>? _positionSubscription;
-  static const Duration _updateInterval = Duration(seconds: 8);
+  static const Duration _updateInterval = Duration(seconds: 4);
 
   Future<bool> _checkPermission() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();

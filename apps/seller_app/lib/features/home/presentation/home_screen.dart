@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../models/order.dart';
 import '../../../providers/app_providers.dart';
@@ -16,11 +17,13 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardState = ref.watch(sellerDashboardProvider);
     final searchingOrders = ref.watch(searchingOrdersProvider);
+    final activeOrders = ref.watch(activeOrdersProvider);
 
     return dashboardState.when(
       data: (dashboard) => _SellerDashboardView(
         dashboard: dashboard,
         searchingOrders: searchingOrders,
+        activeOrders: activeOrders,
       ),
       loading: () => const Scaffold(
         body: SafeArea(
@@ -48,10 +51,12 @@ class _SellerDashboardView extends ConsumerWidget {
   const _SellerDashboardView({
     required this.dashboard,
     required this.searchingOrders,
+    required this.activeOrders,
   });
 
   final SellerDashboard dashboard;
   final AsyncValue<List<Order>> searchingOrders;
+  final AsyncValue<List<Order>> activeOrders;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -60,9 +65,9 @@ class _SellerDashboardView extends ConsumerWidget {
     final colors = theme.colorScheme;
     final currentDashboard = dashboard.copyWith(
       isOnline: isOnline,
-      statusTitle: isOnline ? dashboard.statusTitle : 'You are offline',
+      statusTitle: isOnline ? 'You are Online' : 'You are Offline',
       statusMessage: isOnline
-          ? dashboard.statusMessage
+          ? 'You are visible to customers and can receive tanker requests.'
           : 'Turn availability back on to receive nearby tanker requests.',
     );
 
@@ -88,6 +93,8 @@ class _SellerDashboardView extends ConsumerWidget {
                   _EarningsOverview(dashboard: currentDashboard, colors: colors),
                   const SizedBox(height: 28),
                   _StatusArea(dashboard: currentDashboard),
+                  const SizedBox(height: 28),
+                  _ActiveOrdersSection(activeOrders: activeOrders),
                   const SizedBox(height: 28),
                   _SearchingOrdersSection(searchingOrders: searchingOrders),
                 ],
@@ -219,14 +226,14 @@ class _AvailabilityToggle extends StatelessWidget {
         children: [
           Expanded(
             child: _ToggleButton(
-              label: 'Go Online',
+              label: 'ONLINE',
               selected: isOnline,
               onTap: () => onChanged(true),
             ),
           ),
           Expanded(
             child: _ToggleButton(
-              label: 'Go Offline',
+              label: 'OFFLINE',
               selected: !isOnline,
               onTap: () => onChanged(false),
             ),
@@ -703,6 +710,70 @@ class _NavItem extends StatelessWidget {
   }
 }
 
+class _ActiveOrdersSection extends ConsumerWidget {
+  const _ActiveOrdersSection({required this.activeOrders});
+
+  final AsyncValue<List<Order>> activeOrders;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return activeOrders.when(
+      data: (orders) {
+        if (orders.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0A000000),
+                blurRadius: 24,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.delivery_dining,
+                      color: Color(0xFFB45309),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Active Deliveries',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F2E74),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ...orders.map((order) => _OrderCard(key: ValueKey(order.id), order: order)),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
 class _SearchingOrdersSection extends ConsumerWidget {
   const _SearchingOrdersSection({required this.searchingOrders});
 
@@ -748,7 +819,7 @@ class _SearchingOrdersSection extends ConsumerWidget {
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Text(
-                        'Go online to receive orders',
+                        'You are offline',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -825,7 +896,7 @@ class _SearchingOrdersSection extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              ...orders.take(3).map((order) => _OrderCard(order: order)),
+              ...orders.take(3).map((order) => _OrderCard(key: ValueKey(order.id), order: order)),
             ],
           ),
         );
@@ -850,9 +921,12 @@ class _OrderCard extends ConsumerStatefulWidget {
 class _OrderCardState extends ConsumerState<_OrderCard> {
   bool _isAccepting = false;
   bool _isUpdating = false;
+  bool _isHidden = false;
   String? _errorMessage;
 
   Future<void> _acceptOrder() async {
+    if (_isAccepting) return; // Prevent double tap explicitly
+
     setState(() {
       _isAccepting = true;
       _errorMessage = null;
@@ -892,26 +966,47 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       await orderService.acceptOrder(widget.order.id, sellerId);
       
       if (mounted) {
+        setState(() {
+          _isHidden = true; // Optimistic removal
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Order accepted successfully!'),
+            content: Text('Order Assigned', style: TextStyle(color: Color(0xFF004E5C), fontWeight: FontWeight.bold)),
             backgroundColor: Color(0xFF71F8E4),
             duration: Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
-      setState(() {
-        _isAccepting = false;
-        _errorMessage = e.toString();
-      });
-      
+      final errorStr = e.toString();
+      String message = 'Network error. Please try again.';
+      bool removeCard = false;
+
+      if (errorStr.contains('no longer available')) {
+        message = 'Order already taken';
+        removeCard = true;
+      }
+
       if (mounted) {
+        setState(() {
+          _isAccepting = false;
+          _errorMessage = message;
+          if (removeCard) {
+            _isHidden = true;
+          }
+        });
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_errorMessage ?? 'Failed to accept order'),
+            content: Text(message),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
+            action: removeCard ? null : SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _acceptOrder,
+            ),
           ),
         );
       }
@@ -933,9 +1028,12 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       locationService.startTracking(widget.order.id);
       
       if (mounted) {
+        setState(() {
+          _isUpdating = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Delivery started! Location tracking enabled.'),
+            content: Text('Delivery started! Location tracking enabled.', style: TextStyle(fontWeight: FontWeight.bold)),
             backgroundColor: Color(0xFF71F8E4),
             duration: Duration(seconds: 2),
           ),
@@ -974,9 +1072,13 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       locationService.stopTracking();
       
       if (mounted) {
+        setState(() {
+          _isUpdating = false;
+          _isHidden = true; // Optimistically hide since it's delivered
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Order marked as delivered!'),
+            content: Text('Order marked as delivered!', style: TextStyle(fontWeight: FontWeight.bold)),
             backgroundColor: Color(0xFF10B981),
             duration: Duration(seconds: 2),
           ),
@@ -1002,6 +1104,8 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isHidden) return const SizedBox.shrink();
+
     final status = widget.order.status;
     
     return Container(
@@ -1050,6 +1154,40 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               fontSize: 12,
               color: Color(0xFF757682),
             ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF757682)),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  widget.order.location['address'] ?? 'No address provided',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF757682),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(Icons.access_time, size: 14, color: Color(0xFF757682)),
+              const SizedBox(width: 4),
+              Text(
+                widget.order.createdAt != null 
+                  ? _formatTimestamp(widget.order.createdAt!)
+                  : 'Just now',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF757682),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           _buildActionButton(status),
@@ -1177,5 +1315,12 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       default:
         return const Color(0xFF6B7280);
     }
+  }
+
+  String _formatTimestamp(Timestamp timestamp) {
+    final date = timestamp.toDate().toLocal();
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }

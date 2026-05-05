@@ -1,7 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../firebase_options.dart';
+import '../services/notifications/notification_service.dart';
 
 class AppInitializer extends StatefulWidget {
   const AppInitializer({super.key, required this.child});
@@ -25,17 +29,30 @@ class _AppInitializerState extends State<AppInitializer> {
 
   Future<void> _initialize() async {
     print('[APP INITIALIZER] Starting initialization...');
-    
+
     try {
-      // Small delay to ensure UI renders first
       await Future.delayed(const Duration(milliseconds: 100));
-      
+
       print('[APP INITIALIZER] Initializing Firebase...');
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
       print('[APP INITIALIZER] Firebase initialized!');
-      
+
+      // ── FCM ──────────────────────────────────────────────────────────────
+      try {
+        final fcm = FcmService(
+          messaging: FirebaseMessaging.instance,
+          firestore: FirebaseFirestore.instance,
+          auth: FirebaseAuth.instance,
+        );
+        await fcm.initialize();
+        print('[APP INITIALIZER] FCM initialized');
+      } catch (e) {
+        // Non-fatal — app works without push notifications
+        print('[APP INITIALIZER] FCM init warning: $e');
+      }
+
       if (mounted) {
         setState(() => _initialized = true);
       }

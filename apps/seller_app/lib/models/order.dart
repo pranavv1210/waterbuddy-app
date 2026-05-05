@@ -10,6 +10,7 @@ class Order {
     required this.paymentType,
     required this.paymentStatus,
     required this.location,
+    required this.createdAt,
     this.tracking,
   });
 
@@ -24,6 +25,7 @@ class Order {
       paymentType: data['paymentType'] as String? ?? 'COD',
       paymentStatus: data['paymentStatus'] as String? ?? 'PENDING',
       location: Map<String, dynamic>.from(data['location'] as Map? ?? const {}),
+      createdAt: data['createdAt'] as Timestamp?,
       tracking: data['tracking'] != null
           ? TrackingData.fromMap(data['tracking'] as Map<String, dynamic>)
           : null,
@@ -38,6 +40,7 @@ class Order {
   final String paymentType;
   final String paymentStatus;
   final Map<String, dynamic> location;
+  final Timestamp? createdAt;
   final TrackingData? tracking;
 }
 
