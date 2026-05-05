@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../routes/route_names.dart';
 import '../../../widgets/async_state_view.dart';
@@ -35,28 +36,42 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 
     if (trackingState.errorMessage != null) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF7F9FB),
+        backgroundColor: const Color(0xFFF8FAFC),
         body: SafeArea(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(32),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error: ${trackingState.errorMessage}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Color(0xFF191C1E)),
+                  const Icon(Icons.error_outline_rounded, size: 64, color: Color(0xFFEF4444)),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Something went wrong',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF0F2B5B)),
                   ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () {
-                      ref.read(trackingControllerProvider.notifier).clearError();
-                      context.go(RouteNames.home);
-                    },
-                    child: const Text('Go Back'),
+                  const SizedBox(height: 8),
+                  Text(
+                    trackingState.errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Color(0xFF64748B)),
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        ref.read(trackingControllerProvider.notifier).clearError();
+                        context.go(RouteNames.home);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F2B5B),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text('Back to Home'),
+                    ),
                   ),
                 ],
               ),
@@ -68,15 +83,19 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 
     return uiState.when(
       data: (state) => _TrackingScreenBody(state: state, trackingState: trackingState),
-      error: (_, __) => const AsyncStateView(
-        isLoading: false,
-        hasError: true,
-        child: SizedBox.shrink(),
+      error: (err, __) => Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error loading tracking: $err'),
+              TextButton(onPressed: () => context.go(RouteNames.home), child: const Text('Go Home')),
+            ],
+          ),
+        ),
       ),
-      loading: () => const AsyncStateView(
-        isLoading: true,
-        hasError: false,
-        child: SizedBox.shrink(),
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
       ),
     );
   }
@@ -88,512 +107,280 @@ class _TrackingScreenBody extends StatelessWidget {
   final AssignedOrderTracking state;
   final TrackingState trackingState;
 
+  Future<void> _callDriver(String phoneNumber) async {
+    if (phoneNumber.isEmpty) return;
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Update status based on real-time order status
+    const primaryColor = Color(0xFF0F2B5B);
+    const accentColor = Color(0xFF0EA5E9);
+
     final statusTitle = _getStatusTitle(trackingState.orderStatus);
     final statusSubtitle = _getStatusSubtitle(trackingState.orderStatus);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FB),
-      body: Column(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Stack(
         children: [
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          if (Navigator.of(context).canPop()) {
-                            context.pop();
-                            return;
-                          }
+          // Map Placeholder / Real Map
+          Positioned.fill(
+            child: Container(
+              color: const Color(0xFFE2E8F0),
+              child: const Center(
+                child: Icon(Icons.map_rounded, size: 64, color: Color(0xFF94A3B8)),
+              ),
+            ),
+          ),
 
-                          context.go(RouteNames.home);
-                        },
-                        icon: const Icon(Icons.arrow_back_rounded),
-                        color: const Color(0xFF00236F),
-                      ),
-                      Text(
-                        state.screenTitle,
-                        style: const TextStyle(
-                          color: Color(0xFF00236F),
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    width: 32,
-                    height: 32,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFFECEEF0),
+          // Header with Back Button
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 10, left: 16, right: 16, bottom: 10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.black.withOpacity(0.4), Colors.transparent],
+                ),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded, color: primaryColor),
+                      onPressed: () => context.go(RouteNames.home),
                     ),
-                    child: Image.network(
-                      state.userAvatarUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.person_rounded, size: 18),
+                  ),
+                  const SizedBox(width: 16),
+                  const Text(
+                    'Order Status',
+                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Bottom Content Card
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 20,
+                    offset: Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Pull Handle
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Status Text
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    statusTitle,
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800,
+                                      color: primaryColor,
+                                    ),
+                                  ),
+                                  Text(
+                                    statusSubtitle,
+                                    style: const TextStyle(
+                                      color: Color(0xFF64748B),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0F9FF),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(Icons.water_drop_rounded, color: accentColor),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Driver & Vehicle Card
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: const Color(0xFFF1F5F9)),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 28,
+                                    backgroundColor: const Color(0xFFE2E8F0),
+                                    backgroundImage: state.driver.avatarUrl.isNotEmpty
+                                        ? NetworkImage(state.driver.avatarUrl)
+                                        : null,
+                                    child: state.driver.avatarUrl.isEmpty
+                                        ? const Icon(Icons.person_rounded, color: Color(0xFF64748B))
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              state.driver.name,
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w800,
+                                                color: primaryColor,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            const Icon(Icons.verified_rounded, size: 16, color: Color(0xFF22C55E)),
+                                          ],
+                                        ),
+                                        Text(
+                                          '${state.vehicle.typeLabel} • ${state.vehicle.plateLabel}',
+                                          style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13),
+                                        ),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.star_rounded, size: 14, color: Color(0xFFF59E0B)),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              state.driver.ratingLabel,
+                                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              state.driver.deliveriesLabel,
+                                              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Divider(height: 24, color: Color(0xFFF1F5F9)),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () => _callDriver(state.driver.phoneNumber),
+                                      icon: const Icon(Icons.call_rounded, size: 20),
+                                      label: const Text('Call Driver'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: primaryColor,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        elevation: 0,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () {}, // Chat placeholder
+                                      icon: const Icon(Icons.chat_bubble_rounded, size: 20),
+                                      label: const Text('Message'),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: primaryColor,
+                                        side: const BorderSide(color: Color(0xFFE2E8F0)),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Delivery Info
+                        Row(
+                          children: [
+                            _InfoChip(
+                              icon: Icons.water_damage_rounded,
+                              label: state.vehicle.capacityLabel,
+                              title: 'Volume',
+                            ),
+                            const SizedBox(width: 12),
+                            _InfoChip(
+                              icon: Icons.timer_rounded,
+                              label: state.estimatedArrival,
+                              title: 'ETA',
+                            ),
+                            const SizedBox(width: 12),
+                            _InfoChip(
+                              icon: Icons.payment_rounded,
+                              label: state.orderSummary.amountLabel,
+                              title: 'Payment',
+                            ),
+                          ],
+                        ),
+                        
+                        // Safety buffer for bottom navigation if any
+                        SizedBox(height: MediaQuery.of(context).padding.bottom + 10),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Image.network(
-                    state.mapImageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        Container(color: const Color(0xFFECEEF0)),
-                  ),
-                ),
-                Positioned(
-                  top: 20,
-                  left: 20,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF71F8E4),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          trackingState.orderId ?? state.orderId,
-                          style: const TextStyle(
-                            color: Color(0xFF00236F),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 20,
-                  right: 20,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.88),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const Text(
-                          'ESTIMATED ARRIVAL',
-                          style: TextStyle(
-                            color: Color(0xFF00687A),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        Text(
-                          state.estimatedArrivalClock,
-                          style: const TextStyle(
-                            color: Color(0xFF00236F),
-                            fontSize: 34,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.schedule_rounded,
-                              size: 14,
-                              color: Color(0xFF004941),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              state.estimatedArrivalLabel,
-                              style: const TextStyle(
-                                color: Color(0xFF64748B),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment(0, -0.18),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: 78,
-                            height: 78,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: const Color(0xFF00236F)
-                                  .withValues(alpha: 0.2),
-                            ),
-                          ),
-                          Container(
-                            width: 68,
-                            height: 68,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFF00236F),
-                            ),
-                            child: const Icon(
-                              Icons.local_shipping_rounded,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          state.truckBadgeLabel,
-                          style: const TextStyle(
-                            color: Color(0xFF00236F),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Align(
-                  alignment: const Alignment(-0.34, 0.18),
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF71F8E4),
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                    child: const Icon(
-                      Icons.location_on_rounded,
-                      size: 16,
-                      color: Color(0xFF00201C),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 110),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFFFFF),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
-              boxShadow: [
-                BoxShadow(
-                  color: Color.fromRGBO(0, 35, 111, 0.08),
-                  blurRadius: 32,
-                  offset: Offset(0, -12),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: Container(
-                    width: 48,
-                    height: 6,
-                    margin: const EdgeInsets.only(bottom: 18),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE0E3E5),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            statusTitle,
-                            style: const TextStyle(
-                              color: Color(0xFF00236F),
-                              fontSize: 30,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            statusSubtitle,
-                            style: const TextStyle(
-                              color: Color(0xFF64748B),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          if (trackingState.tracking != null) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              'Location: ${trackingState.tracking!.lat.toStringAsFixed(4)}, ${trackingState.tracking!.lng.toStringAsFixed(4)}',
-                              style: const TextStyle(
-                                color: Color(0xFF757682),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    Material(
-                      color: const Color(0xFFECEEF0),
-                      borderRadius: BorderRadius.circular(18),
-                      child: InkWell(
-                        onTap: () => _showMessage(
-                          context,
-                          'Driver calling will be connected next.',
-                        ),
-                        borderRadius: BorderRadius.circular(18),
-                        child: const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Icon(
-                            Icons.call_rounded,
-                            color: Color(0xFF264191),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF2F4F6),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Row(
-                          children: [
-                            Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(18),
-                                  child: Image.network(
-                                    state.driver.avatarUrl,
-                                    width: 56,
-                                    height: 56,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Container(
-                                      width: 56,
-                                      height: 56,
-                                      color: const Color(0xFFECEEF0),
-                                      child: const Icon(
-                                        Icons.person_rounded,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: -4,
-                                  right: -4,
-                                  child: Container(
-                                    width: 20,
-                                    height: 20,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF71F8E4),
-                                      border: Border.all(
-                                        color: const Color(0xFFF2F4F6),
-                                        width: 2,
-                                      ),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.verified_rounded,
-                                      size: 10,
-                                      color: Color(0xFF00201C),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    state.driver.name,
-                                    style: const TextStyle(
-                                      color: Color(0xFF00236F),
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    state.driver.roleLabel,
-                                    style: const TextStyle(
-                                      color: Color(0xFF64748B),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 4,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color:
-                              const Color(0xFF1E3A8A).withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color:
-                                const Color(0xFF1E3A8A).withValues(alpha: 0.05),
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                              'CAPACITY',
-                              style: TextStyle(
-                                color: Color(0xFF264191),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              state.vehicle.capacityLabel,
-                              style: const TextStyle(
-                                color: Color(0xFF00236F),
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    minHeight: 10,
-                    value: 0.65,
-                    backgroundColor: const Color(0xFFE6E8EA),
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      Color(0xFF1E3A8A),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () => context.go(RouteNames.payments),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF00236F),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          minimumSize: const Size.fromHeight(56),
-                        ),
-                        child: Text(
-                          state.orderSummary.ctaLabel,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    OutlinedButton(
-                      onPressed: () => _showMessage(
-                        context,
-                        'Support flow will be connected next.',
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF64748B),
-                        side: const BorderSide(color: Color(0xFFC5C5D3)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        minimumSize: const Size(96, 56),
-                      ),
-                      child: const Text(
-                        'Help',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          _BottomNav(state: state),
         ],
       ),
     );
@@ -602,174 +389,69 @@ class _TrackingScreenBody extends StatelessWidget {
   String _getStatusTitle(String status) {
     switch (status) {
       case 'ASSIGNED':
-        return 'Driver assigned';
+        return 'Partner Assigned';
       case 'ON_THE_WAY':
-        return 'Driver on the way';
+        return 'Tanker on the way';
       case 'DELIVERED':
-        return 'Delivered';
+        return 'Order Delivered';
+      case 'CANCELLED':
+        return 'Order Cancelled';
       default:
-        return 'Tracking';
+        return 'Tracking Order';
     }
   }
 
   String _getStatusSubtitle(String status) {
     switch (status) {
       case 'ASSIGNED':
-        return 'Your water tanker has been assigned';
+        return 'The driver is preparing your delivery';
       case 'ON_THE_WAY':
-        return 'Your water tanker is heading to your location';
+        return 'Heading towards your location now';
       case 'DELIVERED':
-        return 'Your water has been delivered';
+        return 'Thank you for using WaterBuddy!';
+      case 'CANCELLED':
+        return 'This order was cancelled';
       default:
-        return 'Tracking your order';
+        return 'Real-time status updates';
     }
   }
 }
 
-class _BottomNav extends StatelessWidget {
-  const _BottomNav({required this.state});
-
-  final AssignedOrderTracking state;
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 26),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.88),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(
-            top: BorderSide(
-              color: const Color(0xFFC5C5D3).withValues(alpha: 0.28),
-            ),
-          ),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: state.navItems.map((item) {
-              final isActive = item.id == 'book';
-              return _BottomNavItem(
-                item: item,
-                isActive: isActive,
-                onTap: () {
-                  switch (item.id) {
-                    case 'home':
-                      context.go(RouteNames.home);
-                      break;
-                    case 'history':
-                      context.go(RouteNames.orders);
-                      break;
-                    case 'book':
-                      break;
-                    case 'profile':
-                      context.go(RouteNames.profile);
-                      break;
-                  }
-                },
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BottomNavItem extends StatelessWidget {
-  const _BottomNavItem({
-    required this.item,
-    required this.isActive,
-    required this.onTap,
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+    required this.title,
   });
 
-  final TrackingNavItem item;
-  final bool isActive;
-  final VoidCallback onTap;
+  final IconData icon;
+  final String label;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    if (isActive) {
-      return Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Ink(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1E3A8A), Color(0xFF00236F)],
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(_iconFor(item.iconKey), color: Colors.white),
-                const SizedBox(height: 4),
-                Text(
-                  item.label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(16),
         ),
-      );
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(_iconFor(item.iconKey), color: const Color(0xFF94A3B8)),
-              const SizedBox(height: 4),
-              Text(
-                item.label,
-                style: const TextStyle(
-                  color: Color(0xFF94A3B8),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+        child: Column(
+          children: [
+            Icon(icon, size: 18, color: const Color(0xFF64748B)),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF0F2B5B)),
+            ),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+            ),
+          ],
         ),
       ),
     );
   }
-}
-
-IconData _iconFor(String iconKey) {
-  switch (iconKey) {
-    case 'history':
-      return Icons.history_rounded;
-    case 'water_drop':
-      return Icons.water_drop_rounded;
-    case 'person':
-      return Icons.person_rounded;
-    case 'home':
-    default:
-      return Icons.home_rounded;
-  }
-}
-
-void _showMessage(BuildContext context, String message) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message)));
 }

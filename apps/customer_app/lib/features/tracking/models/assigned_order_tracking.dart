@@ -48,6 +48,7 @@ class DriverAssignment {
     required this.ratingLabel,
     required this.idLabel,
     required this.deliveriesLabel,
+    required this.phoneNumber,
   });
 
   final String name;
@@ -56,6 +57,7 @@ class DriverAssignment {
   final String ratingLabel;
   final String idLabel;
   final String deliveriesLabel;
+  final String phoneNumber;
 }
 
 class VehicleAssignment {
