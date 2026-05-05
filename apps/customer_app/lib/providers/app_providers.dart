@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../models/order.dart' as app_order;
 import '../core/services/auth/auth_service.dart';
 import '../core/services/orders/order_service.dart';
 import '../features/auth/auth_controller.dart';
@@ -40,6 +41,24 @@ final orderServiceProvider =
 final authStateProvider = StreamProvider<User?>(
   (ref) => ref.watch(authServiceProvider).authStateChanges(),
 );
+
+final activeOrderProvider = StreamProvider<app_order.Order?>((ref) {
+  final user = ref.watch(authStateProvider).value;
+  if (user == null) return Stream.value(null);
+
+  return ref.watch(orderServiceProvider).watchCustomerOrders(user.uid).map((orders) {
+    // Find first order that is NOT in a terminal state
+    try {
+      return orders.firstWhere((o) => 
+        o.status == 'SEARCHING' || 
+        o.status == 'ASSIGNED' || 
+        o.status == 'ON_THE_WAY'
+      );
+    } catch (_) {
+      return null;
+    }
+  });
+});
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(

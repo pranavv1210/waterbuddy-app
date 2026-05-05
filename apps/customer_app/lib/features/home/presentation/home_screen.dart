@@ -12,6 +12,7 @@ import '../../../routes/route_names.dart';
 import '../models/home_dashboard.dart';
 import '../providers/home_providers.dart';
 import '../providers/order_creation_provider.dart';
+import '../../../providers/app_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -20,6 +21,18 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(homeDashboardProvider);
     final selectedTankId = ref.watch(selectedTankIdProvider) ?? 'medium';
+
+    // Listen for active orders to redirect if app was closed or user navigated away
+    ref.listen(activeOrderProvider, (previous, next) {
+      final activeOrder = next.value;
+      if (activeOrder != null) {
+        if (activeOrder.status == 'SEARCHING') {
+          context.go('${RouteNames.searching}?orderId=${activeOrder.id}');
+        } else {
+          context.go('${RouteNames.tracking}?orderId=${activeOrder.id}');
+        }
+      }
+    });
 
     return _HomeScreenBody(
       state: dashboard,
@@ -505,28 +518,35 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     );
   }
 
+  bool _isBooking = false;
+
   Widget _buildBookButton(Color primary) {
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: () async {
-          final orderController = ref.read(orderCreationControllerProvider.notifier);
-          final selectedOption = tankOptionsData.firstWhere((t) => t['id'] == widget.selectedTankId);
-          
-          final orderId = await orderController.createOrder(
-            tankSize: (selectedOption['litres'] as int).toDouble(),
-            tankLabel: selectedOption['size'],
-            location: {
-              'latitude': _selectedLocation?.latitude ?? 0.0,
-              'longitude': _selectedLocation?.longitude ?? 0.0,
-              'address': _currentAddress ?? '',
-            },
-            paymentType: 'COD',
-          );
-          
-          if (orderId != null && mounted) {
-            context.go('${RouteNames.searching}?orderId=$orderId');
+        onPressed: _isBooking ? null : () async {
+          setState(() => _isBooking = true);
+          try {
+            final orderController = ref.read(orderCreationControllerProvider.notifier);
+            final selectedOption = tankOptionsData.firstWhere((t) => t['id'] == widget.selectedTankId);
+            
+            final orderId = await orderController.createOrder(
+              tankSize: (selectedOption['litres'] as int).toDouble(),
+              tankLabel: selectedOption['size'],
+              location: {
+                'latitude': _selectedLocation?.latitude ?? 0.0,
+                'longitude': _selectedLocation?.longitude ?? 0.0,
+                'address': _currentAddress ?? '',
+              },
+              paymentType: 'COD',
+            );
+            
+            if (orderId != null && mounted) {
+              context.go('${RouteNames.searching}?orderId=$orderId');
+            }
+          } finally {
+            if (mounted) setState(() => _isBooking = false);
           }
         },
         style: ElevatedButton.styleFrom(
@@ -535,10 +555,12 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0,
         ),
-        child: const Text(
-          'Book Water',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-        ),
+        child: _isBooking 
+          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+          : const Text(
+            'Book Water',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          ),
       ),
     );
   }

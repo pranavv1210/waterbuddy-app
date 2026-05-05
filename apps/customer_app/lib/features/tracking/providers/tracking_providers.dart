@@ -11,11 +11,15 @@ class TrackingController extends StateNotifier<TrackingState> {
   TrackingController(this._orderService) : super(const TrackingState());
 
   final OrderService _orderService;
+  StreamSubscription? _subscription;
 
   void startWatchingOrder(String orderId) {
+    // Prevent duplicate subscriptions
+    _subscription?.cancel();
+    
     state = state.copyWith(orderId: orderId, isLoading: true, clearError: true);
 
-    _orderService.watchOrder(orderId).listen(
+    _subscription = _orderService.watchOrder(orderId).listen(
       (order) {
         if (order != null) {
           debugPrint('Tracking order status: ${order.status}');
@@ -38,6 +42,12 @@ class TrackingController extends StateNotifier<TrackingState> {
 
   void clearError() {
     state = state.copyWith(clearError: true);
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 }
 
@@ -75,12 +85,12 @@ class TrackingState {
 }
 
 final trackingControllerProvider =
-    StateNotifierProvider<TrackingController, TrackingState>((ref) {
+    StateNotifierProvider.autoDispose<TrackingController, TrackingState>((ref) {
   final orderService = ref.watch(orderServiceProvider);
   return TrackingController(orderService);
 });
 
-final orderStreamProvider = StreamProvider.family<app_order.Order?, String>((ref, orderId) {
+final orderStreamProvider = StreamProvider.autoDispose.family<app_order.Order?, String>((ref, orderId) {
   return ref.watch(orderServiceProvider).watchOrder(orderId);
 });
 

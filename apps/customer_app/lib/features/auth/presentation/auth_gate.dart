@@ -17,17 +17,32 @@ class AuthGate extends ConsumerWidget {
     return authState.when(
       data: (user) {
         if (user != null) {
-          // Navigate to home after frame is built
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) {
-              context.go(RouteNames.home);
-            }
-          });
-          // Show loading while navigating
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+          final activeOrderAsync = ref.watch(activeOrderProvider);
+          
+          return activeOrderAsync.when(
+            data: (activeOrder) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted) {
+                  if (activeOrder != null) {
+                    if (activeOrder.status == 'SEARCHING') {
+                      context.go('${RouteNames.searching}?orderId=${activeOrder.id}');
+                    } else {
+                      context.go('${RouteNames.tracking}?orderId=${activeOrder.id}');
+                    }
+                  } else {
+                    context.go(RouteNames.home);
+                  }
+                }
+              });
+              return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            },
+            error: (_, __) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted) context.go(RouteNames.home);
+              });
+              return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            },
+            loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
           );
         }
 

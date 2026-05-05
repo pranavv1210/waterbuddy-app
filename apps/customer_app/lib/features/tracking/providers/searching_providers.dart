@@ -129,7 +129,7 @@ class SearchingController extends StateNotifier<SearchingState> {
 }
 
 final searchingControllerProvider =
-    StateNotifierProvider<SearchingController, SearchingState>((ref) {
+    StateNotifierProvider.autoDispose<SearchingController, SearchingState>((ref) {
   final orderService = ref.watch(orderServiceProvider);
   return SearchingController(orderService);
 });

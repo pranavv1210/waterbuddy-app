@@ -46,6 +46,13 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
     final searchingState = ref.watch(searchingControllerProvider);
     final uiState = ref.watch(searchingTankersProvider);
 
+    // Listen for status changes to trigger navigation
+    ref.listen(searchingControllerProvider, (previous, next) {
+      if (next.orderStatus == 'ASSIGNED' && next.orderId != null) {
+        context.go('${RouteNames.tracking}?orderId=${next.orderId}');
+      }
+    });
+
     if (searchingState.errorMessage != null) {
       return Scaffold(
         backgroundColor: const Color(0xFFF7F9FB),
@@ -86,13 +93,6 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
           context.go(RouteNames.home);
         },
       );
-    }
-
-    // Navigate to tracking screen when order is assigned
-    if (searchingState.orderStatus == 'ASSIGNED' && searchingState.orderId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('${RouteNames.tracking}?orderId=${searchingState.orderId}');
-      });
     }
 
     return _SearchingBody(
