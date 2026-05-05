@@ -34,6 +34,16 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     final trackingState = ref.watch(trackingControllerProvider);
     final uiState = ref.watch(assignedOrderTrackingProvider);
 
+    // Listen for status changes to trigger navigation
+    ref.listen(trackingControllerProvider, (previous, next) {
+      if (next.orderStatus == 'DELIVERED') {
+        final orderId = next.orderId;
+        if (orderId != null) {
+          context.go('${RouteNames.orderComplete}?orderId=$orderId');
+        }
+      }
+    });
+
     if (trackingState.errorMessage != null) {
       return Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),

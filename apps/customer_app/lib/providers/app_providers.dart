@@ -13,6 +13,7 @@ import '../features/orders/presentation/orders_screen.dart';
 import '../features/payments/presentation/payments_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/splash/presentation/splash_screen.dart';
+import '../features/tracking/presentation/order_complete_screen.dart';
 import '../features/tracking/presentation/searching_tankers_screen.dart';
 import '../features/tracking/presentation/tracking_screen.dart';
 import '../routes/route_names.dart';
@@ -79,6 +80,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.payments,
         builder: (_, __) => const PaymentsScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.orderComplete,
+        builder: (_, __) => const OrderCompleteScreen(),
       ),
     ],
   );
