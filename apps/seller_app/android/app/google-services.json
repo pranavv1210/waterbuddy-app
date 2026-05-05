@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "979686341816-0pv3g683i9aq7it0d93bgem2hvm9ajcb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.waterbuddy.customer",
+            "certificate_hash": "ca57d5e1f34de4127f30b8afb338fce043622495"
+          }
+        },
+        {
           "client_id": "979686341816-gi2haph462optrduomb8m8rqm99jfc54.apps.googleusercontent.com",
           "client_type": 3
         }

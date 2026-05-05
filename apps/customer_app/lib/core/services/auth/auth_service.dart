@@ -59,11 +59,18 @@ class AuthService {
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      debugPrint("GOOGLE SIGN IN ERROR: $e");
+      debugPrint("GOOGLE SIGN IN FIREBASE ERROR: ${e.code} - ${e.message}");
       throw AuthFailure(_authErrorMessage(e));
     } catch (e) {
-      debugPrint("GOOGLE SIGN IN ERROR: $e");
-      throw AuthFailure('Google sign-in failed. Please try again.');
+      debugPrint("GOOGLE SIGN IN UNEXPECTED ERROR: $e");
+      // If it's a PlatformException (e.g. from google_sign_in), it might have a helpful message
+      String message = 'Google sign-in failed. Please try again.';
+      if (e.toString().contains('sign_in_failed')) {
+        message = 'Google sign-in failed (Error 12500/10). Please ensure SHA-1 is added to Firebase Console and Google Play Services are updated.';
+      } else if (e.toString().contains('network_error')) {
+        message = 'Network error during Google sign-in. Please check your connection.';
+      }
+      throw AuthFailure(message);
     }
   }
 
