@@ -1,5 +1,6 @@
-package com.example.waterbuddy_seller_app
+package com.waterbuddy.seller
 
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity : FlutterActivity()
+

@@ -46,11 +46,14 @@ class _AppInitializerState extends State<AppInitializer> {
           firestore: FirebaseFirestore.instance,
           auth: FirebaseAuth.instance,
         );
-        await fcm.initialize();
-        print('[APP INITIALIZER] FCM initialized');
+        // Do not block app startup
+        fcm.initialize().catchError((e) {
+          print('[APP INITIALIZER] FCM init warning: $e');
+        });
+        print('[APP INITIALIZER] FCM initialization started');
       } catch (e) {
         // Non-fatal — app works without push notifications
-        print('[APP INITIALIZER] FCM init warning: $e');
+        print('[APP INITIALIZER] FCM setup error: $e');
       }
 
       if (mounted) {
