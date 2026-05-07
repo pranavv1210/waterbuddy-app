@@ -663,7 +663,7 @@ class _CtaButtons extends StatelessWidget {
             child: ElevatedButton.icon(
               onPressed: () {
                 if (order.status == 'SEARCHING') {
-                  context.go('${RouteNames.searching}?orderId=${order.id}');
+                  context.go(RouteNames.home);
                 } else {
                   context.go('${RouteNames.tracking}?orderId=${order.id}');
                 }

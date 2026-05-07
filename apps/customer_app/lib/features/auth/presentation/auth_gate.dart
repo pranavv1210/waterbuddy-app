@@ -25,7 +25,7 @@ class AuthGate extends ConsumerWidget {
                 if (context.mounted) {
                   if (activeOrder != null) {
                     if (activeOrder.status == 'SEARCHING') {
-                      context.go('${RouteNames.searching}?orderId=${activeOrder.id}');
+                      context.go(RouteNames.home);
                     } else {
                       context.go('${RouteNames.tracking}?orderId=${activeOrder.id}');
                     }

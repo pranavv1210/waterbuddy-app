@@ -34,7 +34,7 @@ class _WaterBuddyCustomerAppState
           router.go('${RouteNames.tracking}?orderId=$orderId');
           break;
         case 'searching':
-          router.go('${RouteNames.searching}?orderId=$orderId');
+          router.go(RouteNames.home);
           break;
         case 'order_complete':
           router.go('${RouteNames.orderComplete}?orderId=$orderId');

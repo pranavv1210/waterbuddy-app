@@ -103,7 +103,7 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
   }
 }
 
-class _SearchingBody extends StatelessWidget {
+class _SearchingBody extends ConsumerWidget {
   const _SearchingBody({
     required this.state,
     required this.animation,
@@ -115,7 +115,7 @@ class _SearchingBody extends StatelessWidget {
   final String? orderId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const primaryColor = Color(0xFF0F2B5B);
     const sonarColor = Color(0xFF0EA5E9);
 
@@ -333,7 +333,12 @@ class _SearchingBody extends StatelessWidget {
                       width: double.infinity,
                       height: 56,
                       child: TextButton(
-                        onPressed: () => context.go(RouteNames.home),
+                        onPressed: () async {
+                          if (orderId != null) {
+                            await ref.read(searchingControllerProvider.notifier).cancelOrder();
+                          }
+                          if (context.mounted) context.go(RouteNames.home);
+                        },
                         style: TextButton.styleFrom(
                           foregroundColor: const Color(0xFFEF4444),
                           shape: RoundedRectangleBorder(
