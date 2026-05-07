@@ -21,7 +21,7 @@ class AdminScreen extends ConsumerWidget {
   Future<void> _logout(BuildContext context, WidgetRef ref) async {
     await ref.read(firebaseAuthProvider).signOut();
     if (context.mounted) {
-      context.go(RouteNames.login);
+      context.go(RouteNames.auth);
     }
   }
 
