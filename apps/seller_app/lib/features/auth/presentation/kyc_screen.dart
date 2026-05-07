@@ -20,8 +20,9 @@ class _KycScreenState extends ConsumerState<KycScreen> {
   final _nameCtrl = TextEditingController();
   final _aadhaarCtrl = TextEditingController();
   final _panCtrl = TextEditingController();
+  final _dlCtrl = TextEditingController(); // Added DL
   final _vehicleCtrl = TextEditingController();
-  String _tankerSize = '500';
+  String _tankerSize = '10000'; // Default to 10000L
   
   bool _isLoading = false;
 
@@ -30,6 +31,7 @@ class _KycScreenState extends ConsumerState<KycScreen> {
     _nameCtrl.dispose();
     _aadhaarCtrl.dispose();
     _panCtrl.dispose();
+    _dlCtrl.dispose();
     _vehicleCtrl.dispose();
     super.dispose();
   }
@@ -50,8 +52,9 @@ class _KycScreenState extends ConsumerState<KycScreen> {
         'name': _nameCtrl.text.trim(),
         'aadhaarNumber': _aadhaarCtrl.text.trim(),
         'panNumber': _panCtrl.text.trim().toUpperCase(),
+        'drivingLicense': _dlCtrl.text.trim().toUpperCase(),
         'vehicleNumber': _vehicleCtrl.text.trim().toUpperCase(),
-        'tankerSize': int.tryParse(_tankerSize) ?? 500,
+        'tankerCapacity': int.tryParse(_tankerSize) ?? 10000,
         'kycStatus': 'VERIFIED',
         'isOnline': false,
         'latitude': null,
@@ -202,8 +205,11 @@ class _KycScreenState extends ConsumerState<KycScreen> {
                     _buildTextField(_panCtrl, 'PAN Number', Icons.credit_card_outlined, cap: TextCapitalization.characters),
                     
                     const SizedBox(height: 24),
-                    const Text('VEHICLE DETAILS', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w800, letterSpacing: 1.5, fontSize: 12)),
+                    const Text('VEHICLE & LICENSE DETAILS', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w800, letterSpacing: 1.5, fontSize: 12)),
                     const SizedBox(height: 16),
+                    
+                    _buildTextField(_dlCtrl, 'Driving License Number', Icons.badge_outlined, cap: TextCapitalization.characters),
+                    _buildUploadButton('Upload Driving License', Icons.image_outlined),
                     
                     _buildTextField(_vehicleCtrl, 'Vehicle Registration (RC) Number', Icons.local_shipping, cap: TextCapitalization.characters),
                     
@@ -222,10 +228,10 @@ class _KycScreenState extends ConsumerState<KycScreen> {
                           dropdownColor: const Color(0xFF1E293B),
                           icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF10B981)),
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
-                          items: ['500', '1000', '2000', '5000'].map((String value) {
+                          items: ['10000', '15000', '20000'].map((String value) {
                             return DropdownMenuItem<String>(
                               value: value,
-                              child: Text('$value Liters Capacity'),
+                              child: Text('$value Litres Capacity'),
                             );
                           }).toList(),
                           onChanged: (newValue) {

@@ -154,11 +154,22 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     const primary = Color(0xFF0F2B5B);
     const accent = Color(0xFF0EA5E9);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      drawer: _buildDrawer(user),
-      body: Stack(
-        children: [
+    return PopScope(
+      canPop: !_isLocationConfirmed && widget.activeOrder?.status != 'SEARCHING',
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        
+        if (widget.activeOrder?.status == 'SEARCHING') {
+           await ref.read(searchingControllerProvider.notifier).cancelOrder();
+        } else if (_isLocationConfirmed) {
+           setState(() => _isLocationConfirmed = false);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        drawer: _buildDrawer(user),
+        body: Stack(
+          children: [
           // 1. FULL SCREEN MAP BACKGROUND
           Positioned.fill(
             child: FlutterMap(
@@ -943,10 +954,9 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet>
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Restart search logic or reset order status could go here
-                      // For now just cancel / go home which will remove active order
-                      context.go(RouteNames.home); 
+                    onPressed: () async {
+                      // Cancel the order so activeOrderProvider emits null and we go back to normal view
+                      await ref.read(searchingControllerProvider.notifier).cancelOrder();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,

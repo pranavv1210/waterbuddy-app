@@ -71,7 +71,7 @@ final sellerLocationProvider = StreamProvider.autoDispose((ref) {
   return ref.watch(firestoreProvider).collection('sellers').doc(sellerId).snapshots().map((doc) {
     if (!doc.exists) return null;
     final data = doc.data() as Map<String, dynamic>;
-    return (data['latitude'] as double?, data['longitude'] as double?);
+    return (data['latitude'] as double?, data['longitude'] as double?, data['tankerCapacity'] as int?);
   });
 });
 
@@ -87,6 +87,7 @@ final onlineSellersProvider = StreamProvider.autoDispose((ref) {
               'id': doc.id,
               'lat': data['latitude'] as double?,
               'lng': data['longitude'] as double?,
+              'tankerCapacity': data['tankerCapacity'] as int?,
             };
           }).toList());
 });
@@ -121,6 +122,7 @@ final searchingOrdersProvider = StreamProvider.autoDispose<List<Order>>((ref) {
 
   final sellerLat = location.$1!;
   final sellerLng = location.$2!;
+  final sellerCapacity = location.$3 ?? 10000; // Default to 10000 if not set
 
   return ref.watch(orderServiceProvider).watchSearchingOrders().map((orders) {
     return orders.where((order) {
@@ -130,6 +132,11 @@ final searchingOrdersProvider = StreamProvider.autoDispose<List<Order>>((ref) {
       final orderLng = order.location['longitude'] as double?;
 
       if (orderLat == null || orderLng == null) return false;
+      
+      // Filter by Tank Size: Seller's tank must be >= requested tank size
+      if (sellerCapacity < order.tankSize) {
+        return false;
+      }
 
       // 1. Calculate distance for this seller
       final currentSellerDistance = Geolocator.distanceBetween(
@@ -142,9 +149,13 @@ final searchingOrdersProvider = StreamProvider.autoDispose<List<Order>>((ref) {
       // 2. Initial distance check (5km) - existing rule
       if (currentSellerDistance > 5000) return false;
 
-      // 3. COMPETITIVE DISPATCH: Is this seller in the top 5 closest?
-      // First, calculate distances for ALL online sellers to this specific order
+      // 3. COMPETITIVE DISPATCH: Is this seller in the top 5 closest among capable sellers?
+      // First, calculate distances for ALL capable online sellers to this specific order
       final sellerDistances = allSellers
+          .where((s) {
+            final capacity = s['tankerCapacity'] as int? ?? 10000;
+            return capacity >= order.tankSize;
+          })
           .map((s) {
             final lat = s['lat'] as double?;
             final lng = s['lng'] as double?;
@@ -161,7 +172,7 @@ final searchingOrdersProvider = StreamProvider.autoDispose<List<Order>>((ref) {
       // Sort sellers by distance to this order
       sellerDistances.sort((a, b) => (a['distance'] as double).compareTo(b['distance'] as double));
 
-      // Get top 5 closest sellers
+      // Get top 5 closest capable sellers
       final topSellerIds = sellerDistances.take(5).map((s) => s['id']).toList();
 
       // Only show if current seller is in that top list
