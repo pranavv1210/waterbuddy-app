@@ -546,125 +546,140 @@ class _NewRequestOverlayState extends ConsumerState<_NewRequestOverlay>
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black.withOpacity(0.6), // Dim background
+      color: Colors.black.withOpacity(0.4), // Dim background to focus on bottom sheet
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: const [
+          width: double.infinity,
+          height: MediaQuery.of(context).size.height * 0.65, // takes up 65% of screen
+          padding: const EdgeInsets.only(top: 24, left: 16, right: 16, bottom: 32),
+          decoration: const BoxDecoration(
+            color: Color(0xFF1E293B), // Dark slate like Uber
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
               BoxShadow(
-                color: Colors.black45,
+                color: Colors.black54,
                 blurRadius: 32,
-                offset: Offset(0, 16),
+                offset: Offset(0, -8),
               ),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Pulse radar icon
+              // Top badge
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.1),
-                  shape: BoxShape.circle,
+                  color: const Color(0xFF334155),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Icon(Icons.settings_input_antenna, color: Color(0xFF10B981), size: 40),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'NEW REQUEST',
-                style: TextStyle(
-                  color: Color(0xFF064E3B),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2,
+                child: const Text(
+                  'WATERBUDDY DELIVERY',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 2,
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
-              // Price estimation
+              const SizedBox(height: 32),
+              
+              // Time and distance estimation
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  const Text('est. ', style: TextStyle(color: Color(0xFF64748B), fontSize: 16)),
-                  Text(
-                    '₹${(widget.order.tankSize * 0.15).toStringAsFixed(0)}', // Rough dummy estimation for display
-                    style: const TextStyle(
-                      color: Color(0xFF0F172A),
-                      fontSize: 48,
+                  const Text(
+                    '5',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 56,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -2,
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  const Text('min', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 20, fontWeight: FontWeight.w600)),
+                  const SizedBox(width: 16),
+                  Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF475569), shape: BoxShape.circle)),
+                  const SizedBox(width: 16),
+                  const Text(
+                    '1.2',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Text('km', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 16, fontWeight: FontWeight.w600)),
                 ],
               ),
-              const SizedBox(height: 24),
-              // Details
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on, color: Color(0xFF334155)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${widget.order.tankSize}L Tanker Delivery',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.order.location['address'] ?? 'Customer Location',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              
+              const SizedBox(height: 16),
+              
+              // Tank Size and Location
+              Text(
+                '${widget.order.tankSize}L Tanker Request',
+                style: const TextStyle(
+                  color: Color(0xFF10B981), // Emerald green
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 32),
-              // Accept button with timer ring
+              const SizedBox(height: 8),
+              Text(
+                widget.order.location['address'] ?? 'Customer Location',
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFFCBD5E1),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              
+              const Spacer(),
+              
+              // Massive circular accept button with timer
               GestureDetector(
                 onTap: _isAccepting ? null : _acceptOrder,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     SizedBox(
-                      width: 100,
-                      height: 100,
+                      width: 140,
+                      height: 140,
                       child: AnimatedBuilder(
                         animation: _timerController,
                         builder: (context, child) {
                           return CircularProgressIndicator(
                             value: _timerController.value,
-                            strokeWidth: 6,
-                            backgroundColor: const Color(0xFFE2E8F0),
+                            strokeWidth: 8,
+                            backgroundColor: const Color(0xFF334155),
                             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
                           );
                         },
                       ),
                     ),
                     Container(
-                      width: 80,
-                      height: 80,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF10B981),
+                      width: 110,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981), // Emerald green
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF10B981).withOpacity(0.4),
+                            blurRadius: 24,
+                            spreadRadius: 8,
+                          ),
+                        ],
                       ),
                       child: _isAccepting
                           ? const Center(child: CircularProgressIndicator(color: Colors.white))
@@ -675,7 +690,9 @@ class _NewRequestOverlayState extends ConsumerState<_NewRequestOverlay>
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 12,
+                                  fontSize: 16,
+                                  height: 1.2,
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ),
@@ -683,14 +700,21 @@ class _NewRequestOverlayState extends ConsumerState<_NewRequestOverlay>
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-              TextButton(
-                onPressed: () {
-                  // Ignore logic (would normally call API to reject)
+              
+              const SizedBox(height: 32),
+              
+              // Decline button
+              GestureDetector(
+                onTap: () {
+                  // Ignore logic
                 },
                 child: const Text(
                   'Decline',
-                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
