@@ -10,6 +10,7 @@ import '../core/services/location/location_tracking_service.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/presentation/auth_gate.dart';
 import '../features/auth/otp_screen.dart';
+import '../features/auth/presentation/kyc_screen.dart';
 import '../features/earnings/presentation/earnings_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/orders/presentation/orders_screen.dart';
@@ -67,6 +68,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.otp,
         builder: (_, __) => const OtpScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.kyc,
+        builder: (_, __) => const KycScreen(),
       ),
       GoRoute(
         path: RouteNames.home,

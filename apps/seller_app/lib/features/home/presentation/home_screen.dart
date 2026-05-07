@@ -22,6 +22,53 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A), // Dark map background
+      drawer: Drawer(
+        backgroundColor: const Color(0xFF0F172A),
+        child: Column(
+          children: [
+            const UserAccountsDrawerHeader(
+              decoration: BoxDecoration(color: Color(0xFF064E3B)),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.local_shipping, color: Color(0xFF064E3B), size: 40),
+              ),
+              accountName: Text('WaterBuddy Partner', style: TextStyle(fontWeight: FontWeight.bold)),
+              accountEmail: Text('Verified Partner • Active'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home, color: Colors.white),
+              title: const Text('Home', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.receipt_long, color: Colors.white),
+              title: const Text('Earnings', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                context.go(RouteNames.earnings);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person, color: Colors.white),
+              title: const Text('Profile', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                context.go(RouteNames.profile);
+              },
+            ),
+            const Spacer(),
+            const Divider(color: Color(0xFF334155)),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.redAccent),
+              title: const Text('Logout', style: TextStyle(color: Colors.redAccent)),
+              onTap: () {
+                ref.read(authServiceProvider).signOut();
+              },
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
       body: Stack(
         children: [
           // ── Simulated Map Layer ──
@@ -29,18 +76,36 @@ class HomeScreen extends ConsumerWidget {
             child: _SimulatedMapBackground(isOnline: isOnline),
           ),
 
-          // ── Top Online/Offline Toggle ──
+          // ── Top Elements: Hamburger & Online Toggle ──
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: _AvailabilityToggle(
-                  isOnline: isOnline,
-                  onChanged: (value) {
-                    ref.read(sellerAvailabilityProvider.notifier).setOnline(value);
-                  },
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Builder(
+                    builder: (ctx) => Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))],
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.menu, color: Color(0xFF0F172A)),
+                        onPressed: () => Scaffold.of(ctx).openDrawer(),
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  _AvailabilityToggle(
+                    isOnline: isOnline,
+                    onChanged: (value) {
+                      ref.read(sellerAvailabilityProvider.notifier).setOnline(value);
+                    },
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 48), // Balance for centering the toggle
+                ],
               ),
             ),
           ),

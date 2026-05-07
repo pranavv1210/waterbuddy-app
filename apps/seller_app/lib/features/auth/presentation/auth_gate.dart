@@ -17,16 +17,26 @@ class AuthGate extends ConsumerWidget {
     return authState.when(
       data: (user) {
         if (user != null) {
-          // Navigate to home after frame is built
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) {
-              context.go(RouteNames.home);
+          // Check KYC Status
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            if (!context.mounted) return;
+            
+            try {
+              final doc = await ref.read(firestoreProvider).collection('sellers').doc(user.uid).get();
+              if (doc.exists && doc.data()?['kycStatus'] == 'VERIFIED') {
+                if (context.mounted) context.go(RouteNames.home);
+              } else {
+                if (context.mounted) context.go(RouteNames.kyc);
+              }
+            } catch (e) {
+              if (context.mounted) context.go(RouteNames.kyc); // Default to KYC on error
             }
           });
           // Show loading while navigating
           return const Scaffold(
+            backgroundColor: Color(0xFF020617),
             body: Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(color: Color(0xFF10B981)),
             ),
           );
         }
