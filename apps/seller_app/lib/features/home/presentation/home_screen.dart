@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,8 +7,6 @@ import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import '../../../models/order.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
-import '../../../widgets/async_state_view.dart';
-import '../models/seller_dashboard.dart';
 import '../providers/home_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -15,103 +14,66 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dashboardState = ref.watch(sellerDashboardProvider);
     final searchingOrders = ref.watch(searchingOrdersProvider);
     final activeOrders = ref.watch(activeOrdersProvider);
-
-    return dashboardState.when(
-      data: (dashboard) => _SellerDashboardView(
-        dashboard: dashboard,
-        searchingOrders: searchingOrders,
-        activeOrders: activeOrders,
-      ),
-      loading: () => const Scaffold(
-        body: SafeArea(
-          child: AsyncStateView(
-            isLoading: true,
-            hasError: false,
-            child: SizedBox.shrink(),
-          ),
-        ),
-      ),
-      error: (_, __) => const Scaffold(
-        body: SafeArea(
-          child: AsyncStateView(
-            isLoading: false,
-            hasError: true,
-            child: SizedBox.shrink(),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SellerDashboardView extends ConsumerWidget {
-  const _SellerDashboardView({
-    required this.dashboard,
-    required this.searchingOrders,
-    required this.activeOrders,
-  });
-
-  final SellerDashboard dashboard;
-  final AsyncValue<List<Order>> searchingOrders;
-  final AsyncValue<List<Order>> activeOrders;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
     final isOnline = ref.watch(sellerAvailabilityProvider);
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final currentDashboard = dashboard.copyWith(
-      isOnline: isOnline,
-      statusTitle: isOnline ? 'You are Online' : 'You are Offline',
-      statusMessage: isOnline
-          ? 'You are visible to customers and can receive tanker requests.'
-          : 'Turn availability back on to receive nearby tanker requests.',
-    );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FB),
+      backgroundColor: const Color(0xFF0F172A), // Dark map background
       body: Stack(
         children: [
+          // ── Simulated Map Layer ──
+          Positioned.fill(
+            child: _SimulatedMapBackground(isOnline: isOnline),
+          ),
+
+          // ── Top Online/Offline Toggle ──
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 128),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _TopBar(dashboard: currentDashboard),
-                  const SizedBox(height: 24),
-                  _AvailabilityToggle(
-                    isOnline: isOnline,
-                    onChanged: (value) {
-                      ref.read(sellerAvailabilityProvider.notifier).setOnline(value);
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  _EarningsOverview(dashboard: currentDashboard, colors: colors),
-                  const SizedBox(height: 28),
-                  _StatusArea(dashboard: currentDashboard),
-                  const SizedBox(height: 28),
-                  _ActiveOrdersSection(activeOrders: activeOrders),
-                  const SizedBox(height: 28),
-                  _SearchingOrdersSection(searchingOrders: searchingOrders),
-                ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: _AvailabilityToggle(
+                  isOnline: isOnline,
+                  onChanged: (value) {
+                    ref.read(sellerAvailabilityProvider.notifier).setOnline(value);
+                  },
+                ),
               ),
             ),
           ),
+
+          // ── Bottom Sheet (Earnings / Status) ──
           Align(
             alignment: Alignment.bottomCenter,
-            child: _BottomNavBar(
-              currentRoute: RouteNames.home,
-              onTap: (route) {
-                if (route == RouteNames.home) {
-                  return;
-                }
-                context.go(route);
-              },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _StatusBottomSheet(
+                  isOnline: isOnline,
+                  activeOrders: activeOrders,
+                ),
+                _BottomNavBar(
+                  currentRoute: RouteNames.home,
+                  onTap: (route) {
+                    if (route != RouteNames.home) {
+                      context.go(route);
+                    }
+                  },
+                ),
+              ],
             ),
+          ),
+
+          // ── New Request Overlay (Uber Style) ──
+          searchingOrders.when(
+            data: (orders) {
+              if (!isOnline || orders.isEmpty) return const SizedBox.shrink();
+              final request = orders.first;
+              return _NewRequestOverlay(order: request);
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
           ),
         ],
       ),
@@ -119,481 +81,342 @@ class _SellerDashboardView extends ConsumerWidget {
   }
 }
 
-class _TopBar extends StatelessWidget {
-  const _TopBar({required this.dashboard});
+// ─────────────────────────────────────────────────────────────────────────────
+// Simulated Map Background
+// ─────────────────────────────────────────────────────────────────────────────
+class _SimulatedMapBackground extends StatefulWidget {
+  final bool isOnline;
+  const _SimulatedMapBackground({required this.isOnline});
 
-  final SellerDashboard dashboard;
+  @override
+  State<_SimulatedMapBackground> createState() => _SimulatedMapBackgroundState();
+}
+
+class _SimulatedMapBackgroundState extends State<_SimulatedMapBackground>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.5).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: Image.network(
-            dashboard.avatarUrl,
-            width: 44,
-            height: 44,
-            fit: BoxFit.cover,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                dashboard.businessName,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.8,
-                  color: Color(0xFF6B7280),
+    return CustomPaint(
+      painter: _MapGridPainter(),
+      child: Center(
+        child: AnimatedBuilder(
+          animation: _pulseAnimation,
+          builder: (context, child) {
+            return Container(
+              width: 32 * (widget.isOnline ? _pulseAnimation.value : 1.0),
+              height: 32 * (widget.isOnline ? _pulseAnimation.value : 1.0),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.isOnline
+                    ? const Color(0xFF10B981).withOpacity(0.3)
+                    : const Color(0xFFEF4444).withOpacity(0.3),
+              ),
+              child: Center(
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: widget.isOnline ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.isOnline
+                            ? const Color(0xFF10B981).withOpacity(0.5)
+                            : const Color(0xFFEF4444).withOpacity(0.5),
+                        blurRadius: 12,
+                        spreadRadius: 4,
+                      )
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                dashboard.sellerName,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F2E74),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF71F8E4).withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF71F8E4),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                dashboard.isOnline ? 'ONLINE' : 'OFFLINE',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.8,
-                  color: dashboard.isOnline
-                      ? const Color(0xFF005048)
-                      : const Color(0xFF757682),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        const Icon(
-          Icons.sensors_outlined,
-          color: Color(0xFF0F2E74),
-        ),
-      ],
+      ),
     );
   }
 }
 
+class _MapGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF1E293B)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    const double spacing = 60;
+    
+    // Draw vertical lines
+    for (double i = 0; i < size.width; i += spacing) {
+      canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
+    }
+    
+    // Draw horizontal lines
+    for (double i = 0; i < size.height; i += spacing) {
+      canvas.drawLine(Offset(0, i), Offset(size.width, i), paint);
+    }
+
+    // Draw some random "roads" to look like a map
+    final roadPaint = Paint()
+      ..color = const Color(0xFF334155)
+      ..strokeWidth = 6.0
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawLine(Offset(0, size.height * 0.3), Offset(size.width, size.height * 0.4), roadPaint);
+    canvas.drawLine(Offset(size.width * 0.6, 0), Offset(size.width * 0.4, size.height), roadPaint);
+    canvas.drawLine(Offset(size.width * 0.2, size.height * 0.6), Offset(size.width, size.height * 0.8), roadPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Top Toggle (Online / Offline)
+// ─────────────────────────────────────────────────────────────────────────────
 class _AvailabilityToggle extends StatelessWidget {
-  const _AvailabilityToggle({
-    required this.isOnline,
-    required this.onChanged,
-  });
+  const _AvailabilityToggle({required this.isOnline, required this.onChanged});
 
   final bool isOnline;
   final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF2F4F6),
-        borderRadius: BorderRadius.circular(32),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _ToggleButton(
-              label: 'ONLINE',
-              selected: isOnline,
-              onTap: () => onChanged(true),
-            ),
-          ),
-          Expanded(
-            child: _ToggleButton(
-              label: 'OFFLINE',
-              selected: !isOnline,
-              onTap: () => onChanged(false),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ToggleButton extends StatelessWidget {
-  const _ToggleButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => onChanged(!isOnline),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         decoration: BoxDecoration(
-          gradient: selected
-              ? const LinearGradient(
-                  colors: [Color(0xFF00236F), Color(0xFF1E3A8A)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: selected
-              ? const [
-                  BoxShadow(
-                    color: Color(0x3300236F),
-                    blurRadius: 18,
-                    offset: Offset(0, 8),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            color: selected ? Colors.white : const Color(0xFF757682),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EarningsOverview extends StatelessWidget {
-  const _EarningsOverview({
-    required this.dashboard,
-    required this.colors,
-  });
-
-  final SellerDashboard dashboard;
-  final ColorScheme colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(28),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0A000000),
-                blurRadius: 24,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Today's Earnings",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF00687A),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.end,
-                spacing: 8,
-                runSpacing: 6,
-                children: [
-                  Text(
-                    dashboard.todaysEarnings,
-                    style: const TextStyle(
-                      fontSize: 44,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF191C1E),
-                      height: 1,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      dashboard.earningsChangeLabel,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF4FDBC8),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 28),
-              const Divider(height: 1, color: Color(0xFFF2F4F6)),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: _MetaStat(
-                      label: 'Active Time',
-                      value: dashboard.activeTime,
-                      alignEnd: false,
-                    ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 36,
-                    color: const Color(0xFFE6E8EA),
-                  ),
-                  Expanded(
-                    child: _MetaStat(
-                      label: 'Efficiency',
-                      value: dashboard.efficiencyLabel,
-                      alignEnd: true,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _MiniStatCard(
-                icon: Icons.local_shipping,
-                iconColor: colors.primary,
-                iconBackground: colors.primary.withValues(alpha: 0.06),
-                value: dashboard.completedOrders.toString(),
-                label: 'Orders Completed',
-              ),
+          color: isOnline ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: isOnline
+                  ? const Color(0xFF10B981).withOpacity(0.4)
+                  : const Color(0xFFEF4444).withOpacity(0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _MiniStatCard(
-                icon: Icons.star,
-                iconColor: colors.secondary,
-                iconBackground: colors.secondary.withValues(alpha: 0.06),
-                value: dashboard.ratingToday.toStringAsFixed(1),
-                label: 'Rating Today',
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isOnline ? Icons.power_rounded : Icons.power_off_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              isOnline ? 'YOU\'RE ONLINE' : 'YOU\'RE OFFLINE',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.2,
               ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 }
 
-class _MetaStat extends StatelessWidget {
-  const _MetaStat({
-    required this.label,
-    required this.value,
-    required this.alignEnd,
-  });
+// ─────────────────────────────────────────────────────────────────────────────
+// Bottom Sheet (Earnings / Status)
+// ─────────────────────────────────────────────────────────────────────────────
+class _StatusBottomSheet extends StatelessWidget {
+  const _StatusBottomSheet({required this.isOnline, required this.activeOrders});
 
-  final String label;
-  final String value;
-  final bool alignEnd;
+  final bool isOnline;
+  final AsyncValue<List<Order>> activeOrders;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment:
-          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF757682),
-            letterSpacing: 1.1,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF191C1E),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MiniStatCard extends StatelessWidget {
-  const _MiniStatCard({
-    required this.icon,
-    required this.iconColor,
-    required this.iconBackground,
-    required this.value,
-    required this.label,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBackground;
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: const [
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 24,
-            offset: Offset(0, 4),
+            color: Colors.black26,
+            blurRadius: 20,
+            offset: Offset(0, -10),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          const SizedBox(height: 12),
           Container(
-            width: 48,
-            height: 48,
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
-              color: iconBackground,
-              borderRadius: BorderRadius.circular(18),
+              color: const Color(0xFFE2E8F0),
+              borderRadius: BorderRadius.circular(4),
             ),
-            child: Icon(icon, color: iconColor),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
+          const SizedBox(height: 16),
+          if (!isOnline)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(24, 8, 24, 32),
+              child: Text(
+                'You are offline. Go online to start receiving water delivery requests.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF757682),
-                ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: Column(
+                children: [
+                  const Text(
+                    'Finding Deliveries...',
+                    style: TextStyle(
+                      color: Color(0xFF10B981),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  activeOrders.when(
+                    data: (orders) {
+                      if (orders.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'No active deliveries. Wait for requests.',
+                            style: TextStyle(color: Color(0xFF94A3B8)),
+                          ),
+                        );
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Active Deliveries',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF334155),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ...orders.map((o) => _ActiveDeliveryTile(order: o)),
+                        ],
+                      );
+                    },
+                    loading: () => const CircularProgressIndicator(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
         ],
-      ),
       ),
     );
   }
 }
 
-class _StatusArea extends StatelessWidget {
-  const _StatusArea({required this.dashboard});
-
-  final SellerDashboard dashboard;
+class _ActiveDeliveryTile extends ConsumerWidget {
+  final Order order;
+  const _ActiveDeliveryTile({required this.order});
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Column(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
         children: [
           Container(
-            width: 112,
-            height: 112,
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
+              color: const Color(0xFF0EA5E9).withOpacity(0.1),
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFBFD4FF).withValues(alpha: 0.55),
-                  blurRadius: 28,
-                  spreadRadius: 8,
+            ),
+            child: const Icon(Icons.water_drop, color: Color(0xFF0EA5E9)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${order.tankSize}L Delivery',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                Text(
+                  order.location['address'] ?? 'Unknown location',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.water_drop,
-                  size: 42,
-                  color: dashboard.isOnline
-                      ? const Color(0xFF0F2E74)
-                      : const Color(0xFF757682),
-                ),
-              ),
-            ),
           ),
-          const SizedBox(height: 24),
-          Text(
-            dashboard.statusTitle,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF0F2E74),
-            ),
-          ),
-          const SizedBox(height: 10),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 260),
-            child: Text(
-              dashboard.statusMessage,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: Color(0xFF757682),
+          FilledButton(
+            onPressed: () {
+              // Mark as delivered / start delivery logic
+              final orderService = ref.read(orderServiceProvider);
+              if (order.status == 'ASSIGNED') {
+                orderService.updateOrderStatus(order.id, 'ON_THE_WAY');
+              } else if (order.status == 'ON_THE_WAY') {
+                orderService.updateOrderStatus(order.id, 'DELIVERED');
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF064E3B),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
+            child: Text(order.status == 'ASSIGNED' ? 'START' : 'DONE'),
           ),
         ],
       ),
@@ -601,11 +424,11 @@ class _StatusArea extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Bottom Nav Bar (Uber / Ola Style)
+// ─────────────────────────────────────────────────────────────────────────────
 class _BottomNavBar extends StatelessWidget {
-  const _BottomNavBar({
-    required this.currentRoute,
-    required this.onTap,
-  });
+  const _BottomNavBar({required this.currentRoute, required this.onTap});
 
   final String currentRoute;
   final ValueChanged<String> onTap;
@@ -613,49 +436,30 @@ class _BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 24,
-            offset: Offset(0, -4),
+      color: Colors.white,
+      padding: const EdgeInsets.only(bottom: 24, top: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _NavItem(
+            icon: Icons.home_rounded,
+            label: 'Home',
+            isActive: currentRoute == RouteNames.home,
+            onTap: () => onTap(RouteNames.home),
+          ),
+          _NavItem(
+            icon: Icons.receipt_long_rounded,
+            label: 'Earnings',
+            isActive: currentRoute == RouteNames.earnings,
+            onTap: () => onTap(RouteNames.earnings),
+          ),
+          _NavItem(
+            icon: Icons.person_rounded,
+            label: 'Account',
+            isActive: currentRoute == RouteNames.profile,
+            onTap: () => onTap(RouteNames.profile),
           ),
         ],
-      ),
-      padding: const EdgeInsets.fromLTRB(8, 12, 8, 18),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _NavItem(
-              label: 'Home',
-              icon: Icons.home,
-              active: currentRoute == RouteNames.home,
-              onTap: () => onTap(RouteNames.home),
-            ),
-            _NavItem(
-              label: 'Orders',
-              icon: Icons.local_shipping,
-              active: currentRoute == RouteNames.orders,
-              onTap: () => onTap(RouteNames.orders),
-            ),
-            _NavItem(
-              label: 'Earnings',
-              icon: Icons.payments,
-              active: currentRoute == RouteNames.earnings,
-              onTap: () => onTap(RouteNames.earnings),
-            ),
-            _NavItem(
-              label: 'Profile',
-              icon: Icons.person,
-              active: currentRoute == RouteNames.profile,
-              onTap: () => onTap(RouteNames.profile),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -663,664 +467,249 @@ class _BottomNavBar extends StatelessWidget {
 
 class _NavItem extends StatelessWidget {
   const _NavItem({
-    required this.label,
     required this.icon,
-    required this.active,
+    required this.label,
+    required this.isActive,
     required this.onTap,
   });
 
-  final String label;
   final IconData icon;
-  final bool active;
+  final String label;
+  final bool isActive;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    final color = isActive ? const Color(0xFF064E3B) : const Color(0xFF94A3B8);
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: active ? const Color(0xFFDCEBFF) : Colors.transparent,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 24,
-              color: active ? const Color(0xFF0F2E74) : const Color(0xFF6B7280),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color:
-                    active ? const Color(0xFF0F2E74) : const Color(0xFF6B7280),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _ActiveOrdersSection extends ConsumerWidget {
-  const _ActiveOrdersSection({required this.activeOrders});
-
-  final AsyncValue<List<Order>> activeOrders;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return activeOrders.when(
-      data: (orders) {
-        if (orders.isEmpty) return const SizedBox.shrink();
-
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0A000000),
-                blurRadius: 24,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.delivery_dining,
-                      color: Color(0xFFB45309),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Active Deliveries',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F2E74),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ...orders.map((order) => _OrderCard(key: ValueKey(order.id), order: order)),
-            ],
-          ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-    );
-  }
-}
-
-class _SearchingOrdersSection extends ConsumerWidget {
-  const _SearchingOrdersSection({required this.searchingOrders});
-
-  final AsyncValue<List<Order>> searchingOrders;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isOnline = ref.watch(sellerAvailabilityProvider);
-
-    return searchingOrders.when(
-      data: (orders) {
-        if (!isOnline) {
-          return Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x0A000000),
-                  blurRadius: 24,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEE2E2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.offline_bolt,
-                        color: Color(0xFFDC2626),
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'You are offline',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1F2937),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (orders.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0A000000),
-                blurRadius: 24,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF71F8E4).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.local_shipping,
-                      color: Color(0xFF00687A),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'New Orders',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F2E74),
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF71F8E4),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '${orders.length}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF004E5C),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ...orders.take(3).map((order) => _OrderCard(key: ValueKey(order.id), order: order)),
-            ],
-          ),
-        );
-      },
-      loading: () => const Center(
-        child: CircularProgressIndicator(),
-      ),
-      error: (_, __) => const SizedBox.shrink(),
-    );
-  }
-}
-
-class _OrderCard extends ConsumerStatefulWidget {
-  const _OrderCard({super.key, required this.order});
-
+// ─────────────────────────────────────────────────────────────────────────────
+// Ride Request Overlay (Uber Style)
+// ─────────────────────────────────────────────────────────────────────────────
+class _NewRequestOverlay extends ConsumerStatefulWidget {
+  const _NewRequestOverlay({required this.order});
   final Order order;
 
   @override
-  ConsumerState<_OrderCard> createState() => _OrderCardState();
+  ConsumerState<_NewRequestOverlay> createState() => _NewRequestOverlayState();
 }
 
-class _OrderCardState extends ConsumerState<_OrderCard> {
+class _NewRequestOverlayState extends ConsumerState<_NewRequestOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _timerController;
   bool _isAccepting = false;
-  bool _isUpdating = false;
-  bool _isHidden = false;
-  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _timerController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 15), // 15 seconds to accept
+    )..reverse(from: 1.0);
+
+    _timerController.addStatusListener((status) {
+      if (status == AnimationStatus.dismissed) {
+        // Ignored request
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timerController.dispose();
+    super.dispose();
+  }
 
   Future<void> _acceptOrder() async {
-    if (_isAccepting) return; // Prevent double tap explicitly
-
-    setState(() {
-      _isAccepting = true;
-      _errorMessage = null;
-    });
+    if (_isAccepting) return;
+    setState(() => _isAccepting = true);
 
     try {
-      final auth = ref.watch(firebaseAuthProvider);
+      final auth = ref.read(firebaseAuthProvider);
       final sellerId = auth.currentUser?.uid;
-      if (sellerId == null) {
-        setState(() {
-          _isAccepting = false;
-          _errorMessage = 'Seller not authenticated';
-        });
-        return;
-      }
-
-      // Check if seller is online before accepting
-      final isOnline = ref.read(sellerAvailabilityProvider);
-      if (!isOnline) {
-        setState(() {
-          _isAccepting = false;
-          _errorMessage = 'You must be online to accept orders';
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Go online to accept orders'),
-              backgroundColor: Color(0xFFDC2626),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-        return;
-      }
-
-      final orderService = ref.watch(orderServiceProvider);
-      await orderService.acceptOrder(widget.order.id, sellerId);
-      
-      if (mounted) {
-        setState(() {
-          _isHidden = true; // Optimistic removal
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order Assigned', style: TextStyle(color: Color(0xFF004E5C), fontWeight: FontWeight.bold)),
-            backgroundColor: Color(0xFF71F8E4),
-            duration: Duration(seconds: 2),
-          ),
-        );
+      if (sellerId != null) {
+        await ref.read(orderServiceProvider).acceptOrder(widget.order.id, sellerId);
       }
     } catch (e) {
-      final errorStr = e.toString();
-      String message = 'Network error. Please try again.';
-      bool removeCard = false;
-
-      if (errorStr.contains('no longer available')) {
-        message = 'Order already taken';
-        removeCard = true;
-      }
-
-      if (mounted) {
-        setState(() {
-          _isAccepting = false;
-          _errorMessage = message;
-          if (removeCard) {
-            _isHidden = true;
-          }
-        });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-            action: removeCard ? null : SnackBarAction(
-              label: 'Retry',
-              textColor: Colors.white,
-              onPressed: _acceptOrder,
-            ),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _startDelivery() async {
-    setState(() {
-      _isUpdating = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final orderService = ref.watch(orderServiceProvider);
-      await orderService.updateOrderStatus(widget.order.id, 'ON_THE_WAY');
-      
-      // Start location tracking
-      final locationService = ref.read(locationTrackingServiceProvider);
-      locationService.startTracking(widget.order.id);
-      
-      if (mounted) {
-        setState(() {
-          _isUpdating = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Delivery started! Location tracking enabled.', style: TextStyle(fontWeight: FontWeight.bold)),
-            backgroundColor: Color(0xFF71F8E4),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _isUpdating = false;
-        _errorMessage = e.toString();
-      });
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_errorMessage ?? 'Failed to start delivery'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _markDelivered() async {
-    setState(() {
-      _isUpdating = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final orderService = ref.watch(orderServiceProvider);
-      await orderService.updateOrderStatus(widget.order.id, 'DELIVERED');
-      
-      // Stop location tracking
-      final locationService = ref.read(locationTrackingServiceProvider);
-      locationService.stopTracking();
-      
-      if (mounted) {
-        setState(() {
-          _isUpdating = false;
-          _isHidden = true; // Optimistically hide since it's delivered
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order marked as delivered!', style: TextStyle(fontWeight: FontWeight.bold)),
-            backgroundColor: Color(0xFF10B981),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _isUpdating = false;
-        _errorMessage = e.toString();
-      });
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_errorMessage ?? 'Failed to mark as delivered'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
+      setState(() => _isAccepting = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isHidden) return const SizedBox.shrink();
-
-    final status = widget.order.status;
-    
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FB),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFECEEF0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${widget.order.tankSize}L Tank',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F2E74),
-                ),
+      color: Colors.black.withOpacity(0.6), // Dim background
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black45,
+                blurRadius: 32,
+                offset: Offset(0, 16),
               ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Pulse radar icon
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(status).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFF10B981).withOpacity(0.1),
+                  shape: BoxShape.circle,
                 ),
-                child: Text(
-                  status,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _getStatusColor(status),
+                child: const Icon(Icons.settings_input_antenna, color: Color(0xFF10B981), size: 40),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'NEW REQUEST',
+                style: TextStyle(
+                  color: Color(0xFF064E3B),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Price estimation
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  const Text('est. ', style: TextStyle(color: Color(0xFF64748B), fontSize: 16)),
+                  Text(
+                    '₹${(widget.order.tankSize * 0.15).toStringAsFixed(0)}', // Rough dummy estimation for display
+                    style: const TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 48,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -2,
+                    ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Details
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on, color: Color(0xFF334155)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${widget.order.tankSize}L Tanker Delivery',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.order.location['address'] ?? 'Customer Location',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Payment: ${widget.order.paymentType}',
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF757682),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF757682)),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  widget.order.location['address'] ?? 'No address provided',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF757682),
-                  ),
+              const SizedBox(height: 32),
+              // Accept button with timer ring
+              GestureDetector(
+                onTap: _isAccepting ? null : _acceptOrder,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 100,
+                      height: 100,
+                      child: AnimatedBuilder(
+                        animation: _timerController,
+                        builder: (context, child) {
+                          return CircularProgressIndicator(
+                            value: _timerController.value,
+                            strokeWidth: 6,
+                            backgroundColor: const Color(0xFFE2E8F0),
+                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                          );
+                        },
+                      ),
+                    ),
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF10B981),
+                        shape: BoxShape.circle,
+                      ),
+                      child: _isAccepting
+                          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                          : const Center(
+                              child: Text(
+                                'TAP TO\nACCEPT',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              const Icon(Icons.access_time, size: 14, color: Color(0xFF757682)),
-              const SizedBox(width: 4),
-              Text(
-                widget.order.createdAt != null 
-                  ? _formatTimestamp(widget.order.createdAt!)
-                  : 'Just now',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF757682),
+              const SizedBox(height: 24),
+              TextButton(
+                onPressed: () {
+                  // Ignore logic (would normally call API to reject)
+                },
+                child: const Text(
+                  'Decline',
+                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
+              const SizedBox(height: 16),
             ],
           ),
-          const SizedBox(height: 12),
-          _buildActionButton(status),
-        ],
+        ),
       ),
     );
-  }
-
-  Widget _buildActionButton(String status) {
-    switch (status) {
-      case 'SEARCHING':
-        return FilledButton(
-          onPressed: _isAccepting ? null : _acceptOrder,
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF00236F),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: _isAccepting
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Text(
-                  'Accept Order',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-        );
-      case 'ASSIGNED':
-        return FilledButton(
-          onPressed: _isUpdating ? null : _startDelivery,
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFF59E0B),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: _isUpdating
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Text(
-                  'Start Delivery',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-        );
-      case 'ON_THE_WAY':
-        return FilledButton(
-          onPressed: _isUpdating ? null : _markDelivered,
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF10B981),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: _isUpdating
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Text(
-                  'Mark Delivered',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-        );
-      case 'DELIVERED':
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF10B981).withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Text(
-            'Completed',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF10B981),
-            ),
-          ),
-        );
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'SEARCHING':
-        return const Color(0xFF71F8E4);
-      case 'ASSIGNED':
-        return const Color(0xFF3B82F6);
-      case 'ON_THE_WAY':
-        return const Color(0xFFF59E0B);
-      case 'DELIVERED':
-        return const Color(0xFF10B981);
-      case 'CANCELLED':
-        return const Color(0xFFEF4444);
-      default:
-        return const Color(0xFF6B7280);
-    }
-  }
-
-  String _formatTimestamp(Timestamp timestamp) {
-    final date = timestamp.toDate().toLocal();
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
   }
 }

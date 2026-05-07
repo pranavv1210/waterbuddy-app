@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthFailure implements Exception {
   const AuthFailure(this.message);
@@ -17,8 +18,51 @@ class AuthService {
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+  );
 
   Stream<User?> authStateChanges() => _auth.authStateChanges();
+
+  Future<UserCredential?> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        return null;
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+      
+      final user = userCredential.user;
+      if (user != null) {
+        await createUserIfMissing(
+          uid: user.uid,
+          phone: user.phoneNumber ?? '',
+          role: 'seller', // Using literal string instead of AppConstants
+        );
+      }
+
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure(_authErrorMessage(e));
+    } catch (e) {
+      String message = 'Google sign-in failed. Please try again.';
+      if (e.toString().contains('sign_in_failed')) {
+        message = 'Google sign-in failed (Error 12500/10). Please ensure SHA-1 is added and Google Play Services are updated.';
+      } else if (e.toString().contains('network_error')) {
+        message = 'Network error during Google sign-in. Please check your connection.';
+      }
+      throw AuthFailure(message);
+    }
+  }
 
   Future<void> signInWithPhone({
     required String phoneNumber,

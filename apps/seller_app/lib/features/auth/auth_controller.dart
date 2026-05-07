@@ -116,6 +116,41 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> signInWithGoogle() async {
+    state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
+
+    try {
+      final credential = await _authService.signInWithGoogle();
+      if (credential == null) {
+        // User cancelled
+        state = state.copyWith(isLoading: false);
+        return false;
+      }
+
+      state = state.copyWith(
+        isLoading: false,
+        isVerified: true,
+        successMessage: 'Signed in with Google successfully.',
+        clearError: true,
+      );
+      return true;
+    } on AuthFailure catch (failure) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: failure.message,
+        clearSuccess: true,
+      );
+      return false;
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Unable to sign in with Google right now.',
+        clearSuccess: true,
+      );
+      return false;
+    }
+  }
+
   Future<bool> verifyOtp(String smsCode) async {
     final verificationId = state.verificationId;
     final phone = state.phoneNumber;

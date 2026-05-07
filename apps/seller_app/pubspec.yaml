@@ -15,6 +15,8 @@ dependencies:
   cloud_firestore: ^5.0.1
   firebase_messaging: ^15.0.1
   geolocator: ^12.0.0
+  google_sign_in: 6.2.1
+  flutter_svg: 2.0.10+1
 
 dev_dependencies:
   flutter_test:
@@ -26,6 +28,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/logo.png
+    - assets/images/google_logo.svg
 
 flutter_launcher_icons:
   android: true

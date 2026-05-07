@@ -86,7 +86,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         statusBarColor: Colors.transparent,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F2B5B),
+        backgroundColor: const Color(0xFF064E3B), // Dark Green for Seller
         body: Container(
           width: double.infinity,
           decoration: const BoxDecoration(
@@ -94,8 +94,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color(0xFF0F2B5B),
-                Color(0xFF061530),
+                Color(0xFF064E3B),
+                Color(0xFF022C22),
               ],
             ),
           ),
@@ -119,8 +119,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ),
                       ),
                       child: const Icon(
-                        Icons.water_drop_rounded,
-                        color: Color(0xFF0EA5E9),
+                        Icons.local_shipping_rounded,
+                        color: Color(0xFF10B981), // Emerald
                         size: 80,
                       ),
                     ),
@@ -143,14 +143,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           letterSpacing: -1,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: 4),
                       Text(
-                        'Pure hydration, delivered.',
+                        'PARTNER',
                         style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 1,
+                          color: Color(0xFF10B981),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 8,
                         ),
                       ),
                     ],

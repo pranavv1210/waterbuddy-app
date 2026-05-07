@@ -5,8 +5,6 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../../../core/services/payments/razorpay_service.dart';
 import '../../../providers/app_providers.dart';
-import '../data/mock_payment_repository.dart';
-import '../models/payment_checkout.dart';
 
 // ── RazorpayService provider ─────────────────────────────────────────────────
 
@@ -147,13 +145,5 @@ final paymentControllerProvider =
     ref.watch(firestoreProvider),
   );
 });
-
-final paymentRepositoryProvider = Provider<MockPaymentRepository>(
-  (ref) => MockPaymentRepository(),
-);
-
-final paymentCheckoutProvider = FutureProvider<PaymentCheckout>(
-  (ref) => ref.watch(paymentRepositoryProvider).getCheckout(),
-);
 
 final selectedPaymentMethodProvider = StateProvider<String?>((ref) => 'upi');

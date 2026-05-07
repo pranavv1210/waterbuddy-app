@@ -13,6 +13,9 @@ import '../models/home_dashboard.dart';
 import '../providers/home_providers.dart';
 import '../providers/order_creation_provider.dart';
 import '../../../providers/app_providers.dart';
+import '../../../models/order.dart' as app_order;
+import '../../tracking/providers/searching_providers.dart';
+import '../../tracking/models/searching_tankers_state.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -21,14 +24,13 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(homeDashboardProvider);
     final selectedTankId = ref.watch(selectedTankIdProvider) ?? 'medium';
+    final activeOrder = ref.watch(activeOrderProvider).value;
 
     // Listen for active orders to redirect if app was closed or user navigated away
     ref.listen(activeOrderProvider, (previous, next) {
       final activeOrder = next.value;
       if (activeOrder != null) {
-        if (activeOrder.status == 'SEARCHING') {
-          context.go('${RouteNames.searching}?orderId=${activeOrder.id}');
-        } else {
+        if (activeOrder.status == 'ASSIGNED' || activeOrder.status == 'ON_THE_WAY') {
           context.go('${RouteNames.tracking}?orderId=${activeOrder.id}');
         }
       }
@@ -37,6 +39,7 @@ class HomeScreen extends ConsumerWidget {
     return _HomeScreenBody(
       state: dashboard,
       selectedTankId: selectedTankId,
+      activeOrder: activeOrder,
       onTankSelected: (tankId) {
         ref.read(selectedTankIdProvider.notifier).state = tankId;
       },
@@ -48,11 +51,13 @@ class _HomeScreenBody extends ConsumerStatefulWidget {
   const _HomeScreenBody({
     required this.state,
     required this.selectedTankId,
+    required this.activeOrder,
     required this.onTankSelected,
   });
 
   final HomeDashboard state;
   final String selectedTankId;
+  final app_order.Order? activeOrder;
   final ValueChanged<String> onTankSelected;
 
   @override
@@ -66,6 +71,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
   String? _currentAddress;
   bool _isLoadingLocation = false;
   bool _isMovingMap = false;
+  bool _isLocationConfirmed = false;
 
   // Default to Bangalore center if location not available
   static const LatLng _defaultLocation = LatLng(12.9716, 77.5946);
@@ -150,6 +156,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      drawer: _buildDrawer(user),
       body: Stack(
         children: [
           // 1. FULL SCREEN MAP BACKGROUND
@@ -159,8 +166,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
               options: MapOptions(
                 initialCenter: _currentLocation ?? _defaultLocation,
                 initialZoom: 15,
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.all,
+                interactionOptions: InteractionOptions(
+                  flags: _isLocationConfirmed ? InteractiveFlag.none : InteractiveFlag.all,
                 ),
                 onPositionChanged: _onMapPositionChanged,
                 onMapEvent: (event) async {
@@ -187,6 +194,17 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                         height: 80,
                         child: _buildUserDot(),
                       ),
+                      if (_isLocationConfirmed && _selectedLocation != null)
+                        Marker(
+                          point: _selectedLocation!,
+                          width: 80,
+                          height: 80,
+                          child: const Icon(
+                            Icons.location_on_rounded,
+                            color: Color(0xFFEF4444),
+                            size: 44,
+                          ),
+                        ),
                     ],
                   ),
               ],
@@ -194,43 +212,44 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
           ),
 
           // 2. FIXED CENTER PIN (Uber-style selection)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 40), // Shift up slightly to point at exact center
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: primary,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+          if (!_isLocationConfirmed)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 40), // Shift up slightly to point at exact center
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: primary,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Text(
+                        'Delivery Here',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
                         ),
-                      ],
-                    ),
-                    child: const Text(
-                      'Delivery Here',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ),
-                  const Icon(
-                    Icons.location_on_rounded,
-                    color: Color(0xFFEF4444),
-                    size: 44,
-                  ),
-                ],
+                    const Icon(
+                      Icons.location_on_rounded,
+                      color: Color(0xFFEF4444),
+                      size: 44,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
 
           // 2. TOP LOCATION BAR (Uber style)
           Positioned(
@@ -242,9 +261,54 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Row(
                   children: [
+                    if (!_isLocationConfirmed) ...[
+                      Builder(
+                        builder: (context) => GestureDetector(
+                          onTap: () => Scaffold.of(context).openDrawer(),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.menu_rounded, color: Color(0xFF0F172A), size: 24),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ] else ...[
+                      GestureDetector(
+                        onTap: () => setState(() => _isLocationConfirmed = false),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 20,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A), size: 24),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
                     Expanded(child: _buildLocationBar()),
-                    const SizedBox(width: 12),
-                    _buildActionsBar(user),
+                    if (!_isLocationConfirmed) ...[
+                      const SizedBox(width: 12),
+                      _buildActionsBar(user),
+                    ],
                   ],
                 ),
               ),
@@ -269,7 +333,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
           ),
 
           // 4. BOTTOM SHEET (Uber Style)
-          _buildBottomSheet(user, primary, accent),
+          _buildBottomSheet(user, primary, accent, widget.activeOrder),
         ],
       ),
     );
@@ -379,10 +443,64 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     );
   }
 
-  Widget _buildBottomSheet(User? user, Color primary, Color accent) {
+  Widget _buildBottomSheet(User? user, Color primary, Color accent, app_order.Order? activeOrder) {
+    if (activeOrder != null && activeOrder.status == 'SEARCHING') {
+      return _SearchingBottomSheet(orderId: activeOrder.id);
+    }
+
+    if (!_isLocationConfirmed) {
+      return Positioned(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 25,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(child: _UserGreeting(user: user)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isLocationConfirmed = true;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('Confirm Location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return DraggableScrollableSheet(
-      initialChildSize: 0.35,
-      minChildSize: 0.35,
+      initialChildSize: 0.45,
+      minChildSize: 0.45,
       maxChildSize: 0.6,
       builder: (context, scrollController) {
         return Container(
@@ -415,32 +533,16 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   controller: scrollController,
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _UserGreeting(user: user),
-                        TextButton(
-                          onPressed: () {
-                            // Confirm logic: could save coordinates to a provider
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Location confirmed!')),
-                            );
-                          },
-                          child: const Text('Confirm Location', style: TextStyle(fontWeight: FontWeight.w700)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
                     const Text(
                       'Choose Tank Size',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: Color(0xFF0F172A),
                         letterSpacing: -0.3,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     ...tankOptionsData.map((data) => _buildTankListItem(data, primary)),
                     const SizedBox(height: 80), // Space for fixed button + nav bar
                   ],
@@ -553,7 +655,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
             );
             
             if (orderId != null && mounted) {
-              context.go('${RouteNames.searching}?orderId=$orderId');
+              // Now handled by activeOrderProvider listener and state change
+              // context.go('${RouteNames.searching}?orderId=$orderId');
             }
           } finally {
             if (mounted) setState(() => _isBooking = false);
@@ -571,6 +674,72 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
             'Book Water',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
           ),
+      ),
+    );
+  }
+
+  Widget _buildDrawer(User? user) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(
+              color: Color(0xFF0F2B5B), // primary
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                  child: ClipOval(
+                    child: user?.photoURL != null
+                        ? Image.network(user!.photoURL!, fit: BoxFit.cover)
+                        : const Icon(Icons.person_rounded, color: Color(0xFF0EA5E9), size: 36),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  user?.displayName ?? 'WaterBuddy User',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home_rounded, color: Color(0xFF64748B)),
+            title: const Text('Home'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.receipt_long_rounded, color: Color(0xFF64748B)),
+            title: const Text('History'),
+            onTap: () {
+              Navigator.pop(context);
+              context.go(RouteNames.orders);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.person_rounded, color: Color(0xFF64748B)),
+            title: const Text('Profile'),
+            onTap: () {
+              Navigator.pop(context);
+              context.go(RouteNames.profile);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -696,6 +865,282 @@ class _UserGreeting extends StatelessWidget {
             fontWeight: FontWeight.w800,
             color: Color(0xFF0F172A),
             letterSpacing: -0.5,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SearchingBottomSheet extends ConsumerStatefulWidget {
+  const _SearchingBottomSheet({required this.orderId});
+
+  final String orderId;
+
+  @override
+  ConsumerState<_SearchingBottomSheet> createState() => _SearchingBottomSheetState();
+}
+
+class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(searchingControllerProvider.notifier).startWatchingOrder(widget.orderId);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final searchingState = ref.watch(searchingControllerProvider);
+    final uiState = ref.watch(searchingTankersProvider);
+
+    const primaryColor = Color(0xFF0F2B5B);
+    const sonarColor = Color(0xFF0EA5E9);
+
+    if (searchingState.hasTimedOut) {
+      return DraggableScrollableSheet(
+        initialChildSize: 0.35,
+        minChildSize: 0.35,
+        maxChildSize: 0.35,
+        builder: (context, scrollController) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 25,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.timer_off_rounded, size: 40, color: Color(0xFFEF4444)),
+                const SizedBox(height: 16),
+                const Text(
+                  'No tankers available',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: primaryColor),
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Restart search logic or reset order status could go here
+                      // For now just cancel / go home which will remove active order
+                      context.go(RouteNames.home); 
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Try Again', style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.35,
+      minChildSize: 0.35,
+      maxChildSize: 0.45,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 25,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Handle
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Searching',
+                          style: TextStyle(
+                            color: primaryColor,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const Spacer(),
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: primaryColor.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      uiState.title,
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Center(
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Sonar Waves
+                          ...List.generate(3, (index) {
+                            final delay = index * 0.33;
+                            return AnimatedBuilder(
+                              animation: _controller,
+                              builder: (context, child) {
+                                double progress = (_controller.value + delay) % 1.0;
+                                double opacity = (1.0 - progress) * 0.5;
+                                double size = 60 + (progress * 100);
+                                
+                                return Container(
+                                  width: size,
+                                  height: size,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: sonarColor.withOpacity(opacity),
+                                      width: 2,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          }),
+                          // Central Pulse
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: primaryColor.withOpacity(0.3),
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.water_drop_rounded,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFF22C55E),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            uiState.connectionLabel,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE0F2FE),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              uiState.connectionBadge,
+                              style: const TextStyle(
+                                color: Color(0xFF0369A1),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () {
+                        // Normally this would cancel the order in Firestore via OrderService.
+                        // For now we simulate cancel by removing active order/routing
+                        context.go(RouteNames.home); 
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFFEF4444),
+                      ),
+                      child: Text(uiState.cancelLabel, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },

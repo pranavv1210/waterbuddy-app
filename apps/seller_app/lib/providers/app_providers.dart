@@ -14,6 +14,7 @@ import '../features/earnings/presentation/earnings_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/orders/presentation/orders_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
+import '../features/splash/presentation/splash_screen.dart';
 import '../features/tracking/presentation/tracking_screen.dart';
 import '../routes/route_names.dart';
 
@@ -53,8 +54,12 @@ final authStateProvider = StreamProvider<User?>(
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: RouteNames.auth,
+    initialLocation: RouteNames.splash,
     routes: [
+      GoRoute(
+        path: RouteNames.splash,
+        builder: (_, __) => const SplashScreen(),
+      ),
       GoRoute(
         path: RouteNames.auth,
         builder: (_, __) => const AuthGate(),

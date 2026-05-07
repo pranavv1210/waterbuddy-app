@@ -10,9 +10,8 @@ class MainShell extends StatelessWidget {
   final String location;
 
   int get _currentIndex {
-    if (location.startsWith(RouteNames.orders)) return 2;
-    if (location.startsWith(RouteNames.profile)) return 3;
-    // Book Now is same as home
+    if (location.startsWith(RouteNames.orders)) return 1;
+    if (location.startsWith(RouteNames.profile)) return 2;
     return 0;
   }
 
@@ -28,12 +27,9 @@ class MainShell extends StatelessWidget {
               context.go(RouteNames.home);
               break;
             case 1:
-              context.go(RouteNames.home); // Book Now = Home booking screen
-              break;
-            case 2:
               context.go(RouteNames.orders);
               break;
-            case 3:
+            case 2:
               context.go(RouteNames.profile);
               break;
           }
@@ -85,29 +81,20 @@ class _WaterBuddyNavBar extends StatelessWidget {
                 onTap: () => onTap(0),
               ),
               _NavItem(
-                icon: Icons.water_drop_rounded,
-                label: 'Book Now',
+                icon: Icons.receipt_long_rounded,
+                label: 'History',
                 isSelected: currentIndex == 1,
                 primaryColor: primary,
                 unselectedColor: unselected,
                 onTap: () => onTap(1),
-                isFeatured: true,
-              ),
-              _NavItem(
-                icon: Icons.receipt_long_rounded,
-                label: 'History',
-                isSelected: currentIndex == 2,
-                primaryColor: primary,
-                unselectedColor: unselected,
-                onTap: () => onTap(2),
               ),
               _NavItem(
                 icon: Icons.person_rounded,
                 label: 'Profile',
-                isSelected: currentIndex == 3,
+                isSelected: currentIndex == 2,
                 primaryColor: primary,
                 unselectedColor: unselected,
-                onTap: () => onTap(3),
+                onTap: () => onTap(2),
               ),
             ],
           ),
@@ -125,7 +112,6 @@ class _NavItem extends StatelessWidget {
     required this.primaryColor,
     required this.unselectedColor,
     required this.onTap,
-    this.isFeatured = false,
   });
 
   final IconData icon;
@@ -134,47 +120,10 @@ class _NavItem extends StatelessWidget {
   final Color primaryColor;
   final Color unselectedColor;
   final VoidCallback onTap;
-  final bool isFeatured;
 
   @override
   Widget build(BuildContext context) {
     final color = isSelected ? primaryColor : unselectedColor;
-
-    if (isFeatured) {
-      return GestureDetector(
-        onTap: onTap,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: primaryColor,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: primaryColor.withOpacity(0.35),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Icon(icon, color: Colors.white, size: 22),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: primaryColor,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
 
     return GestureDetector(
       onTap: onTap,
