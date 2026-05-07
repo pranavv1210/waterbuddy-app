@@ -347,8 +347,9 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
           _buildBottomSheet(user, primary, accent, widget.activeOrder),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildLocationBar() {
     final locText = _isMovingMap 
