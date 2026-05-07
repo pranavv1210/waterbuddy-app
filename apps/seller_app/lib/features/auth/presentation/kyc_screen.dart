@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
@@ -24,6 +27,11 @@ class _KycScreenState extends ConsumerState<KycScreen> {
   final _vehicleCtrl = TextEditingController();
   String _tankerSize = '10000'; // Default to 10000L
   
+  File? _aadhaarFile;
+  File? _dlFile;
+  File? _rcFile;
+  final ImagePicker _picker = ImagePicker();
+
   bool _isLoading = false;
 
   @override
@@ -36,18 +44,42 @@ class _KycScreenState extends ConsumerState<KycScreen> {
     super.dispose();
   }
 
+  Future<String?> _uploadFile(File file, String userId, String docType) async {
+    try {
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('kyc_documents')
+          .child(userId)
+          .child('${docType}_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await ref.putFile(file);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      debugPrint('Error uploading $docType: $e');
+      return null;
+    }
+  }
+
   Future<void> _submitKyc() async {
     if (!_formKey.currentState!.validate()) return;
     
+    if (_aadhaarFile == null || _dlFile == null || _rcFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please upload all required documents.')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     
     try {
       final user = ref.read(firebaseAuthProvider).currentUser;
       if (user == null) throw Exception('Not logged in');
       
-      // Simulate fake uploading delay for realism
-      await Future.delayed(const Duration(seconds: 3));
-      
+      // Upload files
+      final aadhaarUrl = await _uploadFile(_aadhaarFile!, user.uid, 'aadhaar');
+      final dlUrl = await _uploadFile(_dlFile!, user.uid, 'dl');
+      final rcUrl = await _uploadFile(_rcFile!, user.uid, 'rc');
+
       await ref.read(firestoreProvider).collection('sellers').doc(user.uid).set({
         'name': _nameCtrl.text.trim(),
         'aadhaarNumber': _aadhaarCtrl.text.trim(),
@@ -55,7 +87,12 @@ class _KycScreenState extends ConsumerState<KycScreen> {
         'drivingLicense': _dlCtrl.text.trim().toUpperCase(),
         'vehicleNumber': _vehicleCtrl.text.trim().toUpperCase(),
         'tankerCapacity': int.tryParse(_tankerSize) ?? 10000,
-        'kycStatus': 'VERIFIED',
+        'kycStatus': 'PENDING', // Changed to PENDING
+        'documents': {
+          'aadhaarUrl': aadhaarUrl,
+          'dlUrl': dlUrl,
+          'rcUrl': rcUrl,
+        },
         'isOnline': false,
         'latitude': null,
         'longitude': null,
@@ -63,7 +100,7 @@ class _KycScreenState extends ConsumerState<KycScreen> {
       }, SetOptions(merge: true));
       
       if (mounted) {
-        context.go(RouteNames.home);
+        context.go(RouteNames.underReview);
       }
     } catch (e) {
       if (mounted) {
@@ -112,30 +149,47 @@ class _KycScreenState extends ConsumerState<KycScreen> {
     );
   }
 
-  Widget _buildUploadButton(String label, IconData icon) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF10B981).withOpacity(0.5), style: BorderStyle.solid),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: const Color(0xFF10B981), size: 32),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+  Future<void> _pickImage(void Function(File) onPicked) async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (image != null) {
+      setState(() => onPicked(File(image.path)));
+    }
+  }
+
+  Widget _buildUploadButton(String label, IconData icon, File? selectedFile, void Function() onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: selectedFile != null ? const Color(0xFF1E293B) : const Color(0xFF0F172A),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selectedFile != null ? const Color(0xFF10B981) : const Color(0xFF10B981).withOpacity(0.5), 
+            style: BorderStyle.solid,
           ),
-          const SizedBox(height: 4),
-          const Text(
-            'Tap to upload photo',
-            style: TextStyle(color: Color(0xFF475569), fontSize: 12),
-          ),
-        ],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              selectedFile != null ? Icons.check_circle : icon, 
+              color: const Color(0xFF10B981), 
+              size: 32,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              selectedFile != null ? 'Document Selected' : label,
+              style: const TextStyle(color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              selectedFile != null ? 'Tap to change' : 'Tap to upload photo',
+              style: const TextStyle(color: Color(0xFF475569), fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -200,7 +254,7 @@ class _KycScreenState extends ConsumerState<KycScreen> {
                     
                     _buildTextField(_nameCtrl, 'Full Name (As per Aadhaar)', Icons.person),
                     _buildTextField(_aadhaarCtrl, 'Aadhaar Number', Icons.credit_card, type: TextInputType.number),
-                    _buildUploadButton('Upload Aadhaar Front & Back', Icons.camera_alt_outlined),
+                    _buildUploadButton('Upload Aadhaar Front & Back', Icons.camera_alt_outlined, _aadhaarFile, () => _pickImage((f) => _aadhaarFile = f)),
                     
                     _buildTextField(_panCtrl, 'PAN Number', Icons.credit_card_outlined, cap: TextCapitalization.characters),
                     
@@ -209,7 +263,7 @@ class _KycScreenState extends ConsumerState<KycScreen> {
                     const SizedBox(height: 16),
                     
                     _buildTextField(_dlCtrl, 'Driving License Number', Icons.badge_outlined, cap: TextCapitalization.characters),
-                    _buildUploadButton('Upload Driving License', Icons.image_outlined),
+                    _buildUploadButton('Upload Driving License', Icons.image_outlined, _dlFile, () => _pickImage((f) => _dlFile = f)),
                     
                     _buildTextField(_vehicleCtrl, 'Vehicle Registration (RC) Number', Icons.local_shipping, cap: TextCapitalization.characters),
                     
@@ -243,7 +297,7 @@ class _KycScreenState extends ConsumerState<KycScreen> {
                       ),
                     ),
                     
-                    _buildUploadButton('Upload RC Book Photo', Icons.document_scanner),
+                    _buildUploadButton('Upload RC Book Photo', Icons.document_scanner, _rcFile, () => _pickImage((f) => _rcFile = f)),
                     
                     const SizedBox(height: 40),
                     

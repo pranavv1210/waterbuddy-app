@@ -11,10 +11,13 @@ import '../features/auth/auth_controller.dart';
 import '../features/auth/presentation/auth_gate.dart';
 import '../features/auth/otp_screen.dart';
 import '../features/auth/presentation/kyc_screen.dart';
+import '../features/auth/presentation/under_review_screen.dart';
+import '../features/admin/presentation/admin_screen.dart';
 import '../features/earnings/presentation/earnings_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/orders/presentation/orders_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
+import '../features/profile/presentation/edit_profile_screen.dart';
 import '../features/splash/presentation/splash_screen.dart';
 import '../features/tracking/presentation/tracking_screen.dart';
 import '../routes/route_names.dart';
@@ -74,6 +77,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const KycScreen(),
       ),
       GoRoute(
+        path: RouteNames.underReview,
+        builder: (_, __) => const UnderReviewScreen(),
+      ),
+      GoRoute(
         path: RouteNames.home,
         builder: (_, __) => const HomeScreen(),
       ),
@@ -92,6 +99,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.profile,
         builder: (_, __) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.editProfile,
+        builder: (_, __) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.admin,
+        builder: (_, __) => const AdminScreen(),
       ),
     ],
   );

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../home/providers/home_providers.dart';
+import '../../../routes/route_names.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -100,7 +102,9 @@ class ProfileScreen extends ConsumerWidget {
           _ProfileMenuItem(
             icon: Icons.person_outline,
             label: 'Business Details',
-            onTap: () {},
+            onTap: () {
+              context.push(RouteNames.editProfile);
+            },
           ),
           _ProfileMenuItem(
             icon: Icons.account_balance_wallet_outlined,

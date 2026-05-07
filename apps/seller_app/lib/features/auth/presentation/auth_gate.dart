@@ -22,9 +22,25 @@ class AuthGate extends ConsumerWidget {
             if (!context.mounted) return;
             
             try {
+              if (user.email == 'admin@waterbuddy.com') {
+                if (context.mounted) context.go(RouteNames.admin);
+                return;
+              }
+              
               final doc = await ref.read(firestoreProvider).collection('sellers').doc(user.uid).get();
-              if (doc.exists && doc.data()?['kycStatus'] == 'VERIFIED') {
-                if (context.mounted) context.go(RouteNames.home);
+              if (doc.exists) {
+                final status = doc.data()?['kycStatus'];
+                final role = doc.data()?['role'];
+                
+                if (role == 'ADMIN') {
+                  if (context.mounted) context.go(RouteNames.admin);
+                } else if (status == 'VERIFIED') {
+                  if (context.mounted) context.go(RouteNames.home);
+                } else if (status == 'PENDING') {
+                  if (context.mounted) context.go(RouteNames.underReview);
+                } else {
+                  if (context.mounted) context.go(RouteNames.kyc);
+                }
               } else {
                 if (context.mounted) context.go(RouteNames.kyc);
               }
