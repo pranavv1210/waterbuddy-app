@@ -517,7 +517,7 @@ class _NewRequestOverlayState extends ConsumerState<_NewRequestOverlay>
 
     _timerController.addStatusListener((status) {
       if (status == AnimationStatus.dismissed) {
-        // Ignored request
+        _ignoreOrder();
       }
     });
   }
@@ -526,6 +526,10 @@ class _NewRequestOverlayState extends ConsumerState<_NewRequestOverlay>
   void dispose() {
     _timerController.dispose();
     super.dispose();
+  }
+
+  void _ignoreOrder() {
+    ref.read(ignoredOrdersProvider.notifier).ignoreOrder(widget.order.id);
   }
 
   Future<void> _acceptOrder() async {
@@ -705,9 +709,7 @@ class _NewRequestOverlayState extends ConsumerState<_NewRequestOverlay>
               
               // Decline button
               GestureDetector(
-                onTap: () {
-                  // Ignore logic
-                },
+                onTap: _ignoreOrder,
                 child: const Text(
                   'Decline',
                   style: TextStyle(

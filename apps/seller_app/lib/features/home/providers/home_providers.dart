@@ -10,6 +10,18 @@ import '../../../providers/app_providers.dart';
 import '../data/mock_seller_dashboard_repository.dart';
 import '../models/seller_dashboard.dart';
 
+class IgnoredOrdersController extends StateNotifier<Set<String>> {
+  IgnoredOrdersController() : super({});
+
+  void ignoreOrder(String orderId) {
+    state = {...state, orderId};
+  }
+}
+
+final ignoredOrdersProvider = StateNotifierProvider<IgnoredOrdersController, Set<String>>((ref) {
+  return IgnoredOrdersController();
+});
+
 final sellerDashboardRepositoryProvider =
     Provider<MockSellerDashboardRepository>(
   (ref) => const MockSellerDashboardRepository(),
@@ -100,6 +112,7 @@ final searchingOrdersProvider = StreamProvider.autoDispose<List<Order>>((ref) {
 
   final location = locationAsync.value;
   final allSellers = onlineSellersAsync.value ?? [];
+  final ignoredOrders = ref.watch(ignoredOrdersProvider);
 
   if (location == null || location.$1 == null || location.$2 == null) {
     debugPrint('Error: Current seller location missing');
@@ -111,6 +124,8 @@ final searchingOrdersProvider = StreamProvider.autoDispose<List<Order>>((ref) {
 
   return ref.watch(orderServiceProvider).watchSearchingOrders().map((orders) {
     return orders.where((order) {
+      if (ignoredOrders.contains(order.id)) return false;
+      
       final orderLat = order.location['latitude'] as double?;
       final orderLng = order.location['longitude'] as double?;
 
