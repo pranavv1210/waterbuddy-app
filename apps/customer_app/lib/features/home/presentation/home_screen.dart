@@ -1127,10 +1127,13 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet>
                     ),
                     const SizedBox(height: 16),
                     TextButton(
-                      onPressed: () {
-                        // Normally this would cancel the order in Firestore via OrderService.
-                        // For now we simulate cancel by removing active order/routing
-                        context.go(RouteNames.home); 
+                      onPressed: () async {
+                        // Cancel the order in Firestore via OrderService.
+                        await ref.read(searchingControllerProvider.notifier).cancelOrder();
+                        // Navigate back to the home view
+                        if (context.mounted) {
+                          context.go(RouteNames.home); 
+                        }
                       },
                       style: TextButton.styleFrom(
                         foregroundColor: const Color(0xFFEF4444),

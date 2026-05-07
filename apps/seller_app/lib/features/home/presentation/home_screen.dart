@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../models/order.dart';
 import '../../../providers/app_providers.dart';
@@ -82,8 +84,7 @@ class HomeScreen extends ConsumerWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Simulated Map Background
-// ─────────────────────────────────────────────────────────────────────────────
+
 class _SimulatedMapBackground extends StatefulWidget {
   final bool isOnline;
   const _SimulatedMapBackground({required this.isOnline});
@@ -96,6 +97,9 @@ class _SimulatedMapBackgroundState extends State<_SimulatedMapBackground>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  final MapController _mapController = MapController();
+  // Default to Bangalore center
+  final LatLng _defaultLocation = const LatLng(12.9716, 77.5946);
 
   @override
   void initState() {
@@ -117,83 +121,67 @@ class _SimulatedMapBackgroundState extends State<_SimulatedMapBackground>
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _MapGridPainter(),
-      child: Center(
-        child: AnimatedBuilder(
-          animation: _pulseAnimation,
-          builder: (context, child) {
-            return Container(
-              width: 32 * (widget.isOnline ? _pulseAnimation.value : 1.0),
-              height: 32 * (widget.isOnline ? _pulseAnimation.value : 1.0),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: widget.isOnline
-                    ? const Color(0xFF10B981).withOpacity(0.3)
-                    : const Color(0xFFEF4444).withOpacity(0.3),
-              ),
-              child: Center(
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: widget.isOnline ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                    border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.isOnline
-                            ? const Color(0xFF10B981).withOpacity(0.5)
-                            : const Color(0xFFEF4444).withOpacity(0.5),
-                        blurRadius: 12,
-                        spreadRadius: 4,
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+    return FlutterMap(
+      mapController: _mapController,
+      options: MapOptions(
+        initialCenter: _defaultLocation,
+        initialZoom: 15,
+        interactionOptions: const InteractionOptions(
+          flags: InteractiveFlag.all,
         ),
       ),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.waterbuddy.seller',
+        ),
+        MarkerLayer(
+          markers: [
+            Marker(
+              point: _defaultLocation,
+              width: 80,
+              height: 80,
+              child: AnimatedBuilder(
+                animation: _pulseAnimation,
+                builder: (context, child) {
+                  return Container(
+                    width: 32 * (widget.isOnline ? _pulseAnimation.value : 1.0),
+                    height: 32 * (widget.isOnline ? _pulseAnimation.value : 1.0),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: widget.isOnline
+                          ? const Color(0xFF10B981).withOpacity(0.3)
+                          : const Color(0xFFEF4444).withOpacity(0.3),
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: widget.isOnline ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                          border: Border.all(color: Colors.white, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: widget.isOnline
+                                  ? const Color(0xFF10B981).withOpacity(0.5)
+                                  : const Color(0xFFEF4444).withOpacity(0.5),
+                              blurRadius: 12,
+                              spreadRadius: 4,
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
-}
-
-class _MapGridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF1E293B)
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
-
-    const double spacing = 60;
-    
-    // Draw vertical lines
-    for (double i = 0; i < size.width; i += spacing) {
-      canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
-    }
-    
-    // Draw horizontal lines
-    for (double i = 0; i < size.height; i += spacing) {
-      canvas.drawLine(Offset(0, i), Offset(size.width, i), paint);
-    }
-
-    // Draw some random "roads" to look like a map
-    final roadPaint = Paint()
-      ..color = const Color(0xFF334155)
-      ..strokeWidth = 6.0
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    canvas.drawLine(Offset(0, size.height * 0.3), Offset(size.width, size.height * 0.4), roadPaint);
-    canvas.drawLine(Offset(size.width * 0.6, 0), Offset(size.width * 0.4, size.height), roadPaint);
-    canvas.drawLine(Offset(size.width * 0.2, size.height * 0.6), Offset(size.width, size.height * 0.8), roadPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

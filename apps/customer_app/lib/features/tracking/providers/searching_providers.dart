@@ -116,6 +116,31 @@ class SearchingController extends StateNotifier<SearchingState> {
     }
   }
 
+  Future<void> cancelOrder() async {
+    final orderId = state.orderId;
+    if (orderId == null) return;
+    
+    try {
+      state = state.copyWith(isLoading: true, clearError: true);
+      await _orderService.updateOrderStatus(orderId, 'CANCELLED');
+      debugPrint('Order cancelled by user: $orderId');
+      
+      _timeoutTimer?.cancel();
+      _orderSubscription?.cancel();
+      
+      state = state.copyWith(
+        orderStatus: 'CANCELLED',
+        isLoading: false,
+      );
+    } catch (e) {
+      debugPrint('Error cancelling order: $e');
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Failed to cancel order: $e',
+      );
+    }
+  }
+
   void clearError() {
     state = state.copyWith(clearError: true);
   }
