@@ -51,11 +51,15 @@ final activeOrderProvider = StreamProvider<app_order.Order?>((ref) {
   return ref.watch(orderServiceProvider).watchCustomerOrders(user.uid).map((orders) {
     // Find first order that is NOT in a terminal state
     try {
-      return orders.firstWhere((o) => 
-        o.status == 'SEARCHING' || 
-        o.status == 'ASSIGNED' || 
-        o.status == 'ON_THE_WAY'
-      );
+      return orders.firstWhere((o) {
+        if (o.status == 'ASSIGNED' || o.status == 'ON_THE_WAY') return true;
+        if (o.status == 'SEARCHING') {
+          if (o.createdAt == null) return true; // Just created, waiting for server timestamp
+          final diff = DateTime.now().difference(o.createdAt!.toDate());
+          if (diff.inMinutes < 2) return true;
+        }
+        return false;
+      });
     } catch (_) {
       return null;
     }

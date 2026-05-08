@@ -893,96 +893,39 @@ class _SearchingBottomSheet extends ConsumerStatefulWidget {
   ConsumerState<_SearchingBottomSheet> createState() => _SearchingBottomSheetState();
 }
 
-class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
-    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(searchingControllerProvider.notifier).startWatchingOrder(widget.orderId);
     });
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  String _getTankLabel(num size) {
+    if (size <= 10000) return 'Small Tank';
+    if (size <= 15000) return 'Medium Tank';
+    return 'Large Tank';
   }
 
   @override
   Widget build(BuildContext context) {
     final searchingState = ref.watch(searchingControllerProvider);
-    final uiState = ref.watch(searchingTankersProvider);
+    final activeOrder = ref.watch(activeOrderProvider).value;
 
     const primaryColor = Color(0xFF0F2B5B);
-    const sonarColor = Color(0xFF0EA5E9);
 
     if (searchingState.hasTimedOut) {
-      return DraggableScrollableSheet(
-        initialChildSize: 0.35,
-        minChildSize: 0.35,
-        maxChildSize: 0.35,
-        builder: (context, scrollController) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 25,
-                  offset: const Offset(0, -5),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.timer_off_rounded, size: 40, color: Color(0xFFEF4444)),
-                const SizedBox(height: 16),
-                const Text(
-                  'No tankers available',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: primaryColor),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      // Cancel the order so activeOrderProvider emits null and we go back to normal view
-                      await ref.read(searchingControllerProvider.notifier).cancelOrder();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('Try Again', style: TextStyle(color: Colors.white)),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    }
-
-    return DraggableScrollableSheet(
-      initialChildSize: 0.35,
-      minChildSize: 0.35,
-      maxChildSize: 0.45,
-      builder: (context, scrollController) {
-        return Container(
+      return Positioned(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
@@ -992,172 +935,183 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet>
             ],
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+              const Icon(Icons.timer_off_rounded, size: 48, color: Color(0xFFEF4444)),
+              const SizedBox(height: 20),
+              const Text(
+                'No tankers available',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
               ),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Searching',
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const Spacer(),
-                        SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: primaryColor.withOpacity(0.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      uiState.title,
-                      style: const TextStyle(
-                        color: Color(0xFF64748B),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Center(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Sonar Waves
-                          ...List.generate(3, (index) {
-                            final delay = index * 0.33;
-                            return AnimatedBuilder(
-                              animation: _controller,
-                              builder: (context, child) {
-                                double progress = (_controller.value + delay) % 1.0;
-                                double opacity = (1.0 - progress) * 0.5;
-                                double size = 60 + (progress * 100);
-                                
-                                return Container(
-                                  width: size,
-                                  height: size,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: sonarColor.withOpacity(opacity),
-                                      width: 2,
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          }),
-                          // Central Pulse
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: primaryColor,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: primaryColor.withOpacity(0.3),
-                                  blurRadius: 10,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.water_drop_rounded,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFF22C55E),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            uiState.connectionLabel,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE0F2FE),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              uiState.connectionBadge,
-                              style: const TextStyle(
-                                color: Color(0xFF0369A1),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () async {
-                        // Cancel the order in Firestore via OrderService.
-                        await ref.read(searchingControllerProvider.notifier).cancelOrder();
-                        // Navigate back to the home view
-                        if (context.mounted) {
-                          context.go(RouteNames.home); 
-                        }
-                      },
-                      style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFFEF4444),
-                      ),
-                      child: Text(uiState.cancelLabel, style: const TextStyle(fontWeight: FontWeight.w700)),
-                    ),
-                  ],
+              const SizedBox(height: 8),
+              const Text(
+                'All our partners are currently busy. Please try again in a few minutes.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    await ref.read(searchingControllerProvider.notifier).cancelOrder();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('Try Again', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
                 ),
               ),
             ],
           ),
-        );
-      },
+        ),
+      );
+    }
+
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Linear progress indicator at the very top, clipped to corners
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              child: const LinearProgressIndicator(
+                backgroundColor: Color(0xFFF1F5F9),
+                color: primaryColor,
+                minHeight: 4,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Finding your tanker...',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Broadcasting your request to nearby partners.',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  // Order details card
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: const Icon(Icons.water_drop_rounded, color: primaryColor),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _getTankLabel(activeOrder?.tankSize ?? 15000),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${activeOrder?.tankSize ?? 15000} Litres',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 13,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE0F2FE),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'SEARCHING',
+                            style: TextStyle(
+                              color: Color(0xFF0369A1),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  // Cancel Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        await ref.read(searchingControllerProvider.notifier).cancelOrder();
+                        if (context.mounted) {
+                          context.go(RouteNames.home);
+                        }
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFEF4444),
+                        side: const BorderSide(color: Color(0xFFE2E8F0)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text('Cancel Request', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
+
