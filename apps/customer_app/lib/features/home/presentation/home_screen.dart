@@ -151,15 +151,17 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final searchingState = ref.watch(searchingControllerProvider);
+    final isSearching = searchingState.orderId != null && (searchingState.orderStatus == 'SEARCHING' || searchingState.isLoading);
     const primary = Color(0xFF0F2B5B);
     const accent = Color(0xFF0EA5E9);
 
     return PopScope(
-      canPop: !_isLocationConfirmed && widget.activeOrder?.status != 'SEARCHING',
+      canPop: !_isLocationConfirmed && !isSearching,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         
-        if (widget.activeOrder?.status == 'SEARCHING') {
+        if (isSearching) {
            await ref.read(searchingControllerProvider.notifier).cancelOrder();
         } else if (_isLocationConfirmed) {
            setState(() => _isLocationConfirmed = false);
@@ -456,8 +458,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
   }
 
   Widget _buildBottomSheet(User? user, Color primary, Color accent, app_order.Order? activeOrder) {
-    if (activeOrder != null && activeOrder.status == 'SEARCHING') {
-      return _SearchingBottomSheet(orderId: activeOrder.id);
+    final searchingState = ref.watch(searchingControllerProvider);
+    final isSearching = searchingState.orderId != null && (searchingState.orderStatus == 'SEARCHING' || searchingState.isLoading);
+
+    if (isSearching) {
+      return _SearchingBottomSheet(orderId: searchingState.orderId!);
     }
 
     if (!_isLocationConfirmed) {
@@ -667,8 +672,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
             );
             
             if (orderId != null && mounted) {
-              // Now handled by activeOrderProvider listener and state change
-              // context.go('${RouteNames.searching}?orderId=$orderId');
+              ref.read(searchingControllerProvider.notifier).startWatchingOrder(orderId);
             }
           } finally {
             if (mounted) setState(() => _isBooking = false);
@@ -899,7 +903,10 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(searchingControllerProvider.notifier).startWatchingOrder(widget.orderId);
+      final currentOrderId = ref.read(searchingControllerProvider).orderId;
+      if (currentOrderId != widget.orderId) {
+        ref.read(searchingControllerProvider.notifier).startWatchingOrder(widget.orderId);
+      }
     });
   }
 
