@@ -851,6 +851,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   ),
                 ],
               ),
+            ),
+          ),
           const SizedBox(height: 28),
           const Text(
             'Recent Deliveries',
