@@ -42,6 +42,8 @@ class Order {
   final Map<String, dynamic> location;
   final TrackingData? tracking;
   final Timestamp? createdAt;
+
+  String? get deliveryAddress => location['address'] as String?;
 }
 
 class TrackingData {
