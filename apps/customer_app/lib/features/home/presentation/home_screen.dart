@@ -886,7 +886,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                     children: recentOrders.map((order) {
                       return _RecentDeliveryTile(
                         address: order.deliveryAddress ?? 'Unknown Address',
-                        date: order.createdAt,
+                        date: order.createdAt?.toDate(),
                         onTap: () {
                            // Set the location from previous order
                            if (order.location != null) {
