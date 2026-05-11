@@ -12,16 +12,14 @@ import 'auth_controller.dart';
 //  Design tokens – shared across the screen
 // ─────────────────────────────────────────────
 class _Colors {
-  static const primary = Color(0xFF064E3B); // Dark Green
-  static const primaryLight = Color(0xFF047857);
+  static const primary = Color(0xFF0F172A); // Dark Slate
   static const accent = Color(0xFF10B981); // Emerald
-  static const accentDark = Color(0xFF059669);
   static const surface = Color(0xFFF8FAFC);
   static const card = Color(0xFFFFFFFF);
   static const inputBg = Color(0xFFF1F5F9);
   static const inputBorder = Color(0xFFE2E8F0);
   static const textPrimary = Color(0xFF0F172A);
-  static const textSecondary = Color(0xFF475569);
+  static const textSecondary = Color(0xFF64748B);
   static const textTertiary = Color(0xFF94A3B8);
   static const divider = Color(0xFFE2E8F0);
 }
@@ -204,10 +202,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               ),
             ],
           ),
-          child: const Icon(
-            Icons.local_shipping_rounded,
-            color: Colors.white,
-            size: 34,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Image.asset('assets/images/logo.png'),
           ),
         ),
         const SizedBox(height: 20),
@@ -215,9 +212,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           'WaterBuddy Partner',
           style: TextStyle(
             color: _Colors.primary,
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.8,
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -1.2,
           ),
         ),
         const SizedBox(height: 6),
@@ -239,8 +236,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: _Colors.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _Colors.divider.withOpacity(0.6)),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: _Colors.divider.withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF0F172A).withOpacity(0.04),
@@ -256,9 +253,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             'Partner Login',
             style: TextStyle(
               color: _Colors.textPrimary,
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.4,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.8,
             ),
           ),
           const SizedBox(height: 4),
@@ -336,7 +333,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         Container(
           decoration: BoxDecoration(
             color: _Colors.inputBg,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(color: _Colors.inputBorder),
           ),
           child: Row(
@@ -411,7 +408,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           disabledBackgroundColor: _Colors.accent.withOpacity(0.5),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
           ),
           elevation: 0,
         ),
@@ -427,9 +424,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             : const Text(
                 'Send OTP',
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.3,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
                 ),
               ),
       ),
@@ -472,7 +469,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           foregroundColor: _Colors.textPrimary,
           side: const BorderSide(color: _Colors.inputBorder),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
           ),
         ),
         child: Row(
@@ -487,8 +484,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             const Text(
               'Sign in with Google',
               style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ],

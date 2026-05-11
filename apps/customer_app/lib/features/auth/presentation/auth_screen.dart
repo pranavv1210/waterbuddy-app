@@ -81,16 +81,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFF00236F);
-    const primaryContainer = Color(0xFF1E3A8A);
-    const brandTeal = Color(0xFF14B8A6);
-    const surface = Color(0xFFF7F9FB);
+    const primary = Color(0xFF0F172A);
+    const primaryContainer = Color(0xFF1E293B);
+    const brandCyan = Color(0xFF38BDF8);
+    const surface = Color(0xFFF8FAFC);
     const surfaceLowest = Color(0xFFFFFFFF);
-    const surfaceLow = Color(0xFFF2F4F6);
-    const outlineVariant = Color(0xFFC5C5D3);
-    const onSurface = Color(0xFF191C1E);
-    const onSurfaceVariant = Color(0xFF444651);
-    const outline = Color(0xFF757682);
+    const surfaceLow = Color(0xFFF1F5F9);
+    const outlineVariant = Color(0xFFE2E8F0);
+    const onSurface = Color(0xFF0F172A);
+    const onSurfaceVariant = Color(0xFF64748B);
+    const outline = Color(0xFF94A3B8);
 
     return Scaffold(
       backgroundColor: surface,
@@ -101,7 +101,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             right: -140,
             child: _GlowOrb(
               size: 360,
-              color: brandTeal.withOpacity(0.08),
+              color: brandCyan.withOpacity(0.08),
             ),
           ),
           Positioned(
@@ -127,7 +127,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         children: [
                           _BrandBadge(
                             primaryContainer: primaryContainer,
-                            brandTeal: brandTeal,
+                            brandCyan: brandCyan,
                           ),
                           const SizedBox(height: 28),
                           const Text(
@@ -136,8 +136,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             style: TextStyle(
                               color: primary,
                               fontSize: 38,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -1.2,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1.5,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -275,9 +275,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                     ? null
                                     : _sendVerificationCode,
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: brandTeal,
+                                  backgroundColor: brandCyan,
                                   disabledBackgroundColor:
-                                      brandTeal.withOpacity(0.55),
+                                      brandCyan.withOpacity(0.55),
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(18),
@@ -410,9 +410,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             child: const Text(
                               'Create account',
                               style: TextStyle(
-                                color: brandTeal,
+                                color: brandCyan,
                                 fontSize: 14,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w900,
                               ),
                             ),
                           ),
@@ -463,11 +463,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 class _BrandBadge extends StatelessWidget {
   const _BrandBadge({
     required this.primaryContainer,
-    required this.brandTeal,
+    required this.brandCyan,
   });
 
   final Color primaryContainer;
-  final Color brandTeal;
+  final Color brandCyan;
 
   @override
   Widget build(BuildContext context) {
@@ -487,7 +487,7 @@ class _BrandBadge extends StatelessWidget {
                   borderRadius: BorderRadius.circular(24),
                   gradient: LinearGradient(
                     colors: [
-                      brandTeal,
+                      brandCyan,
                       primaryContainer,
                     ],
                     begin: Alignment.topLeft,
@@ -495,16 +495,15 @@ class _BrandBadge extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: brandTeal.withOpacity(0.2),
+                      color: brandCyan.withOpacity(0.2),
                       blurRadius: 28,
                       offset: const Offset(0, 14),
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.water_drop_rounded,
-                  color: Colors.white,
-                  size: 38,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Image.asset('assets/images/logo.png'),
                 ),
               ),
             ),
@@ -528,7 +527,7 @@ class _BrandBadge extends StatelessWidget {
               ),
               child: const Icon(
                 Icons.verified_rounded,
-                color: Color(0xFF14B8A6),
+                color: brandCyan,
                 size: 20,
               ),
             ),

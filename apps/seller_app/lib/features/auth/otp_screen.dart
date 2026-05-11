@@ -10,14 +10,14 @@ import '../../routes/route_names.dart';
 //  Design tokens (matching login_screen)
 // ─────────────────────────────────────────────
 class _Colors {
-  static const primary = Color(0xFF064E3B);
-  static const accent = Color(0xFF10B981);
+  static const primary = Color(0xFF0F172A); // Dark Slate
+  static const accent = Color(0xFF10B981); // Emerald
   static const surface = Color(0xFFF8FAFC);
   static const card = Color(0xFFFFFFFF);
   static const inputBg = Color(0xFFF1F5F9);
   static const inputBorder = Color(0xFFE2E8F0);
   static const textPrimary = Color(0xFF0F172A);
-  static const textSecondary = Color(0xFF475569);
+  static const textSecondary = Color(0xFF64748B);
   static const textTertiary = Color(0xFF94A3B8);
   static const divider = Color(0xFFE2E8F0);
 }
@@ -197,9 +197,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
                                     'Verify your number',
                                     style: TextStyle(
                                       color: _Colors.textPrimary,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: -0.5,
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -1.0,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -220,7 +220,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
                                     decoration: BoxDecoration(
                                       color: _Colors.card,
                                       borderRadius:
-                                          BorderRadius.circular(24),
+                                          BorderRadius.circular(32),
                                       border: Border.all(
                                         color:
                                             _Colors.divider.withOpacity(0.6),
@@ -241,7 +241,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
                                           decoration: BoxDecoration(
                                             color: _Colors.inputBg,
                                             borderRadius:
-                                                BorderRadius.circular(14),
+                                                BorderRadius.circular(18),
                                             border: Border.all(
                                               color: _Colors.inputBorder,
                                             ),
@@ -309,7 +309,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
                                                   RoundedRectangleBorder(
                                                 borderRadius:
                                                     BorderRadius.circular(
-                                                        14),
+                                                        18),
                                               ),
                                               elevation: 0,
                                             ),
@@ -330,10 +330,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
                                                 : const Text(
                                                     'Verify & Continue',
                                                     style: TextStyle(
-                                                      fontSize: 16,
+                                                      fontSize: 18,
                                                       fontWeight:
-                                                          FontWeight.w700,
-                                                      letterSpacing: 0.3,
+                                                          FontWeight.w900,
+                                                      letterSpacing: -0.5,
                                                     ),
                                                   ),
                                           ),

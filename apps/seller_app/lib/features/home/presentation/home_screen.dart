@@ -27,13 +27,13 @@ class HomeScreen extends ConsumerWidget {
         child: Column(
           children: [
             const UserAccountsDrawerHeader(
-              decoration: BoxDecoration(color: Color(0xFF064E3B)),
+              decoration: BoxDecoration(color: Color(0xFF0F172A)),
               currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(Icons.local_shipping, color: Color(0xFF064E3B), size: 40),
+                backgroundColor: Colors.white10,
+                child: Icon(Icons.local_shipping, color: Color(0xFF10B981), size: 40),
               ),
-              accountName: Text('WaterBuddy Partner', style: TextStyle(fontWeight: FontWeight.bold)),
-              accountEmail: Text('Verified Partner • Active'),
+              accountName: Text('WaterBuddy Partner', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+              accountEmail: Text('Verified Partner • Active', style: TextStyle(color: Colors.white70)),
             ),
             ListTile(
               leading: const Icon(Icons.home, color: Colors.white),
@@ -267,7 +267,7 @@ class _AvailabilityToggle extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         decoration: BoxDecoration(
           color: isOnline ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
               color: isOnline
@@ -291,9 +291,9 @@ class _AvailabilityToggle extends StatelessWidget {
               isOnline ? 'YOU\'RE ONLINE' : 'YOU\'RE OFFLINE',
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.0,
               ),
             ),
           ],
@@ -318,11 +318,11 @@ class _StatusBottomSheet extends StatelessWidget {
       width: double.infinity,
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black26,
-            blurRadius: 20,
+            color: Colors.black45,
+            blurRadius: 40,
             offset: Offset(0, -10),
           ),
         ],
@@ -361,8 +361,9 @@ class _StatusBottomSheet extends StatelessWidget {
                     'Finding Deliveries...',
                     style: TextStyle(
                       color: Color(0xFF10B981),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -381,11 +382,12 @@ class _StatusBottomSheet extends StatelessWidget {
                         children: [
                           const Text(
                             'Active Deliveries',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF334155),
-                            ),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF94A3B8),
+                                letterSpacing: 0.5,
+                              ),
                           ),
                           const SizedBox(height: 12),
                           ...orders.map((o) => _ActiveDeliveryTile(order: o)),
@@ -415,7 +417,7 @@ class _ActiveDeliveryTile extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
@@ -436,9 +438,10 @@ class _ActiveDeliveryTile extends ConsumerWidget {
                 Text(
                   '${order.tankSize}L Delivery',
                   style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
                     color: Color(0xFF0F172A),
+                    letterSpacing: -0.5,
                   ),
                 ),
                 Text(
@@ -464,12 +467,17 @@ class _ActiveDeliveryTile extends ConsumerWidget {
               }
             },
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF064E3B),
+              backgroundColor: const Color(0xFF0F172A),
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(14),
               ),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
             ),
-            child: Text(order.status == 'ASSIGNED' ? 'START' : 'DONE'),
+            child: Text(
+              order.status == 'ASSIGNED' ? 'START' : 'DONE',
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
           ),
         ],
       ),
@@ -533,7 +541,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? const Color(0xFF064E3B) : const Color(0xFF94A3B8);
+    final color = isActive ? const Color(0xFF10B981) : const Color(0xFF94A3B8);
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -623,13 +631,13 @@ class _NewRequestOverlayState extends ConsumerState<_NewRequestOverlay>
           height: MediaQuery.of(context).size.height * 0.65, // takes up 65% of screen
           padding: const EdgeInsets.only(top: 24, left: 16, right: 16, bottom: 32),
           decoration: const BoxDecoration(
-            color: Color(0xFF1E293B), // Dark slate like Uber
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            color: Color(0xFF0F172A), // Dark slate
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black54,
-                blurRadius: 32,
-                offset: Offset(0, -8),
+                color: Colors.black,
+                blurRadius: 48,
+                offset: Offset(0, -12),
               ),
             ],
           ),
@@ -665,9 +673,9 @@ class _NewRequestOverlayState extends ConsumerState<_NewRequestOverlay>
                     '5',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 56,
+                      fontSize: 64,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: -2,
+                      letterSpacing: -3,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -696,8 +704,9 @@ class _NewRequestOverlayState extends ConsumerState<_NewRequestOverlay>
                 '${widget.order.tankSize}L Tanker Request',
                 style: const TextStyle(
                   color: Color(0xFF10B981), // Emerald green
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 8),
@@ -707,9 +716,9 @@ class _NewRequestOverlayState extends ConsumerState<_NewRequestOverlay>
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: Color(0xFFCBD5E1),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF94A3B8),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               
@@ -759,8 +768,8 @@ class _NewRequestOverlayState extends ConsumerState<_NewRequestOverlay>
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 16,
-                                  height: 1.2,
+                                  fontSize: 18,
+                                  height: 1.1,
                                   letterSpacing: 0.5,
                                 ),
                               ),

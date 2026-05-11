@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static ThemeData light() {
-    const primary = Color(0xFF0F2B5B);
-    const accent = Color(0xFF0EA5E9);
+    const primary = Color(0xFF0F172A);
+    const accent = Color(0xFF38BDF8);
 
     return ThemeData(
       useMaterial3: true,
@@ -22,8 +22,9 @@ class AppTheme {
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: Color(0xFF0F172A),
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
+          fontSize: 22,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -0.5,
         ),
         iconTheme: IconThemeData(color: Color(0xFF0F172A)),
       ),
@@ -32,11 +33,12 @@ class AppTheme {
           backgroundColor: accent,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
           ),
           textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
           ),
           minimumSize: const Size.fromHeight(52),
           elevation: 0,
@@ -47,11 +49,11 @@ class AppTheme {
           foregroundColor: const Color(0xFF0F172A),
           side: const BorderSide(color: Color(0xFFE2E8F0)),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
           ),
           textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
           ),
           minimumSize: const Size.fromHeight(52),
         ),
@@ -68,8 +70,8 @@ class AppTheme {
           borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: accent, width: 1.5),
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: accent, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,

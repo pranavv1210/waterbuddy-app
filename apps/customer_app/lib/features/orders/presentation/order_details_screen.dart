@@ -47,8 +47,8 @@ class OrderDetailsScreen extends ConsumerWidget {
 
     return orderAsync.when(
       loading: () => const Scaffold(
-        backgroundColor: Color(0xFFF7F9FB),
-        body: Center(child: CircularProgressIndicator(color: Color(0xFF0F2B5B))),
+        backgroundColor: Color(0xFFF8FAFC),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF38BDF8))),
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(title: const Text('Order Details')),
@@ -76,9 +76,9 @@ class _OrderDetailsBody extends ConsumerWidget {
 
   final Order order;
 
-  static const _primary = Color(0xFF0F2B5B);
-  static const _accent = Color(0xFF0EA5E9);
-  static const _bg = Color(0xFFF7F9FB);
+  static const _primary = Color(0xFF0F172A);
+  static const _accent = Color(0xFF38BDF8);
+  static const _bg = Color(0xFFF8FAFC);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -207,7 +207,7 @@ class _OrderDetailsBody extends ConsumerWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF0F2B5B), Color(0xFF1E40AF)],
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
             ),
           ),
           child: SafeArea(
@@ -293,7 +293,7 @@ class _OrderDetailsBody extends ConsumerWidget {
 
   static Color _statusColor(String status) {
     switch (status) {
-      case 'SEARCHING':    return const Color(0xFF0EA5E9);
+      case 'SEARCHING':    return const Color(0xFF38BDF8);
       case 'ASSIGNED':     return const Color(0xFF8B5CF6);
       case 'ON_THE_WAY':   return const Color(0xFFF59E0B);
       case 'DELIVERED':    return const Color(0xFF10B981);
@@ -359,12 +359,12 @@ class _DriverCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: const Color(0xFF0F2B5B).withOpacity(0.08),
+                backgroundColor: const Color(0xFF0F172A).withOpacity(0.08),
                 backgroundImage:
                     photoUrl != null ? NetworkImage(photoUrl) : null,
                 child: photoUrl == null
                     ? const Icon(Icons.person_rounded,
-                        color: Color(0xFF0F2B5B), size: 28)
+                        color: Color(0xFF0F172A), size: 28)
                     : null,
               ),
               const SizedBox(width: 16),
@@ -377,9 +377,9 @@ class _DriverCard extends StatelessWidget {
                         Text(
                           name,
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F2B5B),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -396,9 +396,9 @@ class _DriverCard extends StatelessWidget {
                         Text(
                           ratingStr,
                           style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: Color(0xFF0F2B5B),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: Color(0xFF0F172A),
                           ),
                         ),
                         if (totalOrders != null) ...[
@@ -476,7 +476,7 @@ class _TimelineCard extends StatelessWidget {
                 : Icons.timeline_rounded,
             iconColor: isCancelled
                 ? const Color(0xFFEF4444)
-                : const Color(0xFF0EA5E9),
+                : const Color(0xFF38BDF8),
           ),
           const SizedBox(height: 20),
           if (isCancelled)
@@ -522,14 +522,14 @@ class _TimelineStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const doneColor = Color(0xFF10B981);
-    const activeColor = Color(0xFF0EA5E9);
+    const activeColor = Color(0xFF38BDF8);
     const pendingColor = Color(0xFFE2E8F0);
 
     final circleColor = isDone
         ? (isActive ? activeColor : doneColor)
         : pendingColor;
     final lineColor = isDone ? doneColor : pendingColor;
-    final textColor = isDone ? const Color(0xFF0F2B5B) : const Color(0xFF94A3B8);
+    final textColor = isDone ? const Color(0xFF0F172A) : const Color(0xFF94A3B8);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -586,15 +586,15 @@ class _TimelineStep extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF0EA5E9).withOpacity(0.12),
+                color: const Color(0xFF38BDF8).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
                 'CURRENT',
                 style: TextStyle(
                   fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0EA5E9),
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF38BDF8),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -672,10 +672,10 @@ class _CtaButtons extends StatelessWidget {
               label: const Text('Track Order',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0F2B5B),
+                backgroundColor: const Color(0xFF0F172A),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
               ),
             ),
@@ -693,7 +693,7 @@ class _CtaButtons extends StatelessWidget {
               foregroundColor: const Color(0xFF0F2B5B),
               side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(16)),
             ),
           ),
         ),
@@ -763,9 +763,9 @@ class _SectionHeader extends StatelessWidget {
         Text(
           title,
           style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF0F2B5B),
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF0F172A),
           ),
         ),
       ],

@@ -197,13 +197,13 @@ class _KycScreenState extends ConsumerState<KycScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF020617), // Deep slate black
+      backgroundColor: const Color(0xFF0F172A), // Dark Slate
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text(
           'Partner KYC',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: 1),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: -0.5, fontSize: 22),
         ),
         centerTitle: true,
       ),
@@ -308,7 +308,7 @@ class _KycScreenState extends ConsumerState<KycScreen> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 20),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(18),
                         ),
                         elevation: 8,
                         shadowColor: const Color(0xFF10B981).withOpacity(0.5),

@@ -86,7 +86,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         statusBarColor: Colors.transparent,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFF064E3B), // Dark Green for Seller
+        backgroundColor: const Color(0xFF0F172A), // Dark Slate
         body: Container(
           width: double.infinity,
           decoration: const BoxDecoration(
@@ -94,8 +94,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color(0xFF064E3B),
-                Color(0xFF022C22),
+                Color(0xFF1E293B),
+                Color(0xFF0F172A),
               ],
             ),
           ),
@@ -138,9 +138,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         'WaterBuddy',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 42,
+                          fontSize: 44,
                           fontWeight: FontWeight.w900,
-                          letterSpacing: -1,
+                          letterSpacing: -2,
                         ),
                       ),
                       SizedBox(height: 4),
@@ -148,9 +148,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         'PARTNER',
                         style: TextStyle(
                           color: Color(0xFF10B981),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 8,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 10,
                         ),
                       ),
                     ],

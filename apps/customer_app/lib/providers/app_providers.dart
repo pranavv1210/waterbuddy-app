@@ -9,6 +9,7 @@ import '../core/services/orders/order_service.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/presentation/auth_gate.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../features/home/presentation/location_selection_screen.dart';
 import '../features/auth/otp_screen.dart';
 import '../features/orders/presentation/order_details_screen.dart';
 import '../features/orders/presentation/orders_screen.dart';
@@ -97,6 +98,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.payments,
         builder: (_, __) => const PaymentsScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.locationSelection,
+        builder: (_, state) => LocationSelectionScreen(pickupAddress: state.extra as String?),
       ),
 
       // ── Main tabs wrapped with bottom nav bar ───────────────────────

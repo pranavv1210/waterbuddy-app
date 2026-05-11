@@ -72,6 +72,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
   bool _isLoadingLocation = false;
   bool _isMovingMap = false;
   bool _isLocationConfirmed = false;
+  bool _isManualSelection = false; // Added to track if user is explicitly selecting location
 
   // Default to Bangalore center if location not available
   static const LatLng _defaultLocation = LatLng(12.9716, 77.5946);
@@ -145,6 +146,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         setState(() => _isMovingMap = true);
       }
       _selectedLocation = position.center;
+      _isManualSelection = true;
     }
   }
 
@@ -153,8 +155,12 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     final user = FirebaseAuth.instance.currentUser;
     final searchingState = ref.watch(searchingControllerProvider);
     final isSearching = searchingState.orderId != null && (searchingState.orderStatus == 'SEARCHING' || searchingState.isLoading);
-    const primary = Color(0xFF0F2B5B);
-    const accent = Color(0xFF0EA5E9);
+    
+    // Premium Color Palette
+    const primary = Color(0xFF0F172A); // Dark Slate
+    const accent = Color(0xFF38BDF8); // Light Blue
+    const surface = Colors.white;
+    const background = Color(0xFFF8FAFC);
 
     return PopScope(
       canPop: !_isLocationConfirmed && !isSearching,
@@ -228,36 +234,38 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
           if (!_isLocationConfirmed)
             Center(
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 40), // Shift up slightly to point at exact center
+                padding: const EdgeInsets.only(bottom: 40),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: primary,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                            color: primary.withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
                       child: const Text(
-                        'Delivery Here',
+                        'Confirm Delivery Location',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 12,
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ),
+                    const SizedBox(height: 4),
                     const Icon(
                       Icons.location_on_rounded,
                       color: Color(0xFFEF4444),
-                      size: 44,
+                      size: 48,
                     ),
                   ],
                 ),
@@ -466,49 +474,41 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     }
 
     if (!_isLocationConfirmed) {
+      // If we haven't confirmed location, show either Discovery (initial) or Confirm button (after selection)
       return Positioned(
         bottom: 0,
         left: 0,
         right: 0,
         child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 25,
-                offset: const Offset(0, -5),
+                color: primary.withOpacity(0.12),
+                blurRadius: 30,
+                offset: const Offset(0, -10),
               ),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Expanded(child: _UserGreeting(user: user)),
-                ],
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _isLocationConfirmed = true;
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: const Text('Confirm Location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              // Handle
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
+              // If we have a selected location (from search or map move), show confirm button
+              // instead of the full discovery view if we're in "selection mode"
+              _isMovingMap || (_selectedLocation != null && _currentAddress != null && !_isLocationConfirmed && _isManualSelection)
+                ? _buildConfirmLocationView(primary)
+                : _buildDiscoveryView(user, primary, accent),
             ],
           ),
         ),
@@ -585,28 +585,35 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       onTap: () => widget.onTankSelected(data['id']),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 10),
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? primary.withOpacity(0.04) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected ? const Color(0xFFF0F9FF) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? primary : const Color(0xFFF1F5F9),
+            color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFFF1F5F9),
             width: 2,
           ),
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: const Color(0xFF38BDF8).withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ] : [],
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isSelected ? primary : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(12),
+                color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 data['icon'],
-                color: isSelected ? Colors.white : primary,
-                size: 24,
+                color: isSelected ? Colors.white : const Color(0xFF64748B),
+                size: 26,
               ),
             ),
             const SizedBox(width: 16),
@@ -618,28 +625,43 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                     data['size'],
                     style: TextStyle(
                       color: primary,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
-                    '${data['litres'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} Litres',
+                    '${data['litres'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} Litres • Express',
                     style: const TextStyle(
-                      color: Color(0xFF64748B),
+                      color: Color(0xFF94A3B8),
                       fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
             ),
-            Text(
-              '₹${data['basePrice']}',
-              style: TextStyle(
-                color: primary,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '₹${data['basePrice']}',
+                  style: TextStyle(
+                    color: primary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                if (isSelected)
+                  const Text(
+                    'Best Value',
+                    style: TextStyle(
+                      color: Color(0xFF0EA5E9),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
@@ -650,9 +672,24 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
   bool _isBooking = false;
 
   Widget _buildBookButton(Color primary) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      height: 56,
+      height: 60,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: ElevatedButton(
         onPressed: _isBooking ? null : () async {
           setState(() => _isBooking = true);
@@ -679,17 +716,24 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
           }
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
+          backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
         child: _isBooking 
           ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-          : const Text(
-            'Book Water',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-          ),
+          : const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Book Water Now',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                ),
+                SizedBox(width: 12),
+                Icon(Icons.arrow_forward_rounded, size: 22),
+              ],
+            ),
       ),
     );
   }
@@ -760,17 +804,132 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     );
   }
 
+  Widget _buildDiscoveryView(User? user, Color primary, Color accent) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _UserGreeting(user: user),
+          const SizedBox(height: 24),
+          // Search Bar (Rapido style)
+          GestureDetector(
+            onTap: () async {
+              final result = await context.push(RouteNames.locationSelection, extra: _currentAddress);
+              if (result != null && result is Map<String, dynamic>) {
+                if (result.containsKey('location')) {
+                  final loc = result['location'] as Map<String, dynamic>;
+                  final lat = loc['latitude'] as double;
+                  final lng = loc['longitude'] as double;
+                  _selectedLocation = LatLng(lat, lng);
+                  _mapController.move(_selectedLocation!, 15);
+                  _currentAddress = result['address'] as String?;
+                  setState(() {
+                    _isManualSelection = true;
+                  });
+                }
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.search_rounded, color: primary.withOpacity(0.6), size: 22),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Where to deliver?',
+                    style: TextStyle(
+                      color: primary.withOpacity(0.5),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+          const SizedBox(height: 28),
+          const Text(
+            'Recent Deliveries',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Consumer(
+            builder: (context, ref, child) {
+              final history = ref.watch(orderHistoryProvider);
+              return history.when(
+                data: (orders) {
+                  if (orders.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'No previous orders yet',
+                        style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                      ),
+                    );
+                  }
+                  
+                  // Limit to 5 recent orders for the home screen
+                  final recentOrders = orders.take(5).toList();
+                  
+                  return Column(
+                    children: recentOrders.map((order) {
+                      return _RecentDeliveryTile(
+                        address: order.deliveryAddress ?? 'Unknown Address',
+                        date: order.createdAt,
+                        onTap: () {
+                           // Set the location from previous order
+                           if (order.location != null) {
+                             final lat = order.location!['latitude'] as double;
+                             final lng = order.location!['longitude'] as double;
+                             _selectedLocation = LatLng(lat, lng);
+                             _mapController.move(_selectedLocation!, 15);
+                             _currentAddress = order.deliveryAddress;
+                             setState(() => _isLocationConfirmed = true);
+                           }
+                        },
+                      );
+                    }).toList(),
+                  );
+                },
+                loading: () => const Center(child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )),
+                error: (e, s) => const Text('Failed to load history'),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildUserDot() {
     return Stack(
       alignment: Alignment.center,
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: const Color(0xFF0EA5E9).withOpacity(0.15),
-            shape: BoxShape.circle,
-          ),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(seconds: 2),
+          builder: (context, value, child) {
+            return Container(
+              width: 40 * value,
+              height: 40 * value,
+              decoration: BoxDecoration(
+                color: const Color(0xFF38BDF8).withOpacity(0.2 * (1 - value)),
+                shape: BoxShape.circle,
+              ),
+            );
+          },
+          onEnd: () {}, // Repeat logic could be added here
         ),
         Container(
           width: 24,
@@ -790,13 +949,163 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
               width: 14,
               height: 14,
               decoration: const BoxDecoration(
-                color: Color(0xFF0EA5E9),
+                color: Color(0xFF38BDF8),
                 shape: BoxShape.circle,
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ServiceCard extends StatelessWidget {
+  const _ServiceCard({
+    required this.title,
+    required this.subtitle,
+    required this.imagePath,
+    required this.gradient,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final String imagePath;
+  final List<Color> gradient;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 140,
+        height: 180,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradient,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: gradient.last.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -10,
+              bottom: 10,
+              child: Opacity(
+                opacity: 0.9,
+                child: Image.asset(
+                  imagePath,
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RecentDeliveryTile extends StatelessWidget {
+  const _RecentDeliveryTile({required this.address, this.date, required this.onTap});
+
+  final String address;
+  final DateTime? date;
+  final VoidCallback onTap;
+
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return 'Last delivered recently';
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inDays == 0) return 'Last delivered today';
+    if (diff.inDays == 1) return 'Last delivered yesterday';
+    return 'Last delivered ${diff.inDays} days ago';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.history_rounded, color: Color(0xFF64748B), size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    address,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    _formatDate(date),
+                    style: const TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFFCBD5E1)),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -921,7 +1230,8 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
     final searchingState = ref.watch(searchingControllerProvider);
     final activeOrder = ref.watch(activeOrderProvider).value;
 
-    const primaryColor = Color(0xFF0F2B5B);
+    const primaryColor = Color(0xFF0F172A);
+    const accentColor = Color(0xFF38BDF8);
 
     if (searchingState.hasTimedOut) {
       return Positioned(
@@ -932,29 +1242,36 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
           padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 25,
-                offset: const Offset(0, -5),
+                color: primaryColor.withOpacity(0.15),
+                blurRadius: 30,
+                offset: const Offset(0, -10),
               ),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.timer_off_rounded, size: 48, color: Color(0xFFEF4444)),
-              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.timer_off_rounded, size: 48, color: Color(0xFFEF4444)),
+              ),
+              const SizedBox(height: 24),
               const Text(
                 'No tankers available',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF0F172A), letterSpacing: -0.5),
               ),
               const SizedBox(height: 8),
               const Text(
-                'All our partners are currently busy. Please try again in a few minutes.',
+                'All our partners are currently busy in your area. Please try again in a few minutes.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, color: Color(0xFF64748B)),
+                style: TextStyle(fontSize: 15, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 32),
               SizedBox(
@@ -966,9 +1283,10 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    elevation: 0,
                   ),
-                  child: const Text('Try Again', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+                  child: const Text('Try Again', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
                 ),
               ),
             ],
@@ -984,12 +1302,12 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
+              color: primaryColor.withOpacity(0.15),
+              blurRadius: 30,
+              offset: const Offset(0, -10),
             ),
           ],
         ),
@@ -997,57 +1315,73 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Linear progress indicator at the very top, clipped to corners
+            // Modern progress line
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              child: const LinearProgressIndicator(
-                backgroundColor: Color(0xFFF1F5F9),
-                color: primaryColor,
-                minHeight: 4,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              child: LinearProgressIndicator(
+                backgroundColor: accentColor.withOpacity(0.1),
+                color: accentColor,
+                minHeight: 6,
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Finding your tanker...',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                      letterSpacing: -0.5,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Finding your tanker...',
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF0F172A),
+                          letterSpacing: -1.0,
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF38BDF8)),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Broadcasting your request to nearby partners.',
+                    'Broadcasting your request to 5 nearby partners.',
                     style: TextStyle(
                       fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                       color: Color(0xFF64748B),
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // Order details card
+                  // Order details card (Modern style)
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          child: const Icon(Icons.water_drop_rounded, color: primaryColor),
+                          child: const Icon(Icons.water_drop_rounded, color: Color(0xFF38BDF8), size: 28),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -1057,35 +1391,36 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                               Text(
                                 _getTankLabel(activeOrder?.tankSize ?? 15000),
                                 style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
                                   color: Color(0xFF0F172A),
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 4),
                               Text(
-                                '${activeOrder?.tankSize ?? 15000} Litres',
+                                '${activeOrder?.tankSize?.toInt() ?? 15000} Litres • COD',
                                 style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 13,
-                                  color: Color(0xFF64748B),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Color(0xFF94A3B8),
                                 ),
                               ),
                             ],
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE0F2FE),
-                            borderRadius: BorderRadius.circular(8),
+                            color: const Color(0xFFF0F9FF),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFBAE6FD)),
                           ),
                           child: const Text(
                             'SEARCHING',
                             style: TextStyle(
                               color: Color(0xFF0369A1),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
                         ),
@@ -1093,7 +1428,7 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // Cancel Button
+                  // Cancel Button (Modern outlined)
                   SizedBox(
                     width: double.infinity,
                     height: 56,
@@ -1106,10 +1441,10 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFEF4444),
-                        side: const BorderSide(color: Color(0xFFE2E8F0)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        side: const BorderSide(color: Color(0xFFF1F5F9), width: 2),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                       ),
-                      child: const Text('Cancel Request', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                      child: const Text('Cancel Request', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                     ),
                   ),
                 ],
@@ -1117,6 +1452,66 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
             ),
           ],
         ),
+      ),
+    );
+  }
+  Widget _buildConfirmLocationView(Color primary) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.location_on_rounded, color: Color(0xFFEF4444), size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Confirm Delivery Location',
+                      style: TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      _currentAddress ?? 'Selecting location...',
+                      style: const TextStyle(color: Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _isLocationConfirmed = true;
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text('Confirm Location', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _isManualSelection = false;
+              });
+            },
+            child: const Text('Change', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }

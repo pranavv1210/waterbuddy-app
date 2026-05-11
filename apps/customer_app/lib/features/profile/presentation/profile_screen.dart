@@ -42,10 +42,10 @@ class ProfileScreen extends ConsumerWidget {
                         const Text(
                           'My Profile',
                           style: TextStyle(
-                            fontSize: 28,
+                            fontSize: 32,
                             fontWeight: FontWeight.w900,
-                            color: Color(0xFF102A43),
-                            letterSpacing: -0.5,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: -1.5,
                           ),
                         ),
                         IconButton(
@@ -123,16 +123,16 @@ class ProfileScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0F2B5B), Color(0xFF1D4ED8)],
+          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1D4ED8).withOpacity(0.3),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            color: const Color(0xFF0F172A).withOpacity(0.25),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
           ),
         ],
       ),
@@ -226,8 +226,9 @@ class ProfileScreen extends ConsumerWidget {
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    final color = isDestructive ? const Color(0xFFE53E3E) : const Color(0xFF102A43);
-    final bgColor = isDestructive ? const Color(0xFFFFF5F5) : Colors.white;
+    final color = isDestructive ? const Color(0xFFEF4444) : const Color(0xFF0F172A);
+    final accentColor = const Color(0xFF38BDF8);
+    final bgColor = isDestructive ? const Color(0xFFFFF1F2) : Colors.white;
 
     return GestureDetector(
       onTap: onTap,
@@ -249,10 +250,10 @@ class ProfileScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: isDestructive ? color.withOpacity(0.1) : accentColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: Icon(icon, color: isDestructive ? color : accentColor, size: 28),
             ),
             const SizedBox(width: 20),
             Expanded(

@@ -17,7 +17,7 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text(
           'Profile',
-          style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF0F2E74)),
+          style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A), fontSize: 24, letterSpacing: -0.5),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -29,7 +29,7 @@ class ProfileScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(28),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x0A000000),
@@ -44,13 +44,13 @@ class ProfileScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isOnline
-                        ? const Color(0xFF71F8E4).withOpacity(0.15)
-                        : const Color(0xFFF3F4F6),
+                        ? const Color(0xFF10B981).withOpacity(0.1)
+                        : const Color(0xFFF1F5F9),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     isOnline ? Icons.online_prediction : Icons.offline_bolt_outlined,
-                    color: isOnline ? const Color(0xFF00687A) : const Color(0xFF6B7280),
+                    color: isOnline ? const Color(0xFF10B981) : const Color(0xFF64748B),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -61,9 +61,10 @@ class ProfileScreen extends ConsumerWidget {
                       Text(
                         isOnline ? 'You are Online' : 'You are Offline',
                         style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1F2937),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF0F172A),
+                          letterSpacing: -0.5,
                         ),
                       ),
                       Text(
@@ -71,8 +72,9 @@ class ProfileScreen extends ConsumerWidget {
                             ? 'Visible to customers'
                             : 'Not receiving requests',
                         style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF6B7280),
+                          fontSize: 14,
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -80,7 +82,8 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 Switch.adaptive(
                   value: isOnline,
-                  activeColor: const Color(0xFF0F2E74),
+                  activeColor: const Color(0xFF10B981),
+                  activeTrackColor: const Color(0xFF10B981).withOpacity(0.2),
                   onChanged: (value) {
                     ref.read(sellerAvailabilityProvider.notifier).setOnline(value);
                   },
@@ -92,10 +95,10 @@ class ProfileScreen extends ConsumerWidget {
           const Text(
             'Account Settings',
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF6B7280),
-              letterSpacing: 0.5,
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF94A3B8),
+              letterSpacing: 1.0,
             ),
           ),
           const SizedBox(height: 16),
@@ -156,8 +159,8 @@ class _ProfileMenuItem extends StatelessWidget {
         ),
         child: Icon(
           icon,
-          size: 20,
-          color: isDestructive ? const Color(0xFFDC2626) : const Color(0xFF0F2E74),
+          size: 22,
+          color: isDestructive ? const Color(0xFFEF4444) : const Color(0xFF0F172A),
         ),
       ),
       title: Text(

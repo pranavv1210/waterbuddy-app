@@ -24,10 +24,10 @@ class OrdersScreen extends ConsumerWidget {
         title: const Text(
           'Order History',
           style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF0F2B5B),
-            letterSpacing: -0.5,
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF0F172A),
+            letterSpacing: -1.0,
           ),
         ),
       ),
@@ -36,7 +36,7 @@ class OrdersScreen extends ConsumerWidget {
             ? _EmptyState()
             : _OrderList(orders: orders),
         loading: () => const Center(
-          child: CircularProgressIndicator(color: Color(0xFF0F2B5B)),
+          child: CircularProgressIndicator(color: Color(0xFF38BDF8)),
         ),
         error: (e, _) => Center(
           child: Column(
@@ -47,7 +47,7 @@ class OrdersScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               const Text('Failed to load orders',
                   style: TextStyle(
-                      fontWeight: FontWeight.w700, color: Color(0xFF0F2B5B))),
+                      fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
               const SizedBox(height: 8),
               Text(e.toString(),
                   textAlign: TextAlign.center,
@@ -147,12 +147,13 @@ class _OrderCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFF1F5F9)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -179,9 +180,10 @@ class _OrderCard extends StatelessWidget {
                         Text(
                           '${order.tankSize.toInt()}L Water Tank',
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F2B5B),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: -0.5,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -285,7 +287,7 @@ class _OrderCard extends StatelessWidget {
   Color _statusColor(String status) {
     switch (status) {
       case 'SEARCHING':
-        return const Color(0xFF0EA5E9);
+        return const Color(0xFF38BDF8);
       case 'ASSIGNED':
         return const Color(0xFF8B5CF6);
       case 'ON_THE_WAY':
@@ -339,22 +341,22 @@ class _EmptyState extends StatelessWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: const Color(0xFF0F2B5B).withOpacity(0.06),
+                color: const Color(0xFF0F172A).withOpacity(0.06),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.receipt_long_rounded,
                 size: 48,
-                color: Color(0xFF0F2B5B),
+                color: Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 24),
             const Text(
               'No orders yet',
               style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF0F2B5B),
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF0F172A),
                 letterSpacing: -0.5,
               ),
             ),
@@ -376,11 +378,11 @@ class _EmptyState extends StatelessWidget {
                 icon: const Icon(Icons.water_drop_rounded, size: 18),
                 label: const Text('Book Water Now'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F2B5B),
+                  backgroundColor: const Color(0xFF0F172A),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                      borderRadius: BorderRadius.circular(16)),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   elevation: 0,
                 ),
               ),

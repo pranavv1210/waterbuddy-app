@@ -19,7 +19,7 @@ class UnderReviewScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: const Color(0xFF020617), // Deep slate black
+      backgroundColor: const Color(0xFF0F172A), // Dark Slate
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -68,7 +68,7 @@ class UnderReviewScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0F172A),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: const Color(0xFF334155)),
                 ),
                 child: const Row(
@@ -111,7 +111,7 @@ class UnderReviewScreen extends ConsumerWidget {
                     side: const BorderSide(color: Color(0xFF10B981)),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(18),
                     ),
                   ),
                   child: const Text('Check Status Again'),

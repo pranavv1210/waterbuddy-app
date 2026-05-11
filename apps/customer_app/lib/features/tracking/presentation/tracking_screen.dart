@@ -60,7 +60,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                   const SizedBox(height: 24),
                   const Text(
                     'Something went wrong',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF0F2B5B)),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF0F172A), letterSpacing: -0.5),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -78,9 +78,10 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                         context.go(RouteNames.home);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F2B5B),
+                        backgroundColor: const Color(0xFF0F172A),
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        elevation: 0,
                       ),
                       child: const Text('Back to Home'),
                     ),
@@ -153,8 +154,8 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF0F2B5B);
-    const accentColor = Color(0xFF0EA5E9);
+    const primaryColor = Color(0xFF0F172A);
+    const accentColor = Color(0xFF38BDF8);
 
     final statusTitle = _getStatusTitle(widget.trackingState.orderStatus);
     final statusSubtitle = _getStatusSubtitle(widget.trackingState.orderStatus);
@@ -192,7 +193,7 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                                 height: 60,
                                 child: const Icon(
                                   Icons.local_shipping_rounded,
-                                  color: Color(0xFF0F2B5B),
+                                  color: Color(0xFF38BDF8),
                                   size: 40,
                                 ),
                               ),
@@ -248,14 +249,14 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
             alignment: Alignment.bottomCenter,
             child: Container(
               width: double.infinity,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 20,
-                    offset: Offset(0, -5),
+                    color: primaryColor.withOpacity(0.15),
+                    blurRadius: 30,
+                    offset: const Offset(0, -10),
                   ),
                 ],
               ),
@@ -289,9 +290,10 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                                   Text(
                                     statusTitle,
                                     style: const TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w800,
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w900,
                                       color: primaryColor,
+                                      letterSpacing: -1.0,
                                     ),
                                   ),
                                   Text(
@@ -322,7 +324,7 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(28),
                             border: Border.all(color: const Color(0xFFF1F5F9)),
                           ),
                           child: Column(
@@ -349,9 +351,10 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                                             Text(
                                               widget.state.driver.name,
                                               style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w800,
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w900,
                                                 color: primaryColor,
+                                                letterSpacing: -0.5,
                                               ),
                                             ),
                                             const SizedBox(width: 6),
@@ -502,10 +505,11 @@ class _InfoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFF1F5F9)),
         ),
         child: Column(
           children: [

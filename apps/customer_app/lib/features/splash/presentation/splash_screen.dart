@@ -86,7 +86,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         statusBarColor: Colors.transparent,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F2B5B),
+        backgroundColor: const Color(0xFF0F172A),
         body: Container(
           width: double.infinity,
           decoration: const BoxDecoration(
@@ -94,8 +94,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color(0xFF0F2B5B),
-                Color(0xFF061530),
+                Color(0xFF0F172A),
+                Color(0xFF020617),
               ],
             ),
           ),
@@ -120,7 +120,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       ),
                       child: const Icon(
                         Icons.water_drop_rounded,
-                        color: Color(0xFF0EA5E9),
+                        color: Color(0xFF38BDF8),
                         size: 80,
                       ),
                     ),
@@ -147,10 +147,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       Text(
                         'Pure hydration, delivered.',
                         style: TextStyle(
-                          color: Colors.white70,
+                          color: Color(0xFF94A3B8),
                           fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 1,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ],

@@ -34,6 +34,9 @@ flutter:
   assets:
     - assets/images/logo.png
     - assets/images/google_logo.svg
+    - assets/ui/tanker.png
+    - assets/ui/filtered.png
+    - assets/ui/express.png
 
 flutter_launcher_icons:
   android: true

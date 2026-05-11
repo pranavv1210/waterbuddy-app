@@ -57,7 +57,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     // Show error if any
     if (paymentState.errorMessage != null) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF0F4F8),
+        backgroundColor: const Color(0xFFF8FAFC),
         body: SafeArea(
           child: Center(
             child: Padding(
@@ -69,7 +69,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   const SizedBox(height: 24),
                   Text(
                     'Payment Failed',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: const Color(0xFF102A43)),
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -0.5),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -86,8 +86,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         ref.read(paymentControllerProvider.notifier).clearError();
                       },
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F2B5B),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        backgroundColor: const Color(0xFF0F172A),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        elevation: 0,
                       ),
                       child: const Text('Try Again', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                     ),
@@ -101,18 +102,19 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F8),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFF102A43)),
+        iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
         title: const Text(
           'Checkout',
           style: TextStyle(
-            color: Color(0xFF102A43),
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
+            color: Color(0xFF0F172A),
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -1.0,
           ),
         ),
       ),
@@ -155,10 +157,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                               Text(
                                 '₹${(_amountInPaise / 100).toStringAsFixed(2)}',
                                 style: const TextStyle(
-                                  color: Color(0xFF102A43),
-                                  fontSize: 40,
+                                  color: Color(0xFF0F172A),
+                                  fontSize: 44,
                                   fontWeight: FontWeight.w900,
-                                  letterSpacing: -1,
+                                  letterSpacing: -2,
                                 ),
                               ),
                             ],
@@ -168,9 +170,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         const Text(
                           'Select Payment Method',
                           style: TextStyle(
-                            color: Color(0xFF102A43),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -247,8 +250,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                             }
                           },
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F2B5B),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      backgroundColor: const Color(0xFF0F172A),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      elevation: 0,
                     ),
                     child: paymentState.isProcessing
                         ? const SizedBox(
@@ -258,7 +262,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           )
                         : Text(
                             selectedMethod == 'cash' ? 'Confirm Order' : 'Pay ₹${(_amountInPaise / 100).toStringAsFixed(0)}',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
                           ),
                   ),
                 ),
@@ -288,7 +292,8 @@ class _PaymentMethodCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = const Color(0xFF0F2B5B);
+    final activeColor = const Color(0xFF0F172A);
+    final accentColor = const Color(0xFF38BDF8);
 
     return GestureDetector(
       onTap: onTap,
@@ -317,10 +322,10 @@ class _PaymentMethodCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isSelected ? activeColor : const Color(0xFFF0F4F8),
-                borderRadius: BorderRadius.circular(14),
+                color: isSelected ? accentColor : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: isSelected ? Colors.white : const Color(0xFF486581)),
+              child: Icon(icon, color: isSelected ? Colors.white : const Color(0xFF64748B)),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -330,9 +335,9 @@ class _PaymentMethodCard extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      color: Color(0xFF102A43),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F172A),
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -353,7 +358,7 @@ class _PaymentMethodCard extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? activeColor : const Color(0xFFCBD5E1),
+                  color: isSelected ? accentColor : const Color(0xFFCBD5E1),
                   width: 2,
                 ),
               ),
@@ -363,7 +368,7 @@ class _PaymentMethodCard extends StatelessWidget {
                         width: 12,
                         height: 12,
                         decoration: BoxDecoration(
-                          color: activeColor,
+                          color: accentColor,
                           shape: BoxShape.circle,
                         ),
                       ),

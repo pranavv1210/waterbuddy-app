@@ -12,15 +12,15 @@ import 'auth_controller.dart';
 
 // Modern Design Tokens
 class _Colors {
-  static const primary = Color(0xFF0A2540);
-  static const primaryLight = Color(0xFF1A3A5C);
-  static const accent = Color(0xFF00B4D8);
-  static const accentGlow = Color(0xFF90E0EF);
+  static const primary = Color(0xFF0F172A);
+  static const primaryLight = Color(0xFF1E293B);
+  static const accent = Color(0xFF38BDF8);
+  static const accentGlow = Color(0xFF7DD3FC);
   static const surface = Color(0xFFF8FAFC);
   static const card = Color(0xFFFFFFFF);
   static const inputBg = Color(0xFFF1F5F9);
   static const inputBorder = Color(0xFFE2E8F0);
-  static const inputBorderFocus = Color(0xFF00B4D8);
+  static const inputBorderFocus = Color(0xFF38BDF8);
   static const textPrimary = Color(0xFF0F172A);
   static const textSecondary = Color(0xFF64748B);
   static const textTertiary = Color(0xFF94A3B8);
@@ -212,7 +212,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               end: Alignment.bottomRight,
               colors: [
                 _Colors.surface,
-                const Color(0xFFE0F7FA),
+                const Color(0xFFF0F9FF),
                 _Colors.surface,
               ],
               stops: const [0.0, 0.5, 1.0],

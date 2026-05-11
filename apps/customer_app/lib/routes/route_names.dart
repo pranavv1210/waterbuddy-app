@@ -10,4 +10,5 @@ class RouteNames {
   static const payments = '/payments';
   static const orderDetails = '/order-details';
   static const orderComplete = '/order-complete';
+  static const locationSelection = '/location-selection';
 }
