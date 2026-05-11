@@ -16,6 +16,7 @@ import '../../../providers/app_providers.dart';
 import '../../../models/order.dart' as app_order;
 import '../../tracking/providers/searching_providers.dart';
 import '../../tracking/models/searching_tankers_state.dart';
+import '../../orders/providers/order_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
