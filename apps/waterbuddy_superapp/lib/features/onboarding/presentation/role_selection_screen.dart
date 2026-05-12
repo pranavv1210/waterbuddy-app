@@ -91,7 +91,16 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen>
                     onPressed: selectedRole == null
                         ? null
                         : () {
-                            context.go(RouteNames.auth);
+                            switch (selectedRole!) {
+                              case AppRole.consumer:
+                                context.go(RouteNames.authConsumer);
+                              case AppRole.seller:
+                                context.go(RouteNames.authSeller);
+                              case AppRole.driver:
+                                context.go(RouteNames.authDriver);
+                              case AppRole.admin:
+                                context.go(RouteNames.authAdmin);
+                            }
                           },
                     style: FilledButton.styleFrom(
                       minimumSize: const Size.fromHeight(52),

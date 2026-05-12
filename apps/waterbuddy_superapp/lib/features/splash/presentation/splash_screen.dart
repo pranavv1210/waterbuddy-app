@@ -73,8 +73,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       case null:
         context.go(RouteNames.roleSelection);
         break;
-      case _:
-        context.go(RouteNames.auth);
+      case var role:
+        switch (role) {
+          case _:
+            // Let router redirect handle exact dashboard + verification guard.
+            context.go(RouteNames.roleSelection);
+        }
     }
   }
 

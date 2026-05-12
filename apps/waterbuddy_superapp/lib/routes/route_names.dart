@@ -1,8 +1,14 @@
 class RouteNames {
   static const splash = '/';
   static const roleSelection = '/role-selection';
-  static const auth = '/auth';
-  static const otp = '/otp';
+  static const authConsumer = '/auth/consumer';
+  static const authConsumerOtp = '/auth/consumer/otp';
+  static const authSeller = '/auth/seller';
+  static const authDriver = '/auth/driver';
+  static const authDriverOtp = '/auth/driver/otp';
+  static const authAdmin = '/auth/admin';
+  static const auth = authConsumer;
+  static const otp = authConsumerOtp;
 
   static const consumerHome = '/consumer/home';
   static const consumerOrders = '/consumer/orders';

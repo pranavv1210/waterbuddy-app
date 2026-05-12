@@ -14,8 +14,12 @@ import '../core/services/location/seller_location_tracking_service.dart';
 import '../core/services/orders/order_service.dart';
 import '../features/admin/presentation/admin_dashboard_screen.dart';
 import '../features/auth/auth_controller.dart';
-import '../features/auth/login_screen.dart';
-import '../features/auth/otp_screen.dart';
+import '../features/auth/presentation/admin_auth_screen.dart';
+import '../features/auth/presentation/consumer_auth_screen.dart';
+import '../features/auth/presentation/consumer_otp_screen.dart';
+import '../features/auth/presentation/driver_onboarding_screen.dart';
+import '../features/auth/presentation/driver_otp_screen.dart';
+import '../features/auth/presentation/seller_onboarding_screen.dart';
 import '../features/auth/presentation/unauthorized_screen.dart';
 import '../features/driver/presentation/driver_dashboard_screen.dart';
 import '../features/home/presentation/home_screen.dart';
@@ -272,13 +276,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final signedIn = user != null;
 
       if (path == RouteNames.splash) return null;
-      if (!signedIn && path != RouteNames.roleSelection && path != RouteNames.auth && path != RouteNames.otp) {
+      final authPaths = <String>{
+        RouteNames.authConsumer,
+        RouteNames.authConsumerOtp,
+        RouteNames.authSeller,
+        RouteNames.authDriver,
+        RouteNames.authDriverOtp,
+        RouteNames.authAdmin,
+      };
+
+      if (!signedIn && path != RouteNames.roleSelection && !authPaths.contains(path)) {
         return RouteNames.roleSelection;
       }
       if (!signedIn) return null;
       if (role == null) return RouteNames.roleSelection;
 
-      if (path == RouteNames.roleSelection || path == RouteNames.auth || path == RouteNames.otp) {
+      if (path == RouteNames.roleSelection || authPaths.contains(path)) {
         switch (role) {
           case AppRole.consumer:
             return RouteNames.consumerHome;
@@ -311,8 +324,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: RouteNames.splash, builder: (_, __) => const SplashScreen()),
       GoRoute(path: RouteNames.roleSelection, builder: (_, __) => const RoleSelectionScreen()),
-      GoRoute(path: RouteNames.auth, builder: (_, __) => const LoginScreen()),
-      GoRoute(path: RouteNames.otp, builder: (_, __) => const OtpScreen()),
+      GoRoute(path: RouteNames.authConsumer, builder: (_, __) => const ConsumerAuthScreen()),
+      GoRoute(path: RouteNames.authConsumerOtp, builder: (_, __) => const ConsumerOtpScreen()),
+      GoRoute(path: RouteNames.authSeller, builder: (_, __) => const SellerOnboardingScreen()),
+      GoRoute(path: RouteNames.authDriver, builder: (_, __) => const DriverOnboardingScreen()),
+      GoRoute(path: RouteNames.authDriverOtp, builder: (_, __) => const DriverOtpScreen()),
+      GoRoute(path: RouteNames.authAdmin, builder: (_, __) => const AdminAuthScreen()),
       GoRoute(path: RouteNames.sellerDashboard, builder: (_, __) => const SellerDashboardScreen()),
       GoRoute(path: RouteNames.sellerWaiting, builder: (_, __) => const SellerWaitingScreen()),
       GoRoute(path: RouteNames.sellerBlocked, builder: (_, __) => const SellerBlockedScreen()),

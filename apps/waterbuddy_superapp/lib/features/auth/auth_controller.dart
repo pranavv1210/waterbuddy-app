@@ -175,6 +175,43 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> verifyDevelopmentOtp({
+    required String otpCode,
+    required AppRole role,
+    required String fullName,
+    required String email,
+    required String phoneNumber,
+  }) async {
+    if (!RegExp(r'^\d{6}$').hasMatch(otpCode.trim())) {
+      state = state.copyWith(errorMessage: 'Enter a valid 6-digit OTP.');
+      return false;
+    }
+    state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
+    try {
+      await _authService.signInWithDevelopmentOtp(phoneNumber: phoneNumber, otpCode: otpCode.trim());
+      await _authService.upsertUserProfile(
+        role: role,
+        fullName: fullName,
+        email: email,
+        phoneNumber: phoneNumber,
+        authProvider: 'otp',
+        isVerified: true,
+      );
+      state = state.copyWith(
+        isLoading: false,
+        isVerified: true,
+        successMessage: 'Login successful.',
+      );
+      return true;
+    } on AuthFailure catch (failure) {
+      state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      return false;
+    } catch (_) {
+      state = state.copyWith(isLoading: false, errorMessage: 'Unable to verify OTP.');
+      return false;
+    }
+  }
+
   Future<bool> signInWithGoogle({required AppRole role}) async {
     state = state.copyWith(
       isLoading: true,
