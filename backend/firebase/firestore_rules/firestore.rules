@@ -5,8 +5,24 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function hasRole(role) {
-      return isSignedIn() && request.auth.token.role == role;
+    function role() {
+      return isSignedIn() ? request.auth.token.role : null;
+    }
+
+    function isConsumerRole() {
+      return role() == 'consumer' || role() == 'customer';
+    }
+
+    function isSellerRole() {
+      return role() == 'seller';
+    }
+
+    function isDriverRole() {
+      return role() == 'driver';
+    }
+
+    function isAdminRole() {
+      return role() == 'admin';
     }
 
     function isOwner(userId) {
@@ -14,38 +30,63 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if isSignedIn();
+      allow read: if isOwner(userId) || isAdminRole();
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || hasRole("admin");
-      allow delete: if hasRole("admin");
+      allow update: if isOwner(userId) || isAdminRole();
+      allow delete: if isAdminRole();
+    }
+
+    match /admins/{adminId} {
+      allow read: if isOwner(adminId) || isAdminRole();
+      allow write: if isAdminRole();
     }
 
     match /sellers/{sellerId} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(sellerId) || hasRole("admin");
-      allow delete: if hasRole("admin");
+      allow create: if isOwner(sellerId) || isAdminRole();
+      allow update: if isAdminRole()
+        || (isOwner(sellerId) && request.resource.data.verificationStatus == resource.data.verificationStatus);
+      allow delete: if isAdminRole();
+    }
+
+    match /drivers/{driverId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(driverId) || isAdminRole();
+      allow update: if isOwner(driverId) || isAdminRole();
+      allow delete: if isAdminRole();
     }
 
     match /orders/{orderId} {
-      allow read: if isSignedIn();
-      allow create: if hasRole("customer");
-      allow update: if hasRole("admin")
-        || (hasRole("seller") && resource.data.sellerId == request.auth.uid)
-        || (hasRole("customer") && resource.data.customerId == request.auth.uid);
-      allow delete: if hasRole("admin");
+      allow read: if isAdminRole()
+        || (isConsumerRole() && resource.data.customerId == request.auth.uid)
+        || (isSellerRole() && (resource.data.sellerId == request.auth.uid || resource.data.status == 'SEARCHING'))
+        || (isDriverRole() && resource.data.driverId == request.auth.uid);
+
+      allow create: if isConsumerRole() && request.resource.data.customerId == request.auth.uid;
+
+      allow update: if isAdminRole()
+        || (isConsumerRole() && resource.data.customerId == request.auth.uid)
+        || (isSellerRole() && resource.data.sellerId == request.auth.uid)
+        || (isDriverRole() && resource.data.driverId == request.auth.uid);
+
+      allow delete: if isAdminRole();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAdminRole() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create, update, delete: if isAdminRole();
     }
 
     match /tracking/{trackingId} {
       allow read: if isSignedIn();
-      allow create, update: if hasRole("seller") || hasRole("admin");
-      allow delete: if hasRole("admin");
+      allow create, update: if isSellerRole() || isDriverRole() || isAdminRole();
+      allow delete: if isAdminRole();
     }
 
     match /complaints/{complaintId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn();
-      allow update: if hasRole("admin");
-      allow delete: if hasRole("admin");
+      allow update, delete: if isAdminRole();
     }
   }
 }

@@ -1,0 +1,341 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
+
+import '../core/auth/admin_access_service.dart';
+import '../core/auth/app_role.dart';
+import '../core/auth/role_session_service.dart';
+import '../core/services/auth/auth_service.dart';
+import '../core/services/location/seller_location_tracking_service.dart';
+import '../core/services/orders/order_service.dart';
+import '../features/admin/presentation/admin_dashboard_screen.dart';
+import '../features/auth/auth_controller.dart';
+import '../features/auth/login_screen.dart';
+import '../features/auth/otp_screen.dart';
+import '../features/auth/presentation/unauthorized_screen.dart';
+import '../features/driver/presentation/driver_dashboard_screen.dart';
+import '../features/home/presentation/home_screen.dart';
+import '../features/home/presentation/location_selection_screen.dart';
+import '../features/onboarding/presentation/role_selection_screen.dart';
+import '../features/orders/presentation/order_details_screen.dart';
+import '../features/orders/presentation/orders_screen.dart';
+import '../features/payments/presentation/payments_screen.dart';
+import '../features/profile/presentation/profile_screen.dart';
+import '../features/seller/presentation/seller_blocked_screen.dart';
+import '../features/seller/presentation/seller_dashboard_screen.dart';
+import '../features/seller/presentation/seller_waiting_screen.dart';
+import '../features/splash/presentation/splash_screen.dart';
+import '../features/tracking/presentation/order_complete_screen.dart';
+import '../features/tracking/presentation/searching_tankers_screen.dart';
+import '../features/tracking/presentation/tracking_screen.dart';
+import '../models/order.dart' as app_order;
+import '../routes/route_names.dart';
+import '../widgets/main_shell.dart';
+
+final firebaseAuthProvider = Provider<FirebaseAuth>((ref) => FirebaseAuth.instance);
+final firestoreProvider = Provider<FirebaseFirestore>((ref) => FirebaseFirestore.instance);
+final adminAccessServiceProvider = Provider<AdminAccessService>((ref) => const AdminAccessService());
+final roleSessionServiceProvider = Provider<RoleSessionService>((ref) => RoleSessionService());
+
+final authServiceProvider = Provider<AuthService>(
+  (ref) => AuthService(
+    ref.watch(firebaseAuthProvider),
+    ref.watch(firestoreProvider),
+    ref.watch(adminAccessServiceProvider),
+  ),
+);
+
+final sellerLocationTrackingServiceProvider =
+    Provider<SellerLocationTrackingService>((ref) => SellerLocationTrackingService(ref.watch(firestoreProvider)));
+
+final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
+  (ref) => AuthController(ref.watch(authServiceProvider)),
+);
+final orderServiceProvider = Provider<OrderService>((ref) => OrderService(ref.watch(firestoreProvider)));
+final authStateProvider = StreamProvider<User?>((ref) => ref.watch(authServiceProvider).authStateChanges());
+final currentUserProvider = Provider<User?>((ref) => ref.watch(authStateProvider).value);
+
+final selectedRoleProvider = StateNotifierProvider<SelectedRoleController, AppRole?>(
+  (ref) => SelectedRoleController(ref.watch(roleSessionServiceProvider))..restore(),
+);
+
+class SelectedRoleController extends StateNotifier<AppRole?> {
+  SelectedRoleController(this._sessionService) : super(null);
+  final RoleSessionService _sessionService;
+
+  Future<void> restore() async => state = await _sessionService.getSelectedRole();
+
+  Future<void> set(AppRole role) async {
+    state = role;
+    await _sessionService.setSelectedRole(role);
+  }
+
+  Future<void> clear() async {
+    state = null;
+    await _sessionService.clear();
+  }
+}
+
+final sellerVerificationStatusProvider = FutureProvider<String?>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return null;
+  return ref.watch(authServiceProvider).getSellerVerificationStatus(user.uid);
+});
+
+final sellerCurrentLocationProvider = StreamProvider<GeoPoint?>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return Stream.value(null);
+  return ref.watch(firestoreProvider).collection('sellers').doc(user.uid).snapshots().map((doc) {
+    final location = doc.data()?['currentLocation'] as Map<String, dynamic>?;
+    final lat = (location?['latitude'] as num?)?.toDouble();
+    final lng = (location?['longitude'] as num?)?.toDouble();
+    if (lat == null || lng == null) return null;
+    return GeoPoint(lat, lng);
+  });
+});
+
+class SellerOnlineController extends StateNotifier<bool> {
+  SellerOnlineController(this._firestore, this._user, this._locationTrackingService) : super(false) {
+    _watchSelf();
+  }
+  final FirebaseFirestore _firestore;
+  final User? _user;
+  final SellerLocationTrackingService _locationTrackingService;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _selfSub;
+
+  void _watchSelf() {
+    if (_user == null) return;
+    _selfSub = _firestore.collection('sellers').doc(_user.uid).snapshots().listen((doc) {
+      state = doc.data()?['isOnline'] as bool? ?? false;
+    });
+  }
+
+  Future<void> setOnline(bool value) async {
+    if (_user == null) return;
+    await _firestore.collection('sellers').doc(_user.uid).set({
+      'uid': _user.uid,
+      'isOnline': value,
+      'lastActiveAt': FieldValue.serverTimestamp(),
+      if (!value) 'currentLocation': FieldValue.delete(),
+    }, SetOptions(merge: true));
+    if (value) {
+      await _locationTrackingService.start(sellerId: _user.uid);
+    } else {
+      await _locationTrackingService.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _selfSub?.cancel();
+    _locationTrackingService.stop();
+    super.dispose();
+  }
+}
+
+final sellerOnlineProvider = StateNotifierProvider<SellerOnlineController, bool>(
+  (ref) => SellerOnlineController(
+    ref.watch(firestoreProvider),
+    ref.watch(currentUserProvider),
+    ref.watch(sellerLocationTrackingServiceProvider),
+  ),
+);
+
+final onlineSellersProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
+  return ref
+      .watch(firestoreProvider)
+      .collection('sellers')
+      .where('isOnline', isEqualTo: true)
+      .snapshots()
+      .map((snapshot) => snapshot.docs.map((doc) {
+            final data = doc.data();
+            final location = data['currentLocation'] as Map<String, dynamic>?;
+            return {
+              'id': doc.id,
+              'lat': (location?['latitude'] as num?)?.toDouble(),
+              'lng': (location?['longitude'] as num?)?.toDouble(),
+              'tankerCount': data['tankerCount'] as int? ?? 1,
+            };
+          }).toList());
+});
+
+final searchingOrdersProvider = StreamProvider<List<app_order.Order>>((ref) {
+  final online = ref.watch(sellerOnlineProvider);
+  if (!online) return Stream.value(const <app_order.Order>[]);
+
+  final currentUser = ref.watch(currentUserProvider);
+  if (currentUser == null) return Stream.value(const <app_order.Order>[]);
+  final currentLocAsync = ref.watch(sellerCurrentLocationProvider);
+  final onlineSellersAsync = ref.watch(onlineSellersProvider);
+
+  if (currentLocAsync.isLoading || onlineSellersAsync.isLoading) {
+    return Stream.value(const <app_order.Order>[]);
+  }
+
+  final currentLoc = currentLocAsync.value;
+  final sellers = onlineSellersAsync.value ?? const <Map<String, dynamic>>[];
+  if (currentLoc == null) return Stream.value(const <app_order.Order>[]);
+
+  return ref.watch(orderServiceProvider).watchSearchingOrders().map((orders) {
+    return orders.where((order) {
+      final orderLat = (order.location['latitude'] as num?)?.toDouble();
+      final orderLng = (order.location['longitude'] as num?)?.toDouble();
+      if (orderLat == null || orderLng == null) return false;
+
+      final currentDistance =
+          Geolocator.distanceBetween(currentLoc.latitude, currentLoc.longitude, orderLat, orderLng);
+      if (currentDistance > 5000) return false;
+
+      final sellerDistances = sellers
+          .map((seller) {
+            final lat = seller['lat'] as double?;
+            final lng = seller['lng'] as double?;
+            if (lat == null || lng == null) return null;
+            return {
+              'id': seller['id'] as String,
+              'distance': Geolocator.distanceBetween(lat, lng, orderLat, orderLng),
+            };
+          })
+          .whereType<Map<String, dynamic>>()
+          .toList()
+        ..sort((a, b) => (a['distance'] as double).compareTo(b['distance'] as double));
+
+      final top5Ids = sellerDistances.take(5).map((e) => e['id']).toSet();
+      return top5Ids.contains(currentUser.uid);
+    }).toList();
+  });
+});
+
+final activeOrderProvider = StreamProvider<app_order.Order?>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return Stream.value(null);
+  return ref.watch(orderServiceProvider).watchCustomerOrders(user.uid).map((orders) {
+    for (final order in orders) {
+      if (order.status == 'ASSIGNED' ||
+          order.status == 'DRIVER_ASSIGNED' ||
+          order.status == 'ON_THE_WAY' ||
+          order.status == 'ARRIVED') {
+        return order;
+      }
+    }
+    return null;
+  });
+});
+
+final sellerActiveOrdersProvider = StreamProvider<List<app_order.Order>>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return Stream.value(const <app_order.Order>[]);
+  return ref.watch(orderServiceProvider).watchSellerOrders(user.uid).map((orders) {
+    return orders
+        .where((o) =>
+            o.status == 'ASSIGNED' ||
+            o.status == 'DRIVER_ASSIGNED' ||
+            o.status == 'ON_THE_WAY' ||
+            o.status == 'ARRIVED')
+        .toList();
+  });
+});
+
+final driverAssignedOrdersProvider = StreamProvider<List<app_order.Order>>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return Stream.value(const <app_order.Order>[]);
+  return ref.watch(orderServiceProvider).watchDriverOrders(user.uid).map((orders) {
+    return orders.where((o) => o.status != 'DELIVERED' && o.status != 'CANCELLED').toList();
+  });
+});
+
+final usersProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>(
+  (ref) => ref.watch(firestoreProvider).collection('users').snapshots(),
+);
+final sellersProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>(
+  (ref) => ref.watch(firestoreProvider).collection('sellers').snapshots(),
+);
+final driversProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>(
+  (ref) => ref.watch(firestoreProvider).collection('drivers').snapshots(),
+);
+final allOrdersProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>(
+  (ref) => ref.watch(firestoreProvider).collection('orders').snapshots(),
+);
+
+final appRouterProvider = Provider<GoRouter>((ref) {
+  return GoRouter(
+    initialLocation: RouteNames.splash,
+    redirect: (context, state) {
+      final auth = ref.read(authStateProvider);
+      final user = auth.value;
+      final role = ref.read(selectedRoleProvider);
+      final path = state.matchedLocation;
+      final signedIn = user != null;
+
+      if (path == RouteNames.splash) return null;
+      if (!signedIn && path != RouteNames.roleSelection && path != RouteNames.auth && path != RouteNames.otp) {
+        return RouteNames.roleSelection;
+      }
+      if (!signedIn) return null;
+      if (role == null) return RouteNames.roleSelection;
+
+      if (path == RouteNames.roleSelection || path == RouteNames.auth || path == RouteNames.otp) {
+        switch (role) {
+          case AppRole.consumer:
+            return RouteNames.consumerHome;
+          case AppRole.seller:
+            final verification = ref.read(sellerVerificationStatusProvider).value ?? 'pending';
+            if (verification == 'approved') return RouteNames.sellerDashboard;
+            if (verification == 'pending') return RouteNames.sellerWaiting;
+            return RouteNames.sellerBlocked;
+          case AppRole.driver:
+            return RouteNames.driverDashboard;
+          case AppRole.admin:
+            return RouteNames.adminDashboard;
+        }
+      }
+
+      if (path.startsWith('/admin') && role != AppRole.admin) return RouteNames.unauthorized;
+      if (path.startsWith('/seller')) {
+        if (role != AppRole.seller) return RouteNames.unauthorized;
+        final verification = ref.read(sellerVerificationStatusProvider).value ?? 'pending';
+        if (verification == 'approved' && path != RouteNames.sellerDashboard) return RouteNames.sellerDashboard;
+        if (verification == 'pending' && path != RouteNames.sellerWaiting) return RouteNames.sellerWaiting;
+        if ((verification == 'rejected' || verification == 'suspended') && path != RouteNames.sellerBlocked) {
+          return RouteNames.sellerBlocked;
+        }
+      }
+      if (path.startsWith('/driver') && role != AppRole.driver) return RouteNames.unauthorized;
+      if (path.startsWith('/consumer') && role != AppRole.consumer) return RouteNames.unauthorized;
+      return null;
+    },
+    routes: [
+      GoRoute(path: RouteNames.splash, builder: (_, __) => const SplashScreen()),
+      GoRoute(path: RouteNames.roleSelection, builder: (_, __) => const RoleSelectionScreen()),
+      GoRoute(path: RouteNames.auth, builder: (_, __) => const LoginScreen()),
+      GoRoute(path: RouteNames.otp, builder: (_, __) => const OtpScreen()),
+      GoRoute(path: RouteNames.sellerDashboard, builder: (_, __) => const SellerDashboardScreen()),
+      GoRoute(path: RouteNames.sellerWaiting, builder: (_, __) => const SellerWaitingScreen()),
+      GoRoute(path: RouteNames.sellerBlocked, builder: (_, __) => const SellerBlockedScreen()),
+      GoRoute(path: RouteNames.driverDashboard, builder: (_, __) => const DriverDashboardScreen()),
+      GoRoute(path: RouteNames.adminDashboard, builder: (_, __) => const AdminDashboardScreen()),
+      GoRoute(path: RouteNames.unauthorized, builder: (_, __) => const UnauthorizedScreen()),
+      GoRoute(path: RouteNames.searching, builder: (_, __) => const SearchingTankersScreen()),
+      GoRoute(path: RouteNames.tracking, builder: (_, __) => const TrackingScreen()),
+      GoRoute(path: RouteNames.orderComplete, builder: (_, __) => const OrderCompleteScreen()),
+      GoRoute(path: RouteNames.orderDetails, builder: (_, __) => const OrderDetailsScreen()),
+      GoRoute(path: RouteNames.payments, builder: (_, __) => const PaymentsScreen()),
+      GoRoute(
+        path: RouteNames.locationSelection,
+        builder: (_, state) => LocationSelectionScreen(pickupAddress: state.extra as String?),
+      ),
+      ShellRoute(
+        builder: (context, state, child) => MainShell(location: state.uri.toString(), child: child),
+        routes: [
+          GoRoute(path: RouteNames.consumerHome, builder: (_, __) => const HomeScreen()),
+          GoRoute(path: RouteNames.consumerOrders, builder: (_, __) => const OrdersScreen()),
+          GoRoute(path: RouteNames.consumerProfile, builder: (_, __) => const ProfileScreen()),
+        ],
+      ),
+    ],
+  );
+});

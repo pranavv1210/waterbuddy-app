@@ -1,8 +1,10 @@
-export type UserRole = "customer" | "seller" | "admin";
+export type UserRole = "consumer" | "customer" | "seller" | "driver" | "admin";
 export type OrderStatus =
   | "SEARCHING"
   | "ASSIGNED"
+  | "DRIVER_ASSIGNED"
   | "ON_THE_WAY"
+  | "ARRIVED"
   | "DELIVERED"
   | "CANCELLED";
 export type PaymentType = "ONLINE" | "COD";
@@ -44,6 +46,7 @@ export interface OrderRecord {
   id: string;
   customerId: string;
   sellerId: string | null;
+  driverId?: string | null;
   tankSize: number;
   status: OrderStatus;
   paymentType: PaymentType;
@@ -51,6 +54,9 @@ export interface OrderRecord {
   location: OrderLocation;
   candidateSellerIds: string[];
   rejectedSellerIds: string[];
+  assignedAt?: FirebaseFirestore.Timestamp;
+  startedAt?: FirebaseFirestore.Timestamp;
+  deliveredAt?: FirebaseFirestore.Timestamp;
   createdAt?: FirebaseFirestore.Timestamp;
   updatedAt?: FirebaseFirestore.Timestamp;
 }
