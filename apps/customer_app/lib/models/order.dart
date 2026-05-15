@@ -44,6 +44,8 @@ class Order {
   final Timestamp? createdAt;
 
   String? get deliveryAddress => location['address'] as String?;
+  double get latitude => (location['latitude'] as num?)?.toDouble() ?? 0.0;
+  double get longitude => (location['longitude'] as num?)?.toDouble() ?? 0.0;
 }
 
 class TrackingData {

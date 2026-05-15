@@ -214,6 +214,8 @@ class AuthService {
     required String aadhaarUrl,
     required String rcUrl,
     required String tankerPhotoUrls,
+    String? panNumber,
+    String? panUploadUrl,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw const AuthFailure('User not authenticated.');
@@ -234,10 +236,12 @@ class AuthService {
       'email': email,
       'address': address,
       'aadhaarNumber': aadhaarNumber,
+      'panNumber': panNumber,
       'tankerCapacity': tankerCapacity,
       'vehicleNumber': tankerVehicleNumber,
       'licenseUploadUrl': licenseUrl,
       'aadhaarUploadUrl': aadhaarUrl,
+      'panUploadUrl': panUploadUrl,
       'vehicleRcUploadUrl': rcUrl,
       'tankerPhotosUrl': tankerPhotoUrls,
       'verificationStatus': 'pending',
@@ -258,6 +262,8 @@ class AuthService {
     required String aadhaarUploadUrl,
     required String address,
     required String emergencyContact,
+    String? panNumber,
+    String? panUploadUrl,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw const AuthFailure('User not authenticated.');
@@ -277,9 +283,11 @@ class AuthService {
       'email': email,
       'driverLicenseNumber': licenseNumber,
       'aadhaarNumber': aadhaarNumber,
+      'panNumber': panNumber,
       'driverPhotoUrl': driverPhotoUrl,
       'licenseUploadUrl': licenseUploadUrl,
       'aadhaarUploadUrl': aadhaarUploadUrl,
+      'panUploadUrl': panUploadUrl,
       'address': address,
       'emergencyContact': emergencyContact,
       'verificationStatus': 'pending',
