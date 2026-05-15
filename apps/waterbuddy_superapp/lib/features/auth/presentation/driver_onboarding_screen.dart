@@ -197,7 +197,7 @@ class _DriverOnboardingScreenState extends ConsumerState<DriverOnboardingScreen>
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      _isSignUp ? 'Already have an account?' : 'Don\\'t have an account?',
+                                      _isSignUp ? 'Already have an account?' : "Don't have an account?",
                                       style: TextStyle(color: Colors.white.withOpacity(0.6)),
                                     ),
                                     TextButton(
