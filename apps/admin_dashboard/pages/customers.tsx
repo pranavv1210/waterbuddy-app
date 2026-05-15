@@ -66,12 +66,20 @@ export default function CustomersPage() {
 
   return (
     <AppShell>
-      <div className="space-y-8">
-        <div className="flex items-end justify-between">
+      <div className="space-y-10">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="mb-2 text-4xl font-extrabold tracking-tight text-brand-600">Customer Management</h2>
-            <p className="flex items-center gap-2 text-brand-400">
-              <span className="material-symbols-outlined text-sm text-lilac">stars</span>
+            <nav className="mb-2 flex gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#14B8A6]">
+              <span>Management</span>
+              <span className="text-white/20">/</span>
+              <span className="text-white/60">Customer Base</span>
+            </nav>
+            <h2 className="text-4xl font-extrabold tracking-tight text-white">Customer Hub</h2>
+            <p className="mt-1 flex items-center gap-2 text-white/40 font-medium">
+               <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#14B8A6] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#14B8A6]"></span>
+              </span>
               Managing {activeUsersCount} active liquid-subscription customers
             </p>
           </div>
@@ -79,7 +87,7 @@ export default function CustomersPage() {
           <div className="flex gap-3">
             <button
               type="button"
-              className="flex items-center gap-2 rounded-xl border border-lilac/40 bg-white px-6 py-2.5 text-sm font-semibold text-brand-600 transition-all hover:bg-cream"
+              className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-6 py-2.5 text-xs font-bold text-white/60 transition-all hover:bg-white/10 hover:text-white"
             >
               <span className="material-symbols-outlined text-lg">filter_list</span>
               Filters
@@ -87,57 +95,60 @@ export default function CustomersPage() {
             <button
               type="button"
               onClick={exportCsv}
-              className="flex items-center gap-2 rounded-xl bg-lilac px-6 py-2.5 text-sm font-bold text-brand-700 shadow-md transition-all hover:shadow-lg"
+              className="flex items-center gap-2 rounded-xl bg-[#14B8A6] px-6 py-2.5 text-xs font-black text-white shadow-[0_0_20px_rgba(20,184,166,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-widest"
             >
               <span className="material-symbols-outlined text-lg">download</span>
-              Export CSV
+              Export List
             </button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl bg-white p-6">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-brand-400">Active Users</span>
+          <div className="rounded-2xl bg-[#0D1117]/60 border border-white/5 p-6 backdrop-blur-xl shadow-xl transition-all hover:bg-white/5 group">
+            <span className="mb-4 block text-[10px] font-bold uppercase tracking-widest text-[#14B8A6]">Active Users</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black text-brand-600">{activeUsersCount}</span>
-              <span className="text-xs font-bold text-brand-500">+12%</span>
+              <span className="text-3xl font-black text-white tracking-tighter">{activeUsersCount}</span>
+              <span className="text-xs font-bold text-emerald-400">+12.4%</span>
             </div>
-            <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-cream">
+            <div className="mt-6 h-1.5 w-full overflow-hidden rounded-full bg-white/5 border border-white/5">
               <div
-                className="h-full rounded-full bg-lilac"
+                className="h-full rounded-full bg-[#14B8A6] shadow-[0_0_10px_rgba(20,184,166,0.5)]"
                 style={{ width: `${users.length === 0 ? 0 : Math.round((activeUsersCount / users.length) * 100)}%` }}
               ></div>
             </div>
           </div>
 
-          <div className="rounded-xl bg-white p-6">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-brand-400">New This Month</span>
+          <div className="rounded-2xl bg-[#0D1117]/60 border border-white/5 p-6 backdrop-blur-xl shadow-xl transition-all hover:bg-white/5">
+            <span className="mb-4 block text-[10px] font-bold uppercase tracking-widest text-[#14B8A6]">Acquisition</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black text-brand-600">{newThisMonth}</span>
-              <span className="material-symbols-outlined text-sm text-brand-500">trending_up</span>
+              <span className="text-3xl font-black text-white tracking-tighter">{newThisMonth}</span>
+              <span className="material-symbols-outlined text-xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
             </div>
-            <p className="mt-4 text-[10px] text-brand-400">Growth rate based on current month sign-ups</p>
+            <p className="mt-4 text-[10px] text-white/40 font-bold uppercase tracking-wider">New Sign-ups This Month</p>
           </div>
 
-          <div className="rounded-xl bg-white p-6">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-brand-400">Churn Rate</span>
+          <div className="rounded-2xl bg-[#0D1117]/60 border border-white/5 p-6 backdrop-blur-xl shadow-xl transition-all hover:bg-white/5">
+            <span className="mb-4 block text-[10px] font-bold uppercase tracking-widest text-red-400">Churn Rate</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black text-brand-600">{churnRate.toFixed(1)}%</span>
-              <span className="text-xs font-bold text-brand-500">Stable</span>
+              <span className="text-3xl font-black text-white tracking-tighter">{churnRate.toFixed(1)}%</span>
+              <span className="text-xs font-bold text-white/20 ml-1 tracking-widest">STABLE</span>
             </div>
-            <p className="mt-4 text-[10px] text-brand-400">Industry benchmark: 2.1%</p>
+            <p className="mt-4 text-[10px] text-white/40 font-bold uppercase tracking-wider">Industry Avg: 2.1%</p>
           </div>
 
-          <div className="relative overflow-hidden rounded-xl bg-brand-500 p-6 text-white">
-            <div className="relative z-10">
-              <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-lilac">Lifetime Value</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black">${averageLtv.toFixed(2)}</span>
+          <div className="relative overflow-hidden rounded-2xl bg-[#14B8A6] p-6 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]">
+            <div className="relative z-10 h-full flex flex-col justify-between">
+              <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Lifetime Value</span>
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-black tracking-tighter">₹{averageLtv.toFixed(0)}</span>
+                  <span className="text-[10px] font-bold uppercase opacity-60">Avg</span>
+                </div>
+                <p className="mt-1 text-[10px] text-white/80 font-medium">Per Active Customer Account</p>
               </div>
-              <p className="mt-4 text-[10px] text-lilac/80">Average per active customer account</p>
             </div>
-            <div className="absolute -bottom-4 -right-4 opacity-20">
-              <span className="material-symbols-outlined text-[100px]">payments</span>
+            <div className="absolute -bottom-8 -right-8 opacity-20">
+              <span className="material-symbols-outlined text-[120px]" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
             </div>
           </div>
         </div>
@@ -148,12 +159,11 @@ export default function CustomersPage() {
           {actionError ? <ErrorState message={actionError} /> : null}
           {!loading && !error ? (
             <CustomersTable
-              users={users}
+              customers={users}
               page={page}
-              pageSize={5}
+              pageSize={8}
               onPageChange={setPage}
               onToggleBlocked={handleToggleBlocked}
-              onViewHistory={(user) => router.push(`/orders?customer=${encodeURIComponent(user.name)}`)}
             />
           ) : null}
         </section>

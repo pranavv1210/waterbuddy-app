@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { ComplaintRecord } from "../../services/types";
+import { StatusBadge } from "../ui/StatusBadge";
 
 interface ComplaintsTableProps {
   complaints: ComplaintRecord[];
@@ -9,14 +10,6 @@ interface ComplaintsTableProps {
   pageSize: number;
   onPageChange: (page: number) => void;
   onUpdateStatus: (complaint: ComplaintRecord) => Promise<void>;
-}
-
-function statusTone(status: string): string {
-  const normalized = status.toLowerCase();
-  if (normalized === "open") return "bg-cream text-brand-700";
-  if (normalized === "in progress") return "bg-lilac/40 text-brand-700";
-  if (normalized === "resolved") return "bg-brand-100 text-brand-700";
-  return "bg-cream text-brand-600";
 }
 
 function priorityRank(priority: string): number {
@@ -67,27 +60,27 @@ export function ComplaintsTable({
   const pageNumbers = Array.from({ length: Math.min(3, totalPages) }, (_, i) => i + 1);
 
   return (
-    <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
-      <div className="flex items-center justify-between bg-cream p-6">
-        <div className="flex gap-2">
+    <div className="overflow-hidden rounded-3xl border border-white/5 bg-[#0D1117]/60 shadow-xl backdrop-blur-xl">
+      <div className="flex flex-wrap items-center justify-between bg-white/[0.03] p-6 gap-4">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => onFilterModeChange("all")}
-            className={`rounded-lg px-4 py-2 text-sm transition-colors ${
+            className={`rounded-xl px-5 py-2 text-xs font-bold transition-all ${
               filterMode === "all"
-                ? "bg-white font-bold text-brand-600 shadow-sm"
-                : "font-medium text-brand-400 hover:bg-white/60"
+                ? "bg-[#14B8A6] text-white shadow-[0_0_15px_rgba(20,184,166,0.4)]"
+                : "bg-white/5 text-white/60 hover:bg-white/10"
             }`}
           >
-            All Complaints
+            All Tickets
           </button>
           <button
             type="button"
             onClick={() => onFilterModeChange("active")}
-            className={`rounded-lg px-4 py-2 text-sm transition-colors ${
+            className={`rounded-xl px-5 py-2 text-xs font-bold transition-all ${
               filterMode === "active"
-                ? "bg-white font-bold text-brand-600 shadow-sm"
-                : "font-medium text-brand-400 hover:bg-white/60"
+                ? "bg-amber-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]"
+                : "bg-white/5 text-white/60 hover:bg-white/10"
             }`}
           >
             Active Only
@@ -95,101 +88,96 @@ export function ComplaintsTable({
           <button
             type="button"
             onClick={() => onFilterModeChange("priority")}
-            className={`rounded-lg px-4 py-2 text-sm transition-colors ${
+            className={`rounded-xl px-5 py-2 text-xs font-bold transition-all ${
               filterMode === "priority"
-                ? "bg-white font-bold text-brand-600 shadow-sm"
-                : "font-medium text-brand-400 hover:bg-white/60"
+                ? "bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]"
+                : "bg-white/5 text-white/60 hover:bg-white/10"
             }`}
           >
             By Priority
           </button>
         </div>
-        <button className="flex items-center gap-2 text-sm font-bold text-brand-500 transition-colors hover:text-brand-600">
+        <button className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 text-xs font-bold text-white/80 transition-all hover:bg-white/10">
           <span className="material-symbols-outlined text-lg">filter_list</span>
           Advanced Filters
         </button>
       </div>
 
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-cream">
-            <th className="px-8 py-4 text-left text-[11px] font-bold uppercase tracking-widest text-brand-400">Complaint ID</th>
-            <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-widest text-brand-400">Order ID</th>
-            <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-widest text-brand-400">User Name</th>
-            <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-widest text-brand-400">Issue Type</th>
-            <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-widest text-brand-400">Status</th>
-            <th className="px-8 py-4 text-right text-[11px] font-bold uppercase tracking-widest text-brand-400">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-lilac/20">
-          {visible.map((complaint) => (
-            <tr key={complaint.id} className="group transition-colors duration-200 hover:bg-cream/70">
-              <td className="px-8 py-5">
-                <span className="font-bold text-brand-600">#{complaint.id}</span>
-              </td>
-              <td className="px-6 py-5">
-                <span className="font-medium text-brand-400">#{complaint.orderId}</span>
-              </td>
-              <td className="px-6 py-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-lilac/30 text-xs font-bold text-brand-600">
-                    {initials(complaint.customer)}
-                  </div>
-                  <span className="font-semibold text-brand-600">{complaint.customer}</span>
-                </div>
-              </td>
-              <td className="px-6 py-5">
-                <span className="rounded-full bg-cream px-3 py-1 text-xs font-bold uppercase text-brand-400">
-                  {complaint.issueType}
-                </span>
-              </td>
-              <td className="px-6 py-5">
-                <span
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-tight ${statusTone(
-                    complaint.status,
-                  )}`}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
-                  {complaint.status}
-                </span>
-              </td>
-              <td className="px-8 py-5 text-right">
-                <div className="flex justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                  <button
-                    type="button"
-                    onClick={() => onUpdateStatus(complaint)}
-                    className="rounded-lg bg-lilac/30 px-3 py-1.5 text-xs font-bold text-brand-600 transition-colors hover:bg-lilac/45"
-                  >
-                    Update Status
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/complaints?ticket=${encodeURIComponent(complaint.id)}`)}
-                    className="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-brand-600"
-                  >
-                    View Details
-                  </button>
-                </div>
-              </td>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-white/5 text-[10px] uppercase tracking-[0.2em] text-white/40">
+              <th className="px-8 py-5 text-left font-bold">Complaint ID</th>
+              <th className="px-6 py-5 text-left font-bold">Order ID</th>
+              <th className="px-6 py-5 text-left font-bold">User</th>
+              <th className="px-6 py-5 text-left font-bold">Issue Type</th>
+              <th className="px-6 py-5 text-left font-bold">Status</th>
+              <th className="px-8 py-5 text-right font-bold">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-white/5 text-sm">
+            {visible.map((complaint) => (
+              <tr key={complaint.id} className="group transition-colors duration-200 hover:bg-white/5">
+                <td className="px-8 py-6">
+                  <span className="font-bold text-[#14B8A6]">#{complaint.id}</span>
+                </td>
+                <td className="px-6 py-6">
+                  <span className="font-bold text-white/40">#{complaint.orderId}</span>
+                </td>
+                <td className="px-6 py-6">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0F766E]/20 text-xs font-bold text-[#14B8A6] border border-[#14B8A6]/10">
+                      {initials(complaint.customer)}
+                    </div>
+                    <span className="font-bold text-white/90">{complaint.customer}</span>
+                  </div>
+                </td>
+                <td className="px-6 py-6">
+                  <span className="rounded-lg bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white/60 border border-white/5">
+                    {complaint.issueType}
+                  </span>
+                </td>
+                <td className="px-6 py-6">
+                  <StatusBadge value={complaint.status} />
+                </td>
+                <td className="px-8 py-6 text-right">
+                  <div className="flex justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      type="button"
+                      onClick={() => onUpdateStatus(complaint)}
+                      className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-white/60 transition-all hover:bg-white/10 hover:text-white"
+                    >
+                      Update
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/complaints?ticket=${encodeURIComponent(complaint.id)}`)}
+                      className="rounded-xl bg-[#14B8A6] px-4 py-2 text-xs font-bold text-white transition-all hover:bg-[#14B8A6]/80 shadow-[0_0_15px_rgba(20,184,166,0.3)]"
+                    >
+                      Details
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      {visible.length === 0 ? (
-        <div className="p-6 text-sm text-brand-400">No complaints found for selected filter.</div>
-      ) : null}
+      {visible.length === 0 && (
+        <div className="p-16 text-center text-sm text-white/20">No complaints found.</div>
+      )}
 
-      <div className="flex items-center justify-between bg-cream p-6">
-        <p className="text-xs font-medium text-brand-400">
-          Showing {filtered.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + pageSize, filtered.length)} of {filtered.length} entries
+      <div className="flex items-center justify-between bg-white/[0.02] border-t border-white/5 px-8 py-6">
+        <p className="text-xs font-medium text-white/40">
+          Showing <span className="text-white/80">{filtered.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + pageSize, filtered.length)}</span> of <span className="text-white/80">{filtered.length}</span> entries
         </p>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => onPageChange(Math.max(1, safePage - 1))}
             disabled={safePage === 1}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-400 transition-colors hover:bg-white disabled:opacity-30"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
           >
             <span className="material-symbols-outlined text-sm">chevron_left</span>
           </button>
@@ -198,10 +186,10 @@ export function ComplaintsTable({
               key={pageNumber}
               type="button"
               onClick={() => onPageChange(pageNumber)}
-              className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold ${
+              className={`h-10 w-10 rounded-xl text-xs font-bold transition-all ${
                 safePage === pageNumber
-                  ? "bg-brand-500 text-white"
-                  : "text-brand-400 hover:bg-white"
+                  ? "bg-[#14B8A6] text-white shadow-[0_0_15px_rgba(20,184,166,0.4)]"
+                  : "bg-white/5 text-white/60 hover:bg-white/10"
               }`}
             >
               {pageNumber}
@@ -211,7 +199,7 @@ export function ComplaintsTable({
             type="button"
             onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
             disabled={safePage === totalPages}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-400 transition-colors hover:bg-white disabled:opacity-30"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
           >
             <span className="material-symbols-outlined text-sm">chevron_right</span>
           </button>

@@ -75,84 +75,118 @@ export default function OrdersPage() {
   return (
     <AppShell>
       <div className="space-y-10">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex gap-3 overflow-x-auto pb-2 sm:pb-0">
-            {statusTabs.map((tab) => {
-              const active = tab === activeTab;
-              return (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => onTabChange(tab)}
-                  className={`whitespace-nowrap rounded-full px-6 py-2 text-sm transition-colors ${
-                    active
-                      ? "bg-lilac text-brand-700 font-semibold"
-                      : "bg-white border border-lilac/20 text-brand-500 font-medium hover:bg-cream"
-                  }`}
-                >
-                  {tab}
-                </button>
-              );
-            })}
+        {/* Page Header */}
+        <div className="flex flex-col gap-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">Orders Management</h1>
+              <p className="text-white/60 font-medium">Track and manage all deliveries in real-time.</p>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={exportCsv}
+                className="flex items-center gap-2 rounded-xl bg-[#14B8A6] px-6 py-2.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(20,184,166,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <span className="material-symbols-outlined text-lg">download</span>
+                Export Report
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-brand-500 transition-colors hover:bg-cream"
-            >
-              <span className="material-symbols-outlined text-sm">filter_list</span>
-              More Filters
-            </button>
-            <button
-              type="button"
-              onClick={exportCsv}
-              className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90"
-            >
-              <span className="material-symbols-outlined text-sm">download</span>
-              Export Report
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-6">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {statusTabs.map((tab) => {
+                const active = tab === activeTab;
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => onTabChange(tab)}
+                    className={`whitespace-nowrap rounded-xl px-6 py-2 text-xs font-bold transition-all ${
+                      active
+                        ? "bg-[#14B8A6] text-white shadow-[0_0_15px_rgba(20,184,166,0.4)]"
+                        : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/5"
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="relative group">
+                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-lg group-focus-within:text-[#14B8A6] transition-colors">search</span>
+                 <input 
+                  type="text" 
+                  placeholder="Filter by customer..." 
+                  className="bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs font-medium text-white placeholder:text-white/20 outline-none focus:ring-2 focus:ring-[#14B8A6]/30 focus:border-[#14B8A6]/50 transition-all w-64"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    router.push({ query: { ...router.query, customer: val } }, undefined, { shallow: true });
+                  }}
+                 />
+              </div>
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 text-xs font-bold text-white/60 transition-all hover:bg-white/10 hover:text-white border border-white/5"
+              >
+                <span className="material-symbols-outlined text-lg">filter_list</span>
+                Filters
+              </button>
+            </div>
           </div>
         </div>
 
         {loading ? <LoadingState /> : null}
         {error ? <ErrorState message={error} /> : null}
+        
         {!loading && !error ? (
-          <OrdersTable orders={filteredOrders} page={page} pageSize={6} onPageChange={setPage} />
-        ) : null}
+          <div className="space-y-10">
+             <OrdersTable orders={filteredOrders} page={page} pageSize={8} onPageChange={setPage} />
 
-        {!loading && !error ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <div className="flex h-40 flex-col justify-between rounded-xl bg-brand-500 p-6">
-              <span className="material-symbols-outlined text-3xl text-lilac">local_shipping</span>
-              <div>
-                <h3 className="text-sm font-medium text-lilac/80">Active Deliveries</h3>
-                <p className="text-3xl font-extrabold text-white">{activeDeliveriesCount}</p>
+             {/* Quick Stats Grid */}
+             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div className="group flex h-40 flex-col justify-between rounded-2xl bg-[#14B8A6]/10 border border-[#14B8A6]/20 p-6 transition-all hover:bg-[#14B8A6]/15 shadow-lg">
+                <div className="bg-[#14B8A6]/20 w-12 h-12 rounded-xl flex items-center justify-center text-[#14B8A6]">
+                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_shipping</span>
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-[#14B8A6] uppercase tracking-widest mb-1">Active Deliveries</h3>
+                  <p className="text-3xl font-extrabold text-white">{activeDeliveriesCount}</p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex h-40 flex-col justify-between rounded-xl bg-lilac p-6">
-              <span className="material-symbols-outlined text-3xl text-brand-600">verified</span>
-              <div>
-                <h3 className="text-sm font-medium text-brand-600/70">Delivered Today</h3>
-                <p className="text-3xl font-extrabold text-brand-700">{deliveredCount}</p>
+              <div className="group flex h-40 flex-col justify-between rounded-2xl bg-blue-500/10 border border-blue-500/20 p-6 transition-all hover:bg-blue-500/15 shadow-lg">
+                <div className="bg-blue-500/20 w-12 h-12 rounded-xl flex items-center justify-center text-blue-400">
+                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Delivered Today</h3>
+                  <p className="text-3xl font-extrabold text-white">{deliveredCount}</p>
+                </div>
               </div>
-            </div>
 
-            <div className="relative flex h-40 flex-col justify-between overflow-hidden rounded-xl border border-lilac/20 bg-white p-6">
-              <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-cream opacity-60 blur-2xl"></div>
-              <span className="material-symbols-outlined text-3xl text-brand-400">monitoring</span>
-              <div>
-                <h3 className="text-sm font-medium text-brand-400/80">Completion Rate</h3>
-                <p className="text-3xl font-extrabold text-brand-700">{completionRate.toFixed(1)}%</p>
+              <div className="group flex h-40 flex-col justify-between rounded-2xl bg-purple-500/10 border border-purple-500/20 p-6 transition-all hover:bg-purple-500/15 shadow-lg">
+                <div className="bg-purple-500/20 w-12 h-12 rounded-xl flex items-center justify-center text-purple-400">
+                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>monitoring</span>
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-1">Completion Rate</h3>
+                  <p className="text-3xl font-extrabold text-white">{completionRate.toFixed(1)}%</p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex h-40 flex-col justify-between rounded-xl border border-lilac/20 bg-white p-6">
-              <span className="material-symbols-outlined text-3xl text-brand-500">assignment_late</span>
-              <div>
-                <h3 className="text-sm font-medium text-brand-400/80">Failed Dispatches</h3>
-                <p className="text-3xl font-extrabold text-brand-600">{failedDispatchesCount}</p>
+              <div className="group flex h-40 flex-col justify-between rounded-2xl bg-red-500/10 border border-red-500/20 p-6 transition-all hover:bg-red-500/15 shadow-lg">
+                <div className="bg-red-500/20 w-12 h-12 rounded-xl flex items-center justify-center text-red-400">
+                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>assignment_late</span>
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-red-400 uppercase tracking-widest mb-1">Failed Dispatches</h3>
+                  <p className="text-3xl font-extrabold text-white">{failedDispatchesCount}</p>
+                </div>
               </div>
             </div>
           </div>

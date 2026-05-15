@@ -5,21 +5,22 @@ interface StatusBadgeProps {
 export function StatusBadge({ value }: StatusBadgeProps) {
   const normalized = value.toLowerCase();
 
-  const tone =
+  const styles =
     normalized === "searching"
-      ? "bg-lilac/35 text-brand-700"
+      ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
       : normalized === "assigned"
-      ? "bg-lilac/50 text-brand-700"
+      ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
       : normalized === "on the way"
-      ? "bg-brand-100 text-brand-700"
-      : normalized === "delivered" || normalized === "resolved" || normalized === "online"
-      ? "bg-brand-50 text-brand-600"
-      : normalized === "cancelled" || normalized === "rejected"
-      ? "bg-brand-100/70 text-brand-700"
-      : "bg-brand-50 text-brand-700";
+      ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+      : normalized === "delivered" || normalized === "resolved" || normalized === "online" || normalized === "completed" || normalized === "approved" || normalized === "active"
+      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+      : normalized === "cancelled" || normalized === "rejected" || normalized === "blocked" || normalized === "critical"
+      ? "bg-red-500/10 text-red-400 border-red-500/20"
+      : "bg-white/5 text-white/40 border-white/10";
 
   return (
-    <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${tone}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${styles}`}>
+      <span className="h-1 w-1 rounded-full bg-current"></span>
       {value}
     </span>
   );

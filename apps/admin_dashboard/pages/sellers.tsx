@@ -50,38 +50,38 @@ export default function SellersPage() {
 
   return (
     <AppShell>
-      <section className="space-y-8">
+      <section className="space-y-10">
         <div className="flex flex-col items-end gap-6 lg:flex-row">
           <div className="flex-1">
-            <nav className="mb-2 flex gap-2 text-xs font-semibold uppercase tracking-widest text-brand-300">
+            <nav className="mb-2 flex gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#14B8A6]">
               <span>Management</span>
-              <span>/</span>
-              <span className="text-lilac">Seller Network</span>
+              <span className="text-white/20">/</span>
+              <span className="text-white/60">Seller Network</span>
             </nav>
-            <h2 className="text-4xl font-extrabold leading-tight text-brand-600">Seller Management</h2>
-            <p className="mt-2 max-w-xl text-brand-400">
+            <h2 className="text-4xl font-extrabold leading-tight text-white tracking-tight">Seller Management</h2>
+            <p className="mt-2 max-w-xl text-white/40 font-medium">
               Oversee your water distribution partners, monitor compliance, and manage service availability across the network.
             </p>
           </div>
 
           <div className="flex gap-4">
-            <div className="flex min-w-[200px] items-center gap-4 rounded-2xl bg-white p-5">
-              <div className="rounded-xl bg-lilac/30 p-3">
-                <span className="material-symbols-outlined text-brand-600">storefront</span>
+            <div className="flex min-w-[180px] items-center gap-4 rounded-2xl bg-white/5 border border-white/5 p-5 backdrop-blur-xl">
+              <div className="rounded-xl bg-[#14B8A6]/20 p-3 text-[#14B8A6]">
+                <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>storefront</span>
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-brand-400">Active Sellers</p>
-                <p className="text-2xl font-black text-brand-600">{activeSellersCount}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Active Sellers</p>
+                <p className="text-2xl font-black text-white">{activeSellersCount}</p>
               </div>
             </div>
 
-            <div className="flex min-w-[200px] items-center gap-4 rounded-2xl bg-white p-5">
-              <div className="rounded-xl bg-cream p-3">
-                <span className="material-symbols-outlined text-brand-500">verified_user</span>
+            <div className="flex min-w-[180px] items-center gap-4 rounded-2xl bg-white/5 border border-white/5 p-5 backdrop-blur-xl">
+              <div className="rounded-xl bg-amber-500/20 p-3 text-amber-400">
+                <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-brand-400">Pending KYC</p>
-                <p className="text-2xl font-black text-brand-500">{pendingKycCount}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Pending KYC</p>
+                <p className="text-2xl font-black text-white">{pendingKycCount}</p>
               </div>
             </div>
           </div>
@@ -92,63 +92,66 @@ export default function SellersPage() {
         {actionError ? <ErrorState message={actionError} /> : null}
 
         {!loading && !error ? (
-          <SellersTable
-            sellers={sellers}
-            activeFilter={activeFilter}
-            onChangeFilter={(filter) => {
-              setActiveFilter(filter);
-              setPage(1);
-            }}
-            page={page}
-            pageSize={10}
-            onPageChange={setPage}
-            onToggleEnabled={handleToggleEnabled}
-            onApproveKyc={handleApproveKyc}
-            onRejectKyc={handleRejectKyc}
-          />
-        ) : null}
+          <div className="space-y-10">
+            <SellersTable
+              sellers={sellers}
+              activeFilter={activeFilter}
+              onChangeFilter={(filter) => {
+                setActiveFilter(filter);
+                setPage(1);
+              }}
+              page={page}
+              pageSize={8}
+              onPageChange={setPage}
+              onToggleEnabled={handleToggleEnabled}
+              onApproveKyc={handleApproveKyc}
+              onRejectKyc={handleRejectKyc}
+            />
 
-        {!loading && !error ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="relative overflow-hidden rounded-3xl bg-brand-500 p-6 text-white md:col-span-2">
-              <div className="relative z-10">
-                <h3 className="mb-1 text-xl font-bold">Growth Forecast</h3>
-                <p className="mb-6 text-sm text-lilac">
-                  Estimated {growthPercent.toFixed(0)}% seller approval strength based on current compliance trend.
-                </p>
-                <div className="flex items-end gap-4">
-                  <div className="relative h-32 w-full overflow-hidden rounded-2xl bg-white/10">
-                    <div className="absolute bottom-0 left-0 h-[55%] w-full rounded-t-xl bg-lilac"></div>
-                  </div>
-                  <div className="relative h-32 w-full overflow-hidden rounded-2xl bg-white/10">
-                    <div className="absolute bottom-0 left-0 h-[65%] w-full rounded-t-xl bg-lilac"></div>
-                  </div>
-                  <div className="relative h-32 w-full overflow-hidden rounded-2xl bg-white/10">
-                    <div className="absolute bottom-0 left-0 h-[80%] w-full rounded-t-xl bg-lilac"></div>
-                  </div>
-                  <div className="relative h-32 w-full overflow-hidden rounded-2xl bg-white/10">
-                    <div className="absolute bottom-0 left-0 h-[92%] w-full rounded-t-xl border-t-2 border-dashed border-white bg-lilac/40"></div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div className="relative overflow-hidden rounded-3xl bg-[#0D1117]/60 border border-white/5 p-8 text-white md:col-span-2 shadow-xl backdrop-blur-xl group">
+                <div className="relative z-10">
+                  <h3 className="mb-1 text-xl font-bold tracking-tight">Growth Forecast</h3>
+                  <p className="mb-8 text-sm text-white/40 font-medium">
+                    Estimated {growthPercent.toFixed(0)}% seller approval strength based on compliance trends.
+                  </p>
+                  <div className="flex items-end gap-3 h-32">
+                    {[45, 60, 55, 80, 75, 95].map((h, i) => (
+                      <div key={i} className="relative flex-1 group/bar">
+                        <div 
+                          className="w-full rounded-t-xl bg-[#14B8A6]/20 transition-all duration-500 group-hover:bg-[#14B8A6]/40" 
+                          style={{ height: `${h}%` }}
+                        ></div>
+                        {i === 5 && (
+                           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-6 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-white text-black text-[10px] font-bold px-2 py-1 rounded">
+                              +12% Forecast
+                           </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
+                <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#14B8A6]/5 blur-3xl group-hover:bg-[#14B8A6]/10 transition-colors"></div>
               </div>
-              <div className="absolute -right-8 -top-8 h-48 w-48 rounded-full bg-white/5 blur-3xl"></div>
-            </div>
 
-            <div className="flex flex-col justify-between rounded-3xl bg-lilac p-6 text-brand-700">
-              <div>
-                <span className="material-symbols-outlined mb-4 text-4xl">map</span>
-                <h3 className="mb-1 text-xl font-black leading-tight">Expansion Target</h3>
-                <p className="text-sm font-medium text-brand-600/80">
-                  New seller clusters identified in high-demand zones from recent order flow.
-                </p>
+              <div className="flex flex-col justify-between rounded-3xl bg-[#14B8A6] p-8 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]">
+                <div>
+                  <div className="bg-white/20 w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
+                    <span className="material-symbols-outlined text-2xl">map</span>
+                  </div>
+                  <h3 className="mb-2 text-xl font-extrabold tracking-tight">Expansion Target</h3>
+                  <p className="text-sm font-medium text-white/80 leading-relaxed">
+                    New seller clusters identified in high-demand zones from recent order flow.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 text-xs font-black text-[#14B8A6] uppercase tracking-widest shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  View Network Map
+                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                </button>
               </div>
-              <button
-                type="button"
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 py-3 font-bold text-white"
-              >
-                View Map
-                <span className="material-symbols-outlined text-lg">arrow_right_alt</span>
-              </button>
             </div>
           </div>
         ) : null}

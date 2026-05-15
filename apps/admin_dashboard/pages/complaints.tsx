@@ -62,68 +62,78 @@ export default function ComplaintsPage() {
 
   return (
     <AppShell>
-      <div className="space-y-8">
-        <div className="mb-8 flex items-end justify-between">
+      <div className="space-y-10">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="mb-2 text-4xl font-extrabold tracking-tight text-brand-600">Support Tickets</h2>
-            <p className="text-brand-400">
+             <nav className="mb-2 flex gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#14B8A6]">
+              <span>Support</span>
+              <span className="text-white/20">/</span>
+              <span className="text-white/60">Tickets</span>
+            </nav>
+            <h2 className="text-4xl font-extrabold tracking-tight text-white">Support Center</h2>
+            <p className="mt-1 text-white/40 font-medium">
               Manage and resolve incoming water delivery issues and customer complaints.
             </p>
           </div>
-          <div className="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cream text-brand-600">
-              <span className="material-symbols-outlined">priority_high</span>
+          
+          <div className="flex items-center gap-4 rounded-2xl bg-red-500/10 border border-red-500/20 p-5 backdrop-blur-xl">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/20 text-red-400">
+              <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>priority_high</span>
             </div>
             <div>
-              <p className="text-2xl font-bold text-brand-600 leading-none">{criticalOpenCount}</p>
-              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-brand-400">Critical Open</p>
+              <p className="text-2xl font-black text-white leading-none">{criticalOpenCount}</p>
+              <p className="mt-2 text-[10px] font-black uppercase tracking-[0.15em] text-red-400/60">Critical Open</p>
             </div>
           </div>
         </div>
 
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div className="group flex cursor-pointer flex-col justify-between rounded-2xl bg-white p-6 shadow-sm transition-colors hover:bg-cream">
-            <div className="mb-4 flex items-start justify-between">
-              <span className="material-symbols-outlined text-3xl text-brand-500">inbox</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-brand-300">Total</span>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+          <div className="flex flex-col justify-between rounded-2xl bg-[#0D1117]/60 border border-white/5 p-6 backdrop-blur-xl shadow-xl transition-all hover:bg-white/5">
+            <div className="mb-6 flex items-start justify-between">
+              <div className="bg-[#14B8A6]/10 w-10 h-10 rounded-xl flex items-center justify-center text-[#14B8A6]">
+                <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>inbox</span>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/20">Total</span>
             </div>
             <div>
-              <p className="text-3xl font-black text-brand-600">{totalCount}</p>
-              <p className="text-sm font-medium text-brand-400">Received this month</p>
+              <p className="text-3xl font-black text-white tracking-tighter">{totalCount}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mt-1">Tickets Received</p>
             </div>
           </div>
 
-          <div className="flex cursor-pointer flex-col justify-between rounded-2xl bg-brand-500 p-6 text-white shadow-sm transition-transform hover:scale-[1.01]">
-            <div className="mb-4 flex items-start justify-between">
-              <span className="material-symbols-outlined text-3xl text-lilac">timer</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-white/40">Speed</span>
+          <div className="flex flex-col justify-between rounded-2xl bg-[#14B8A6] p-6 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]">
+            <div className="mb-6 flex items-start justify-between">
+              <div className="bg-white/20 w-10 h-10 rounded-xl flex items-center justify-center">
+                <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>timer</span>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Efficiency</span>
             </div>
             <div>
-              <p className="text-3xl font-black">{averageResolutionHours.toFixed(1)}h</p>
-              <p className="text-sm font-medium text-white/70">Avg. Resolution Time</p>
+              <p className="text-3xl font-black tracking-tighter">{averageResolutionHours.toFixed(1)}h</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/80 mt-1">Avg Resolution Time</p>
             </div>
           </div>
 
-          <div className="col-span-1 flex items-center gap-8 rounded-2xl bg-white p-6 shadow-sm md:col-span-2">
-            <div className="flex-1">
-              <h4 className="mb-1 font-bold text-brand-600">Weekly Volume</h4>
-              <div className="mt-4 flex h-16 items-end gap-2">
+          <div className="md:col-span-2 rounded-2xl bg-[#0D1117]/60 border border-white/5 p-6 backdrop-blur-xl shadow-xl">
+             <div className="flex items-center justify-between mb-6">
+                <h4 className="text-xs font-bold text-white uppercase tracking-widest">Weekly Volume</h4>
+                <div className="text-right">
+                  <p className={`text-xs font-black tracking-wider ${weeklyGrowthPercent >= 0 ? "text-red-400" : "text-emerald-400"}`}>
+                    {weeklyGrowthPercent >= 0 ? "+" : ""}
+                    {weeklyGrowthPercent.toFixed(0)}%
+                  </p>
+                  <p className="text-[10px] text-white/20 font-bold uppercase tracking-tighter">vs Last Week</p>
+                </div>
+             </div>
+             <div className="flex h-16 items-end gap-2 px-2">
                 {weeklySeries.buckets.map((value, index) => (
                   <div
                     key={index}
-                    className={`w-full rounded-t-md ${index === 3 ? "bg-lilac" : "bg-brand-100"}`}
+                    className={`flex-1 rounded-t-lg transition-all duration-500 ${index === new Date().getDay() ? "bg-[#14B8A6] shadow-[0_0_15px_rgba(20,184,166,0.4)]" : "bg-white/10 hover:bg-white/20"}`}
                     style={{ height: `${Math.max(15, (value / weeklySeries.maxValue) * 100)}%` }}
                   ></div>
                 ))}
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-xs font-bold uppercase tracking-widest text-brand-500">
-                {weeklyGrowthPercent >= 0 ? "+" : ""}
-                {weeklyGrowthPercent.toFixed(0)}%
-              </p>
-              <p className="text-xs text-brand-400">vs last week</p>
-            </div>
+             </div>
           </div>
         </div>
 
@@ -140,7 +150,7 @@ export default function ComplaintsPage() {
                 setPage(1);
               }}
               page={page}
-              pageSize={4}
+              pageSize={6}
               onPageChange={setPage}
               onUpdateStatus={handleStatusUpdate}
             />
@@ -148,48 +158,45 @@ export default function ComplaintsPage() {
         </section>
 
         {!loading && !error ? (
-          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="group relative h-48 overflow-hidden rounded-3xl lg:col-span-2">
-              <div className="absolute inset-0 bg-gradient-to-r from-brand-500 to-brand-600/80"></div>
-              <div className="absolute inset-0 opacity-20">
-                <div className="absolute -left-10 top-8 h-32 w-32 rounded-full bg-lilac blur-2xl transition-transform duration-700 group-hover:scale-125"></div>
-                <div className="absolute right-6 top-4 h-20 w-20 rounded-full bg-white/20 blur-xl transition-transform duration-700 group-hover:scale-110"></div>
-                <div className="absolute bottom-0 right-12 h-24 w-24 rounded-full bg-brand-100 blur-2xl transition-transform duration-700 group-hover:scale-125"></div>
-              </div>
-              <div className="relative z-20 flex h-full flex-col justify-center p-8 text-white">
-                <h3 className="mb-2 text-2xl font-bold">
-                  Customer Satisfaction is {totalCount === 0 ? "0" : Math.max(0, Math.round((resolvedCount / totalCount) * 100))}%
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="relative group overflow-hidden rounded-3xl bg-[#0D1117]/60 border border-white/5 p-8 lg:col-span-2 shadow-xl backdrop-blur-xl">
+              <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#14B8A6]/5 blur-3xl group-hover:bg-[#14B8A6]/10 transition-all"></div>
+              <div className="relative z-10 flex h-full flex-col justify-center">
+                <h3 className="mb-2 text-2xl font-extrabold text-white tracking-tight">
+                  Satisfaction Score: <span className="text-[#14B8A6]">{totalCount === 0 ? "100" : Math.max(0, Math.round((resolvedCount / totalCount) * 100))}%</span>
                 </h3>
-                <p className="mb-4 max-w-md text-sm text-white/70">
-                  Your team improved ticket closure consistency this week. Keep monitoring critical tickets closely.
+                <p className="mb-6 max-w-md text-sm text-white/40 font-medium leading-relaxed">
+                  Your team improved ticket closure consistency this week. Performance is tracking 12% above last month's baseline.
                 </p>
                 <div className="flex gap-4">
-                  <button className="rounded-full bg-lilac px-6 py-2 text-xs font-bold uppercase tracking-widest text-brand-700">
-                    Review Team Stats
+                  <button className="rounded-xl bg-white/5 border border-white/10 px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-white/60 transition-all hover:bg-white/10 hover:text-white">
+                    Detailed Analytics
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col justify-between rounded-3xl bg-lilac p-8 text-brand-700">
+            <div className="flex flex-col justify-between rounded-3xl bg-white/5 border border-white/5 p-8 backdrop-blur-xl">
               <div>
-                <h4 className="mb-2 text-lg font-bold">AI Summary</h4>
-                <p className="mb-4 text-xs uppercase tracking-widest text-brand-500">Sentiment Analysis</p>
+                <h4 className="mb-1 text-sm font-black text-white uppercase tracking-widest">Sentiment AI</h4>
+                <p className="mb-8 text-[10px] font-bold uppercase tracking-widest text-white/20">Network Health Index</p>
               </div>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Positive</span>
-                  <span className="rounded bg-white/40 px-2 py-0.5 text-xs font-bold">
-                    {totalCount === 0 ? "0" : Math.max(0, Math.round((resolvedCount / totalCount) * 100))}%
+              <div className="space-y-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-white/60">Resolution Success</span>
+                  <span className="text-xs font-black text-[#14B8A6]">
+                    {totalCount === 0 ? "100" : Math.max(0, Math.round((resolvedCount / totalCount) * 100))}%
                   </span>
                 </div>
-                <div className="h-2 w-full rounded-full bg-white/40">
+                <div className="h-2 w-full rounded-full bg-white/5 border border-white/5 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-brand-500"
-                    style={{ width: `${totalCount === 0 ? 0 : Math.max(0, Math.round((resolvedCount / totalCount) * 100))}%` }}
+                    className="h-full rounded-full bg-[#14B8A6] shadow-[0_0_10px_rgba(20,184,166,0.5)] transition-all duration-1000"
+                    style={{ width: `${totalCount === 0 ? 100 : Math.max(0, Math.round((resolvedCount / totalCount) * 100))}%` }}
                   ></div>
                 </div>
-                <p className="text-[10px] italic text-brand-500">*Based on the last 50 resolved tickets</p>
+                <p className="text-[10px] italic text-white/20 font-medium leading-tight">
+                  *Resolution index is calculated based on the last 50 processed support tickets.
+                </p>
               </div>
             </div>
           </div>

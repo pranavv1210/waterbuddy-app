@@ -1,126 +1,92 @@
+import { useRouter } from "next/router";
 import { UserRecord } from "../../services/types";
 
 interface CustomersTableProps {
-  users: UserRecord[];
+  customers: UserRecord[];
   page: number;
   pageSize: number;
   onPageChange: (page: number) => void;
   onToggleBlocked: (user: UserRecord) => Promise<void>;
-  onViewHistory: (user: UserRecord) => void;
 }
 
-function formatDate(value: number | string | undefined): string {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-}
-
-export function CustomersTable({
-  users,
-  page,
-  pageSize,
-  onPageChange,
-  onToggleBlocked,
-  onViewHistory,
-}: CustomersTableProps) {
-  const totalPages = Math.max(1, Math.ceil(users.length / pageSize));
+export function CustomersTable({ customers, page, pageSize, onPageChange, onToggleBlocked }: CustomersTableProps) {
+  const router = useRouter();
+  const totalPages = Math.max(1, Math.ceil(customers.length / pageSize));
   const safePage = Math.min(page, totalPages);
   const startIndex = (safePage - 1) * pageSize;
-  const visibleUsers = users.slice(startIndex, startIndex + pageSize);
-
-  const maxVisiblePages = 4;
-  const pageNumbers = Array.from(
-    { length: Math.min(totalPages, maxVisiblePages) },
-    (_, index) => index + 1,
-  );
+  const visibleUsers = customers.slice(startIndex, startIndex + pageSize);
+  const pageNumbers = Array.from({ length: Math.min(5, totalPages) }, (_, index) => index + 1);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-lilac/15 bg-white shadow-sm">
-      <table className="w-full border-collapse text-left">
-        <thead>
-          <tr className="bg-cream">
-            <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-brand-400">Customer Name</th>
-            <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-brand-400">Phone</th>
-            <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-brand-400">Total Orders</th>
-            <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-brand-400">Join Date</th>
-            <th className="px-8 py-5 text-right text-xs font-black uppercase tracking-widest text-brand-400">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-lilac/20">
-          {visibleUsers.map((user) => (
-            <tr key={user.id} className="group transition-colors duration-200 hover:bg-cream/70">
-              <td className="px-8 py-6">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-lilac/40 font-semibold text-brand-700">
-                    {getInitials(user.name)}
-                  </div>
-                  <div>
-                    <p className="font-bold text-brand-600">{user.name}</p>
-                    <p className="text-xs text-brand-400">{user.email}</p>
-                  </div>
-                </div>
-              </td>
-
-              <td className="px-8 py-6">
-                <span className="text-sm font-medium text-brand-500">{user.phone}</span>
-              </td>
-
-              <td className="px-8 py-6">
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-lilac/40 px-3 py-1 text-xs font-bold text-brand-700">
-                    {user.totalOrders} Orders
-                  </span>
-                </div>
-              </td>
-
-              <td className="px-8 py-6">
-                <p className="text-sm text-brand-400">{formatDate(user.joinDate)}</p>
-              </td>
-
-              <td className="px-8 py-6 text-right">
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onViewHistory(user)}
-                    className="rounded-lg bg-lilac/30 px-4 py-2 text-xs font-bold text-brand-600 transition-all hover:bg-lilac/45"
-                  >
-                    View History
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onToggleBlocked(user)}
-                    className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                      user.blocked
-                        ? "bg-lilac/35 text-brand-700 hover:bg-lilac/50"
-                        : "bg-cream text-brand-700 hover:bg-lilac/30"
-                    }`}
-                  >
-                    {user.blocked ? "Unblock User" : "Block User"}
-                  </button>
-                </div>
-              </td>
+    <div className="overflow-hidden rounded-3xl border border-white/5 bg-[#0D1117]/60 shadow-xl backdrop-blur-xl">
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-collapse text-left">
+          <thead className="bg-white/5 text-[10px] uppercase tracking-[0.2em] text-white/40">
+            <tr>
+              <th className="px-8 py-5 font-bold">User Details</th>
+              <th className="px-6 py-5 font-bold">Registration Date</th>
+              <th className="px-6 py-5 font-bold">Platform Status</th>
+              <th className="px-8 py-5 text-right font-bold">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-white/5 text-sm">
+            {visibleUsers.map((user) => (
+              <tr key={user.id} className="group transition-colors duration-200 hover:bg-white/5">
+                <td className="px-8 py-6">
+                  <div>
+                    <p className="text-base font-bold text-white/90">{user.name}</p>
+                    <p className="text-sm text-white/40 font-medium">{user.phone || user.id}</p>
+                  </div>
+                </td>
 
-      {visibleUsers.length === 0 ? <div className="p-6 text-sm text-brand-400">No customers found.</div> : null}
+                <td className="px-6 py-6 text-white/60 font-medium">
+                  {user.joinDate || "N/A"}
+                </td>
 
-      <div className="flex items-center justify-between bg-cream/50 px-8 py-6">
-        <p className="text-xs font-medium text-brand-400">
-          Showing {users.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + pageSize, users.length)} of {users.length} customers
+                <td className="px-6 py-6">
+                  <div className="flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${user.blocked ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" : "bg-[#14B8A6] shadow-[0_0_8px_rgba(20,184,166,0.5)]"}`}></span>
+                    <span className={`text-xs font-bold uppercase tracking-wider ${user.blocked ? "text-red-400" : "text-[#14B8A6]"}`}>
+                      {user.blocked ? "Blocked" : "Active"}
+                    </span>
+                  </div>
+                </td>
+
+                <td className="px-8 py-6 text-right">
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/customers?id=${user.id}`)}
+                      className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-white/60 transition-all hover:bg-white/10 hover:text-white"
+                    >
+                      View
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onToggleBlocked(user)}
+                      className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                        user.blocked
+                          ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
+                          : "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20"
+                      }`}
+                    >
+                      {user.blocked ? "Unblock" : "Block User"}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {visibleUsers.length === 0 && (
+        <div className="p-16 text-center text-sm text-white/20">No customers found.</div>
+      )}
+
+      <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.02] px-8 py-6">
+        <p className="text-xs font-medium text-white/40">
+          Showing <span className="text-white/80">{customers.length === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + pageSize, customers.length)}</span> of <span className="text-white/80">{customers.length}</span> customers
         </p>
 
         <div className="flex gap-2">
@@ -128,7 +94,7 @@ export function CustomersTable({
             type="button"
             onClick={() => onPageChange(Math.max(1, safePage - 1))}
             disabled={safePage === 1}
-            className="rounded-lg border border-lilac/40 p-2 text-brand-400 transition-all hover:bg-white disabled:opacity-30"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
           >
             <span className="material-symbols-outlined">chevron_left</span>
           </button>
@@ -138,37 +104,21 @@ export function CustomersTable({
               key={pageNumber}
               type="button"
               onClick={() => onPageChange(pageNumber)}
-              className={`flex h-10 w-10 items-center justify-center rounded-lg text-sm font-bold transition-all ${
+              className={`h-10 w-10 rounded-xl text-xs font-bold transition-all ${
                 pageNumber === safePage
-                  ? "bg-brand-500 text-white"
-                  : "border border-lilac/40 bg-white text-brand-600 hover:bg-cream"
+                  ? "bg-[#14B8A6] text-white shadow-[0_0_15px_rgba(20,184,166,0.4)]"
+                  : "bg-white/5 text-white/60 hover:bg-white/10"
               }`}
             >
               {pageNumber}
             </button>
           ))}
 
-          {totalPages > maxVisiblePages ? <span className="flex items-center px-2 text-brand-400">...</span> : null}
-
-          {totalPages > maxVisiblePages ? (
-            <button
-              type="button"
-              onClick={() => onPageChange(totalPages)}
-              className={`flex h-10 w-10 items-center justify-center rounded-lg text-sm font-bold transition-all ${
-                totalPages === safePage
-                  ? "bg-brand-500 text-white"
-                  : "border border-lilac/40 bg-white text-brand-600 hover:bg-cream"
-              }`}
-            >
-              {totalPages}
-            </button>
-          ) : null}
-
           <button
             type="button"
             onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
             disabled={safePage === totalPages}
-            className="rounded-lg border border-lilac/40 p-2 text-brand-600 transition-all hover:bg-white disabled:opacity-30"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
           >
             <span className="material-symbols-outlined">chevron_right</span>
           </button>
