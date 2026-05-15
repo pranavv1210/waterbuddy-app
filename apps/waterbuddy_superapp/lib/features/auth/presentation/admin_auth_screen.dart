@@ -52,7 +52,7 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     children: [
-                      IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white), onPressed: () => context.pop()),
+                      IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white), onPressed: () => context.go(RouteNames.roleSelection)),
                     ],
                   ),
                 ),

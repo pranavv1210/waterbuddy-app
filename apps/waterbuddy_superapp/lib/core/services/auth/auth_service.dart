@@ -20,7 +20,10 @@ class AuthService {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
   final AdminAccessService _adminAccessService;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+    serverClientId: '979686341816-gi2haph462optrduomb8m8rqm99jfc54.apps.googleusercontent.com',
+  );
   static const String devOtpCode = '123456';
 
   Stream<User?> authStateChanges() => _auth.authStateChanges();

@@ -102,7 +102,7 @@ class _SellerOnboardingScreenState extends ConsumerState<SellerOnboardingScreen>
                     children: [
                       IconButton(
                         icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-                        onPressed: () => context.pop(),
+                        onPressed: () => context.go(RouteNames.roleSelection),
                       ),
                     ],
                   ),

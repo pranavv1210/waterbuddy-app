@@ -229,7 +229,7 @@ class _ConsumerAuthScreenState extends ConsumerState<ConsumerAuthScreen> with Si
             left: 16,
             child: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-              onPressed: () => context.pop(),
+              onPressed: () => context.go(RouteNames.roleSelection),
             ),
           ),
         ],
