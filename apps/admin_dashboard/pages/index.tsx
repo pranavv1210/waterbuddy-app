@@ -28,8 +28,8 @@ export default function HomePage() {
       <div className="space-y-8">
         {/* Page Header */}
         <div className="mb-10">
-          <h1 className="text-3xl font-extrabold text-brand-600 tracking-tight mb-1">Overview</h1>
-          <p className="text-brand-400 font-medium">Monitoring real-time liquidity and delivery performance.</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">Overview</h1>
+          <p className="text-white/60 font-medium">Monitoring real-time liquidity and delivery performance.</p>
         </div>
 
         {loading ? <LoadingState /> : null}
