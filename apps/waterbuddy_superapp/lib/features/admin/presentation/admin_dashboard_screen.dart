@@ -55,26 +55,89 @@ class AdminDashboardScreen extends ConsumerWidget {
           ...sellers.when(
             data: (snapshot) => snapshot.docs.map((doc) {
               final data = doc.data();
-              final status = (data['verificationStatus'] ?? '').toString();
-              return ListTile(
-                title: Text((data['businessName'] ?? data['ownerName'] ?? doc.id).toString()),
-                subtitle: Text('verificationStatus: $status'),
-                trailing: Wrap(
-                  spacing: 6,
-                  children: [
-                    FilledButton(
-                      onPressed: () => doc.reference.set({'verificationStatus': 'approved'}, SetOptions(merge: true)),
-                      child: const Text('Approve'),
-                    ),
-                    FilledButton.tonal(
-                      onPressed: () => doc.reference.set({'verificationStatus': 'rejected'}, SetOptions(merge: true)),
-                      child: const Text('Reject'),
-                    ),
-                    FilledButton.tonal(
-                      onPressed: () => doc.reference.set({'verificationStatus': 'suspended'}, SetOptions(merge: true)),
-                      child: const Text('Suspend'),
-                    ),
-                  ],
+              final status = (data['verificationStatus'] ?? data['kycStatus'] ?? '').toString();
+              
+              final docs = data['documents'] as Map<String, dynamic>?;
+              final aadhaar = docs?['aadhaarUrl'] ?? data['aadhaarUploadUrl'];
+              final dl = docs?['dlUrl'] ?? data['licenseUploadUrl'];
+              final rc = docs?['rcUrl'] ?? data['vehicleRcUploadUrl'];
+
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        (data['businessName'] ?? data['ownerName'] ?? data['name'] ?? doc.id).toString(),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('Status: $status'),
+                      const SizedBox(height: 12),
+                      const Text('KYC Documents:', style: TextStyle(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            if (aadhaar != null && aadhaar.toString().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Column(
+                                  children: [
+                                    const Text('Aadhaar', style: TextStyle(fontSize: 12)),
+                                    const SizedBox(height: 4),
+                                    Image.network(aadhaar.toString(), width: 100, height: 100, fit: BoxFit.cover,
+                                      errorBuilder: (c, e, s) => Container(width: 100, height: 100, color: Colors.grey, child: const Icon(Icons.error))),
+                                  ],
+                                ),
+                              ),
+                            if (dl != null && dl.toString().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Column(
+                                  children: [
+                                    const Text('DL', style: TextStyle(fontSize: 12)),
+                                    const SizedBox(height: 4),
+                                    Image.network(dl.toString(), width: 100, height: 100, fit: BoxFit.cover,
+                                      errorBuilder: (c, e, s) => Container(width: 100, height: 100, color: Colors.grey, child: const Icon(Icons.error))),
+                                  ],
+                                ),
+                              ),
+                            if (rc != null && rc.toString().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Column(
+                                  children: [
+                                    const Text('RC', style: TextStyle(fontSize: 12)),
+                                    const SizedBox(height: 4),
+                                    Image.network(rc.toString(), width: 100, height: 100, fit: BoxFit.cover,
+                                      errorBuilder: (c, e, s) => Container(width: 100, height: 100, color: Colors.grey, child: const Icon(Icons.error))),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          FilledButton(
+                            onPressed: () => doc.reference.set({'verificationStatus': 'approved', 'kycStatus': 'VERIFIED'}, SetOptions(merge: true)),
+                            style: FilledButton.styleFrom(backgroundColor: Colors.green),
+                            child: const Text('Approve'),
+                          ),
+                          FilledButton.tonal(
+                            onPressed: () => doc.reference.set({'verificationStatus': 'rejected', 'kycStatus': 'REJECTED'}, SetOptions(merge: true)),
+                            child: const Text('Reject'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               );
             }).toList(),

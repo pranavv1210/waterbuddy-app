@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRouter } from "next/router";
 import { SellerRecord } from "../../services/types";
 import { StatusBadge } from "../ui/StatusBadge";
@@ -55,6 +56,8 @@ export function SellersTable({
   const startIndex = (safePage - 1) * pageSize;
   const visibleSellers = filteredSellers.slice(startIndex, startIndex + pageSize);
   const pageNumbers = Array.from({ length: Math.min(3, totalPages) }, (_, index) => index + 1);
+
+  const [selectedSellerForDocs, setSelectedSellerForDocs] = useState<SellerRecord | null>(null);
 
   const pendingCount = sellers.filter((seller) => normalizeKycStatus(seller.kycStatus).includes("pending")).length;
   const inactiveCount = sellers.filter((seller) => !seller.enabled).length;
@@ -182,6 +185,13 @@ export function SellersTable({
                         <>
                           <button
                             type="button"
+                            onClick={() => setSelectedSellerForDocs(seller)}
+                            className="rounded-xl bg-[#3B82F6] px-4 py-2 text-xs font-bold text-white transition-all hover:bg-[#3B82F6]/80 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                          >
+                            Review Docs
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => onApproveKyc(seller)}
                             className="rounded-xl bg-[#14B8A6] px-4 py-2 text-xs font-bold text-white transition-all hover:bg-[#14B8A6]/80 shadow-[0_0_15px_rgba(20,184,166,0.3)]"
                           >
@@ -257,6 +267,91 @@ export function SellersTable({
           </button>
         </div>
       </div>
+
+      {selectedSellerForDocs && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-[#0D1117] border border-white/10 p-8 shadow-2xl">
+            <div className="mb-6 flex items-center justify-between">
+              <h3 className="text-2xl font-bold text-white">KYC Documents: {selectedSellerForDocs.name}</h3>
+              <button
+                type="button"
+                onClick={() => setSelectedSellerForDocs(null)}
+                className="rounded-full bg-white/10 p-2 text-white/60 hover:bg-white/20 hover:text-white transition-all"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            {!(selectedSellerForDocs.documents || selectedSellerForDocs.aadhaarUploadUrl || selectedSellerForDocs.licenseUploadUrl || selectedSellerForDocs.vehicleRcUploadUrl) ? (
+              <div className="p-8 text-center text-white/40">No documents uploaded by this seller.</div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <p className="text-sm font-bold uppercase tracking-wider text-white/40">Aadhaar Card</p>
+                  {(selectedSellerForDocs.documents?.aadhaarUrl || selectedSellerForDocs.aadhaarUploadUrl) ? (
+                    <img
+                      src={selectedSellerForDocs.documents?.aadhaarUrl || selectedSellerForDocs.aadhaarUploadUrl}
+                      alt="Aadhaar"
+                      className="w-full rounded-xl border border-white/10 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 text-white/40">Missing</div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <p className="text-sm font-bold uppercase tracking-wider text-white/40">Driving License</p>
+                  {(selectedSellerForDocs.documents?.dlUrl || selectedSellerForDocs.licenseUploadUrl) ? (
+                    <img
+                      src={selectedSellerForDocs.documents?.dlUrl || selectedSellerForDocs.licenseUploadUrl}
+                      alt="Driving License"
+                      className="w-full rounded-xl border border-white/10 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 text-white/40">Missing</div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-bold uppercase tracking-wider text-white/40">RC Book</p>
+                  {(selectedSellerForDocs.documents?.rcUrl || selectedSellerForDocs.vehicleRcUploadUrl) ? (
+                    <img
+                      src={selectedSellerForDocs.documents?.rcUrl || selectedSellerForDocs.vehicleRcUploadUrl}
+                      alt="RC Book"
+                      className="w-full rounded-xl border border-white/10 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 text-white/40">Missing</div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            <div className="mt-8 flex justify-end gap-4 border-t border-white/10 pt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  onRejectKyc(selectedSellerForDocs);
+                  setSelectedSellerForDocs(null);
+                }}
+                className="rounded-xl border border-white/10 bg-white/5 px-6 py-3 font-bold text-white/60 transition-all hover:bg-white/10 hover:text-white"
+              >
+                Reject
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onApproveKyc(selectedSellerForDocs);
+                  setSelectedSellerForDocs(null);
+                }}
+                className="rounded-xl bg-[#14B8A6] px-6 py-3 font-bold text-white transition-all hover:bg-[#14B8A6]/80 shadow-[0_0_15px_rgba(20,184,166,0.3)]"
+              >
+                Approve Seller
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

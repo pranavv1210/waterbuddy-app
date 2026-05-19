@@ -77,7 +77,7 @@ class UnderReviewScreen extends ConsumerWidget {
                     SizedBox(width: 16),
                     Expanded(
                       child: Text(
-                        'This process usually takes 24-48 hours. You will be notified once approved.',
+                        'It will take some time to review and then after admin approval the account gets unlocked.',
                         style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
                       ),
                     ),

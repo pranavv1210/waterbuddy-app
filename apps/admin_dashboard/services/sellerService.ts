@@ -28,10 +28,18 @@ export function subscribeSellers(
           name: valueOrDash(data.name),
           phone: valueOrDash(data.phone),
           location: valueOrDash(data.location),
-          kycStatus: valueOrDash(data.kycStatus),
+          kycStatus: valueOrDash(data.kycStatus || data.verificationStatus),
           onlineStatus: Boolean(data.onlineStatus),
           enabled: data.enabled !== false,
           rating: typeof data.rating === "number" ? data.rating : undefined,
+          documents: data.documents ? {
+            aadhaarUrl: data.documents.aadhaarUrl,
+            dlUrl: data.documents.dlUrl,
+            rcUrl: data.documents.rcUrl,
+          } : undefined,
+          aadhaarUploadUrl: data.aadhaarUploadUrl,
+          licenseUploadUrl: data.licenseUploadUrl,
+          vehicleRcUploadUrl: data.vehicleRcUploadUrl,
         } satisfies SellerRecord;
       });
       callback(sellers);
@@ -51,5 +59,6 @@ export async function setSellerKycStatus(sellerId: string, kycStatus: string): P
   if (!isFirebaseReady || !db) {
     throw new Error(firebaseInitErrorMessage ?? "Firebase is not configured.");
   }
-  await updateDoc(doc(db, "sellers", sellerId), { kycStatus });
+  const verificationStatus = kycStatus.toLowerCase() === "verified" || kycStatus.toLowerCase() === "approved" ? "approved" : "rejected";
+  await updateDoc(doc(db, "sellers", sellerId), { kycStatus, verificationStatus });
 }

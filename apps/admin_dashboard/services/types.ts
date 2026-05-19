@@ -21,6 +21,14 @@ export interface SellerRecord {
   onlineStatus: boolean;
   enabled: boolean;
   rating?: number;
+  documents?: {
+    aadhaarUrl?: string;
+    dlUrl?: string;
+    rcUrl?: string;
+  };
+  aadhaarUploadUrl?: string;
+  licenseUploadUrl?: string;
+  vehicleRcUploadUrl?: string;
 }
 
 export interface UserRecord {
