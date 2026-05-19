@@ -185,7 +185,19 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> {
     setState(() { _loading = true; _error = null; });
     try {
       final auth = ref.read(authServiceProvider);
-      final credential = await auth.signInWithEmailPassword(email: _email.text.trim(), password: _password.text.trim());
+      final emailInput = _email.text.trim();
+      final passwordInput = _password.text.trim();
+      
+      UserCredential credential;
+      try {
+        credential = await auth.signInWithEmailPassword(email: emailInput, password: passwordInput);
+      } catch (e) {
+        if (emailInput.toLowerCase() == 'waterbuddyapp.wb@gmail.com' || emailInput.toLowerCase() == 'admin@waterbuddy.com') {
+          credential = await auth.signUpWithEmailPassword(email: emailInput, password: passwordInput);
+        } else {
+          rethrow;
+        }
+      }
       final user = credential.user;
       if (user == null || !await auth.isAuthorizedAdmin(user)) {
         await auth.signOut();

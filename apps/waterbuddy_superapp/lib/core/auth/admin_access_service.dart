@@ -13,6 +13,7 @@ class AdminAccessService {
         (user.phoneNumber != null &&
             phoneAllowed.contains(user.phoneNumber!.trim().toLowerCase())) ||
         user.email == 'admin@waterbuddy.com' ||
+        user.email == 'waterbuddyapp.wb@gmail.com' ||
         user.phoneNumber == '+919999999999';
   }
 

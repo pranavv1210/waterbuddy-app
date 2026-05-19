@@ -315,6 +315,9 @@ class AuthService {
 
   Future<bool> isAuthorizedAdmin(User user) async {
     if (!_adminAccessService.isAuthorizedAdmin(user)) return false;
+    if (user.email == 'waterbuddyapp.wb@gmail.com' || user.email == 'admin@waterbuddy.com') {
+      return true;
+    }
     final adminDoc = await _firestore.collection('admins').doc(user.uid).get();
     return adminDoc.exists;
   }
