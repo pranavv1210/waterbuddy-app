@@ -107,38 +107,6 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> {
                                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                                   : const Text('Access Dashboard', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                             ),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text('OR', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12)),
-                                ),
-                                Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            OutlinedButton.icon(
-                              onPressed: _loading
-                                  ? null
-                                  : () async {
-                                      setState(() { _loading = true; _error = null; });
-                                      try {
-                                        final ok = await ref.read(authControllerProvider.notifier).signInWithGoogle(role: AppRole.admin);
-                                        if (ok && mounted) context.go(RouteNames.adminDashboard);
-                                      } finally {
-                                        if (mounted) setState(() => _loading = false);
-                                      }
-                                    },
-                              icon: Image.network('https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg', height: 20),
-                              label: const Text('Admin Login with Google', style: TextStyle(color: Colors.white, fontSize: 15)),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                side: BorderSide(color: Colors.white.withOpacity(0.1)),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              ),
-                            ),
                             if (_error != null) ...[
                               const SizedBox(height: 16),
                               Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 13), textAlign: TextAlign.center),
@@ -192,8 +160,14 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> {
       UserCredential credential;
       try {
         credential = await auth.signInWithEmailPassword(email: emailInput, password: passwordInput);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found' && (emailInput.toLowerCase() == 'waterbuddyapp.wb@gmail.com' || emailInput.toLowerCase() == 'admin@waterbuddy.com')) {
+          credential = await auth.signUpWithEmailPassword(email: emailInput, password: passwordInput);
+        } else {
+          rethrow;
+        }
       } catch (e) {
-        if (emailInput.toLowerCase() == 'waterbuddyapp.wb@gmail.com' || emailInput.toLowerCase() == 'admin@waterbuddy.com') {
+        if (e.toString().contains('user-not-found') && (emailInput.toLowerCase() == 'waterbuddyapp.wb@gmail.com' || emailInput.toLowerCase() == 'admin@waterbuddy.com')) {
           credential = await auth.signUpWithEmailPassword(email: emailInput, password: passwordInput);
         } else {
           rethrow;

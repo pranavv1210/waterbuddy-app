@@ -220,7 +220,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-              child: Container(color: Colors.transparent),
+              child: Container(color: const Color(0xFF0D1117).withOpacity(0.7)),
             ),
           ),
         ],
@@ -229,6 +229,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
   }
 
   Widget _buildWelcomeHeader(String name) {
+    final displayName = (name.trim().isEmpty || name.toLowerCase() == 'admin' || name.toLowerCase() == 'administrator') 
+        ? 'WaterBuddy Admin' 
+        : name.trim();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -238,7 +242,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
               'Welcome back,',
               style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16, fontWeight: FontWeight.w400),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -259,10 +263,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
-          '$name 👋',
-          style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+          '$displayName 👋',
+          style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5),
         ),
       ],
     );
@@ -285,7 +289,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.4,
+      childAspectRatio: 1.05,
       children: [
         _buildStatCard(
           title: 'Users',
@@ -350,7 +354,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
             child: Icon(icon, size: 96, color: color.withOpacity(0.05)),
           ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -411,29 +415,19 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.03),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
-          ),
-          padding: const EdgeInsets.all(4),
-          child: TabBar(
-            controller: _tabController,
-            indicator: BoxDecoration(
-              color: const Color(0xFF0F766E),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF14B8A6).withOpacity(0.2)),
-            ),
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white.withOpacity(0.5),
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
-            tabs: const [
-              Tab(text: 'Pending KYC'),
-              Tab(text: 'All Partners'),
-            ],
-          ),
+        TabBar(
+          controller: _tabController,
+          indicatorColor: const Color(0xFF14B8A6),
+          indicatorWeight: 3,
+          indicatorSize: TabBarIndicatorSize.tab,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white.withOpacity(0.5),
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 15),
+          tabs: const [
+            Tab(text: 'Pending KYC'),
+            Tab(text: 'All Partners'),
+          ],
         ),
         const SizedBox(height: 20),
         SizedBox(
@@ -927,7 +921,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
           radius: 18,
           backgroundColor: Color(0xFF0F766E),
           child: Text(
-            'AD',
+            'WB',
             style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
           ),
         ),
