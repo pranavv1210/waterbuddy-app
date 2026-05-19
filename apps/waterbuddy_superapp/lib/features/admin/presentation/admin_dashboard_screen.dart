@@ -928,27 +928,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
       ),
       itemBuilder: (context) => [
         PopupMenuItem(
-          value: 1,
-          child: Row(
-            children: [
-              Icon(Icons.admin_panel_settings_rounded, color: Colors.white.withOpacity(0.7), size: 18),
-              const SizedBox(width: 12),
-              const Text('Console Profile', style: TextStyle(color: Colors.white, fontSize: 14)),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 2,
-          child: Row(
-            children: [
-              Icon(Icons.tune_rounded, color: Colors.white.withOpacity(0.7), size: 18),
-              const SizedBox(width: 12),
-              const Text('Platform Settings', style: TextStyle(color: Colors.white, fontSize: 14)),
-            ],
-          ),
-        ),
-        const PopupMenuDivider(height: 1),
-        PopupMenuItem(
           value: 3,
           child: Row(
             children: [
@@ -965,13 +944,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
           if (context.mounted) {
             context.go(RouteNames.roleSelection);
           }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('This is a restricted enterprise console view.'),
-              backgroundColor: Color(0xFF0F766E),
-            ),
-          );
         }
       },
     );
