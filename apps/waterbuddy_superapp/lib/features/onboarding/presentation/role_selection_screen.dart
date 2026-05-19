@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,35 +37,64 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen>
     final roles = AppRole.values;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0A2A5C), Color(0xFF0D1117)],
+      backgroundColor: const Color(0xFF0D1117),
+      body: Stack(
+        children: [
+          // Background ambient light orbs
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFF0F766E),
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'WaterBuddy',
-                  style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Choose your role',
-                  style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 16),
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: ListView.separated(
-                    itemCount: roles.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
+          Positioned(
+            bottom: -50,
+            right: -100,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFF14B8A6),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'WaterBuddy',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.8,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Choose your operations role below',
+                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 15),
+                  ),
+                  const Spacer(), // Centering element top push
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(roles.length, (index) {
                       final role = roles[index];
                       final animation = CurvedAnimation(
                         parent: _controller,
@@ -75,44 +105,87 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen>
                         child: SlideTransition(
                           position: Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
                               .animate(animation),
-                          child: _RoleCard(
-                            role: role,
-                            selected: selectedRole == role,
-                            onTap: () => ref.read(selectedRoleProvider.notifier).set(role),
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: _RoleCard(
+                              role: role,
+                              selected: selectedRole == role,
+                              onTap: () => ref.read(selectedRoleProvider.notifier).set(role),
+                            ),
                           ),
                         ),
                       );
-                    },
+                    }),
                   ),
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: selectedRole == null
-                        ? null
-                        : () {
-                            switch (selectedRole!) {
-                              case AppRole.consumer:
-                                context.go(RouteNames.authConsumer);
-                              case AppRole.seller:
-                                context.go(RouteNames.authSeller);
-                              case AppRole.driver:
-                                context.go(RouteNames.authDriver);
-                              case AppRole.admin:
-                                context.go(RouteNames.authAdmin);
-                            }
-                          },
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                      backgroundColor: const Color(0xFF0EA5E9),
+                  const Spacer(), // Centering element bottom push
+                  SizedBox(
+                    width: double.infinity,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: selectedRole == null
+                            ? null
+                            : const LinearGradient(
+                                colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
+                              ),
+                        boxShadow: selectedRole == null
+                            ? null
+                            : [
+                                BoxShadow(
+                                  color: const Color(0xFF14B8A6).withOpacity(0.3),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                      ),
+                      child: FilledButton(
+                        onPressed: selectedRole == null
+                            ? null
+                            : () {
+                                switch (selectedRole) {
+                                  case AppRole.consumer:
+                                    context.go(RouteNames.authConsumer);
+                                  case AppRole.seller:
+                                    context.go(RouteNames.authSeller);
+                                  case AppRole.driver:
+                                    context.go(RouteNames.authDriver);
+                                  case AppRole.admin:
+                                    context.go(RouteNames.authAdmin);
+                                }
+                              },
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(56),
+                          backgroundColor: selectedRole == null
+                              ? Colors.white.withOpacity(0.04)
+                              : Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: selectedRole == null
+                                  ? Colors.white.withOpacity(0.08)
+                                  : Colors.transparent,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: selectedRole == null
+                                ? Colors.white.withOpacity(0.3)
+                                : Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: const Text('Continue', style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -131,32 +204,80 @@ class _RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Color activeColor = const Color(0xFF14B8A6);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: Colors.white.withOpacity(selected ? 0.2 : 0.12),
+            borderRadius: BorderRadius.circular(20),
+            color: selected ? Colors.white.withOpacity(0.06) : Colors.white.withOpacity(0.02),
             border: Border.all(
-              color: selected ? const Color(0xFF38BDF8) : Colors.white24,
+              color: selected ? activeColor : Colors.white.withOpacity(0.08),
+              width: selected ? 1.8 : 1.0,
             ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: activeColor.withOpacity(0.12),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             child: Row(
               children: [
-                Icon(_icon(role), color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    role.label,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: selected ? activeColor.withOpacity(0.12) : Colors.white.withOpacity(0.03),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    _icon(role),
+                    color: selected ? activeColor : Colors.white.withOpacity(0.6),
+                    size: 24,
                   ),
                 ),
-                if (selected) const Icon(Icons.check_circle, color: Color(0xFF38BDF8)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        role.label,
+                        style: TextStyle(
+                          color: selected ? Colors.white : Colors.white.withOpacity(0.8),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _subtitle(role),
+                        style: TextStyle(
+                          color: selected ? activeColor.withOpacity(0.8) : Colors.white.withOpacity(0.4),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                AnimatedScale(
+                  scale: selected ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutBack,
+                  child: Icon(Icons.check_circle_rounded, color: activeColor, size: 24),
+                ),
               ],
             ),
           ),
@@ -168,13 +289,26 @@ class _RoleCard extends StatelessWidget {
   IconData _icon(AppRole role) {
     switch (role) {
       case AppRole.consumer:
-        return Icons.person_outline_rounded;
+        return Icons.water_drop_rounded;
       case AppRole.seller:
-        return Icons.local_shipping_outlined;
+        return Icons.storefront_rounded;
       case AppRole.driver:
-        return Icons.navigation_outlined;
+        return Icons.local_shipping_rounded;
       case AppRole.admin:
-        return Icons.admin_panel_settings_outlined;
+        return Icons.admin_panel_settings_rounded;
+    }
+  }
+
+  String _subtitle(AppRole role) {
+    switch (role) {
+      case AppRole.consumer:
+        return 'Order tankers to your doorstep';
+      case AppRole.seller:
+        return 'Manage tanker fleets & listings';
+      case AppRole.driver:
+        return 'Accept dispatches & navigate routes';
+      case AppRole.admin:
+        return 'Supervise & approve accounts';
     }
   }
 }

@@ -155,7 +155,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                         children: [
                           Text(
                             'WaterBuddy',
-                            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.black),
+                            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
                           ),
                           Text(
                             'Operations Control',
@@ -252,7 +252,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                   SizedBox(width: 6),
                   Text(
                     'Live Sync',
-                    style: TextStyle(color: Color(0xFF14B8A6), fontSize: 10, fontWeight: FontWeight.black, letterSpacing: 0.5),
+                    style: TextStyle(color: Color(0xFF14B8A6), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                   ),
                 ],
               ),
@@ -262,7 +262,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         const SizedBox(height: 4),
         Text(
           '$name 👋',
-          style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.black, letterSpacing: -0.5),
+          style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5),
         ),
       ],
     );
@@ -356,7 +356,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.between,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
@@ -376,7 +376,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                         ),
                         child: const Text(
                           'LIVE',
-                          style: TextStyle(color: Colors.redAccent, fontSize: 8, fontWeight: FontWeight.black),
+                          style: TextStyle(color: Colors.redAccent, fontSize: 8, fontWeight: FontWeight.w900),
                         ),
                       ),
                   ],
@@ -641,7 +641,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.between,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Column(
@@ -830,7 +830,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                     children: [
                       Text(
                         documentType,
-                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.black),
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close_rounded, color: Colors.white, size: 24),
@@ -1012,7 +1012,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                     child: const CircleAvatar(
                       radius: 28,
                       backgroundColor: Color(0xFF1E293B),
-                      child: Text('WB', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.black)),
+                      child: Text('WB', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -1022,7 +1022,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                       children: [
                         const Text(
                           'WaterBuddy Admin',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.black, fontSize: 16),
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
                         ),
                         const SizedBox(height: 2),
                         Text(
