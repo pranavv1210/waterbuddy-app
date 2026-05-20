@@ -144,13 +144,13 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen>
                             : () {
                                 switch (selectedRole) {
                                   case AppRole.consumer:
-                                    context.go(RouteNames.authConsumer);
+                                    context.push(RouteNames.authConsumer);
                                   case AppRole.seller:
-                                    context.go(RouteNames.authSeller);
+                                    context.push(RouteNames.authSeller);
                                   case AppRole.driver:
-                                    context.go(RouteNames.authDriver);
+                                    context.push(RouteNames.authDriver);
                                   case AppRole.admin:
-                                    context.go(RouteNames.authAdmin);
+                                    context.push(RouteNames.authAdmin);
                                 }
                               },
                         style: FilledButton.styleFrom(

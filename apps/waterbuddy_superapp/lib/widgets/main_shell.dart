@@ -17,23 +17,30 @@ class MainShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: _WaterBuddyNavBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go(RouteNames.home);
-              break;
-            case 1:
-              context.go(RouteNames.orders);
-              break;
-            case 2:
-              context.go(RouteNames.profile);
-              break;
-          }
-        },
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        context.go(RouteNames.home);
+      },
+      child: Scaffold(
+        body: child,
+        bottomNavigationBar: _WaterBuddyNavBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            switch (index) {
+              case 0:
+                context.go(RouteNames.home);
+                break;
+              case 1:
+                context.go(RouteNames.orders);
+                break;
+              case 2:
+                context.go(RouteNames.profile);
+                break;
+            }
+          },
+        ),
       ),
     );
   }

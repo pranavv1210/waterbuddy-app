@@ -86,12 +86,22 @@ class _OrderDetailsBody extends ConsumerWidget {
         ? ref.watch(_sellerDataProvider(order.sellerId!))
         : null;
 
-    return Scaffold(
-      backgroundColor: _bg,
-      body: CustomScrollView(
-        slivers: [
-          _buildSliverAppBar(context, order),
-          SliverPadding(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(RouteNames.orders);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: _bg,
+        body: CustomScrollView(
+          slivers: [
+            _buildSliverAppBar(context, order),
+            SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
@@ -183,8 +193,9 @@ class _OrderDetailsBody extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSliverAppBar(BuildContext context, Order order) {
     final statusColor = _statusColor(order.status);

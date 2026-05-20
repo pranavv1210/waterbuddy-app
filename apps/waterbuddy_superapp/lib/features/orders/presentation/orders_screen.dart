@@ -141,7 +141,7 @@ class _OrderCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         // All orders open the unified details screen
-        context.go('${RouteNames.orderDetails}?orderId=${order.id}');
+        context.push('${RouteNames.orderDetails}?orderId=${order.id}');
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),

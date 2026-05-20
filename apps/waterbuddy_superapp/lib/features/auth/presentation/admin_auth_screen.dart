@@ -8,6 +8,7 @@ import '../../../core/auth/app_role.dart';
 import '../../../core/services/auth/auth_service.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
+import '../../../widgets/kaveri_auth_layout.dart';
 
 class AdminAuthScreen extends ConsumerStatefulWidget {
   const AdminAuthScreen({super.key});
@@ -16,111 +17,90 @@ class AdminAuthScreen extends ConsumerStatefulWidget {
   ConsumerState<AdminAuthScreen> createState() => _AdminAuthScreenState();
 }
 
-class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> {
+class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> with SingleTickerProviderStateMixin {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _loading = false;
   String? _error;
 
+  late final AnimationController _animController;
+  late final Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 450))..forward();
+    _fadeAnimation = CurvedAnimation(parent: _animController, curve: Curves.easeInOut);
+  }
+
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
-      body: Stack(
-        children: [
-          Positioned(
-            top: -100, left: -100,
-            child: Container(width: 300, height: 300, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF0F766E))),
-          ),
-          Positioned(
-            bottom: -50, right: -100,
-            child: Container(width: 250, height: 250, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF14B8A6))),
-          ),
-          Positioned.fill(
-            child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80), child: Container(color: Colors.transparent)),
-          ),
-          SafeArea(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        context.go(RouteNames.roleSelection);
+      },
+      child: KaveriAuthLayout(
+        activeRole: AppRole.admin,
+        title: 'Login as Subdivision User',
+        subtitle: 'Secure administrative access',
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withOpacity(0.12)),
+            ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    children: [
-                      IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white), onPressed: () => context.go(RouteNames.roleSelection)),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                      child: Container(
-                        padding: const EdgeInsets.all(28),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(28),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 30, offset: const Offset(0, 10)),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const Icon(Icons.admin_panel_settings_rounded, color: Color(0xFF14B8A6), size: 64),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Admin Portal',
-                              style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Secure access for administrators',
-                              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 32),
-                            
-                            _buildTextField(controller: _email, label: 'Admin Email', icon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
-                            const SizedBox(height: 16),
-                            _buildTextField(controller: _password, label: 'Password', icon: Icons.lock_outline, obscure: true),
-                            
-                            const SizedBox(height: 24),
-                            FilledButton(
-                              onPressed: _loading ? null : _loginWithEmail,
-                              style: FilledButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                backgroundColor: const Color(0xFF0F766E),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                elevation: 0,
-                              ),
-                              child: _loading
-                                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                  : const Text('Access Dashboard', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                            ),
-                            if (_error != null) ...[
-                              const SizedBox(height: 16),
-                              Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 13), textAlign: TextAlign.center),
-                            ],
-                          ],
-                        ),
-                      ),
+                const Row(
+                  children: [
+                    Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 24),
+                    SizedBox(width: 8),
+                    Text(
+                      'Admin Authorization',
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                  ),
+                  ],
                 ),
+                const SizedBox(height: 20),
+                
+                _buildTextField(controller: _email, label: 'Admin Email ID', icon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
+                const SizedBox(height: 12),
+                _buildTextField(controller: _password, label: 'Password', icon: Icons.lock_outline, obscure: true),
+                
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: _loading ? null : _loginWithEmail,
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: const Color(0xFF0EA5E9),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: _loading
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text('Access Dashboard', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: 16),
+                  Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 13), textAlign: TextAlign.center),
+                ],
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -139,13 +119,22 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> {
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
-        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.4)),
+        labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.5)),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.03),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF14B8A6))),
+        fillColor: Colors.white.withOpacity(0.04),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFF38BDF8)),
+        ),
       ),
     );
   }
@@ -197,4 +186,3 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> {
     }
   }
 }
-

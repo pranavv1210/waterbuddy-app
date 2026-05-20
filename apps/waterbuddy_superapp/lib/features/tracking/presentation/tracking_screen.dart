@@ -94,7 +94,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       );
     }
 
-    return uiState.when(
+    final body = uiState.when(
       data: (state) => _TrackingScreenBody(state: state, trackingState: trackingState),
       error: (err, __) => Scaffold(
         body: Center(
@@ -110,6 +110,15 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
+    );
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        context.go(RouteNames.home);
+      },
+      child: body,
     );
   }
 }

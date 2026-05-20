@@ -58,7 +58,7 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
       return _TimeoutView(onRetry: () => context.go(RouteNames.home));
     }
 
-    return Scaffold(
+    final body = Scaffold(
       body: Stack(
         children: [
           // 1. Map Background
@@ -224,6 +224,16 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
           ),
         ],
       ),
+    );
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        await ref.read(searchingControllerProvider.notifier).cancelOrder();
+        if (context.mounted) context.go(RouteNames.home);
+      },
+      child: body,
     );
   }
 
