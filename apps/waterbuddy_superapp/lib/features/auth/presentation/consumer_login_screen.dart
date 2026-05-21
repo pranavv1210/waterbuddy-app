@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/app_role.dart';
-import '../../auth_controller.dart';
+import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/waterbuddy_auth_layout.dart';
 

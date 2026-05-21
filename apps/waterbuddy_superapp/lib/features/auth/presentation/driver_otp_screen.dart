@@ -7,7 +7,7 @@ import '../../../core/auth/app_role.dart';
 import '../../../core/services/auth/auth_service.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
-import '../../../widgets/kaveri_auth_layout.dart';
+import '../../../widgets/waterbuddy_auth_layout.dart';
 
 class DriverOtpScreen extends ConsumerStatefulWidget {
   const DriverOtpScreen({super.key});
@@ -54,7 +54,7 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen> with SingleTi
           context.go(RouteNames.authDriver);
         }
       },
-      child: KaveriAuthLayout(
+      child: WaterBuddyAuthLayout(
         activeRole: AppRole.driver,
         title: 'Verify OTP',
         subtitle: 'Enter the 6-digit code sent to $phoneNumber',

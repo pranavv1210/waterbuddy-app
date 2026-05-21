@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/app_role.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
-import '../../../widgets/kaveri_auth_layout.dart';
+import '../../../widgets/waterbuddy_auth_layout.dart';
 
 class ConsumerOtpScreen extends ConsumerStatefulWidget {
   const ConsumerOtpScreen({super.key});
@@ -57,7 +57,7 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen> with Sing
           context.go(RouteNames.authConsumer);
         }
       },
-      child: KaveriAuthLayout(
+      child: WaterBuddyAuthLayout(
         activeRole: AppRole.consumer,
         title: 'Verify OTP',
         subtitle: 'Enter the 6-digit code sent to $phoneNumber',
