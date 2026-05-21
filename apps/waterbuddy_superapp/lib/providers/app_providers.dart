@@ -16,10 +16,16 @@ import '../features/admin/presentation/admin_dashboard_screen.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/presentation/admin_auth_screen.dart';
 import '../features/auth/presentation/consumer_auth_screen.dart';
+import '../features/auth/presentation/consumer_login_screen.dart';
+import '../features/auth/presentation/consumer_signup_screen.dart';
 import '../features/auth/presentation/consumer_otp_screen.dart';
 import '../features/auth/presentation/driver_onboarding_screen.dart';
+import '../features/auth/presentation/driver_login_screen.dart';
+import '../features/auth/presentation/driver_signup_screen.dart';
 import '../features/auth/presentation/driver_otp_screen.dart';
 import '../features/auth/presentation/seller_onboarding_screen.dart';
+import '../features/auth/presentation/seller_login_screen.dart';
+import '../features/auth/presentation/seller_signup_screen.dart';
 import '../features/auth/presentation/unauthorized_screen.dart';
 import '../features/driver/presentation/driver_dashboard_screen.dart';
 import '../features/home/presentation/home_screen.dart';
@@ -278,9 +284,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (path == RouteNames.splash) return null;
       final authPaths = <String>{
         RouteNames.authConsumer,
+        RouteNames.authConsumerLogin,
+        RouteNames.authConsumerSignup,
         RouteNames.authConsumerOtp,
         RouteNames.authSeller,
+        RouteNames.authSellerLogin,
+        RouteNames.authSellerSignup,
         RouteNames.authDriver,
+        RouteNames.authDriverLogin,
+        RouteNames.authDriverSignup,
         RouteNames.authDriverOtp,
         RouteNames.authAdmin,
       };
@@ -324,10 +336,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: RouteNames.splash, builder: (_, __) => const SplashScreen()),
       GoRoute(path: RouteNames.roleSelection, builder: (_, __) => const RoleSelectionScreen()),
-      GoRoute(path: RouteNames.authConsumer, builder: (_, __) => const ConsumerAuthScreen()),
+      GoRoute(path: RouteNames.authConsumer, builder: (_, __) => const ConsumerAuthLandingScreen()),
+      GoRoute(path: RouteNames.authConsumerLogin, builder: (_, __) => const ConsumerLoginScreen()),
+      GoRoute(path: RouteNames.authConsumerSignup, builder: (_, __) => const ConsumerSignupScreen()),
       GoRoute(path: RouteNames.authConsumerOtp, builder: (_, __) => const ConsumerOtpScreen()),
-      GoRoute(path: RouteNames.authSeller, builder: (_, __) => const SellerOnboardingScreen()),
-      GoRoute(path: RouteNames.authDriver, builder: (_, __) => const DriverOnboardingScreen()),
+      GoRoute(path: RouteNames.authSeller, builder: (_, __) => const SellerAuthLandingScreen()),
+      GoRoute(path: RouteNames.authSellerLogin, builder: (_, __) => const SellerLoginScreen()),
+      GoRoute(path: RouteNames.authSellerSignup, builder: (_, __) => const SellerSignupScreen()),
+      GoRoute(path: RouteNames.authDriver, builder: (_, __) => const DriverAuthLandingScreen()),
+      GoRoute(path: RouteNames.authDriverLogin, builder: (_, __) => const DriverLoginScreen()),
+      GoRoute(path: RouteNames.authDriverSignup, builder: (_, __) => const DriverSignupScreen()),
       GoRoute(path: RouteNames.authDriverOtp, builder: (_, __) => const DriverOtpScreen()),
       GoRoute(path: RouteNames.authAdmin, builder: (_, __) => const AdminAuthScreen()),
       GoRoute(path: RouteNames.sellerDashboard, builder: (_, __) => const SellerDashboardScreen()),

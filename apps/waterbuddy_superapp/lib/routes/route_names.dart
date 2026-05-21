@@ -1,12 +1,23 @@
 class RouteNames {
   static const splash = '/';
   static const roleSelection = '/role-selection';
+
   static const authConsumer = '/auth/consumer';
+  static const authConsumerLogin = '/auth/consumer/login';
+  static const authConsumerSignup = '/auth/consumer/signup';
   static const authConsumerOtp = '/auth/consumer/otp';
+
   static const authSeller = '/auth/seller';
+  static const authSellerLogin = '/auth/seller/login';
+  static const authSellerSignup = '/auth/seller/signup';
+
   static const authDriver = '/auth/driver';
+  static const authDriverLogin = '/auth/driver/login';
+  static const authDriverSignup = '/auth/driver/signup';
   static const authDriverOtp = '/auth/driver/otp';
+
   static const authAdmin = '/auth/admin';
+  
   static const auth = authConsumer;
   static const otp = authConsumerOtp;
 

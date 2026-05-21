@@ -8,7 +8,7 @@ import '../../../core/auth/app_role.dart';
 import '../../../core/services/auth/auth_service.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
-import '../../../widgets/kaveri_auth_layout.dart';
+import '../../../widgets/waterbuddy_auth_layout.dart';
 
 class AdminAuthScreen extends ConsumerStatefulWidget {
   const AdminAuthScreen({super.key});
@@ -49,9 +49,9 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> with SingleTi
         if (didPop) return;
         context.go(RouteNames.roleSelection);
       },
-      child: KaveriAuthLayout(
+      child: WaterBuddyAuthLayout(
         activeRole: AppRole.admin,
-        title: 'Login as Subdivision User',
+        title: 'Admin Login',
         subtitle: 'Secure administrative access',
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -86,7 +86,7 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> with SingleTi
                   onPressed: _loading ? null : _loginWithEmail,
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: const Color(0xFF0EA5E9),
+                    backgroundColor: const Color(0xFFEF4444),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   child: _loading

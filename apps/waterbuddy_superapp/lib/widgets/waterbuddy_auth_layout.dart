@@ -6,13 +6,13 @@ import '../core/auth/app_role.dart';
 import '../providers/app_providers.dart';
 import '../routes/route_names.dart';
 
-class KaveriAuthLayout extends ConsumerStatefulWidget {
+class WaterBuddyAuthLayout extends ConsumerStatefulWidget {
   final AppRole activeRole;
   final String title;
   final String subtitle;
   final Widget child;
 
-  const KaveriAuthLayout({
+  const WaterBuddyAuthLayout({
     super.key,
     required this.activeRole,
     required this.title,
@@ -21,10 +21,10 @@ class KaveriAuthLayout extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<KaveriAuthLayout> createState() => _KaveriAuthLayoutState();
+  ConsumerState<WaterBuddyAuthLayout> createState() => _WaterBuddyAuthLayoutState();
 }
 
-class _KaveriAuthLayoutState extends ConsumerState<KaveriAuthLayout> with SingleTickerProviderStateMixin {
+class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout> with SingleTickerProviderStateMixin {
   late final AnimationController _toastController;
   late final Animation<Offset> _toastOffset;
   String _toastMessage = '';
@@ -88,7 +88,7 @@ class _KaveriAuthLayoutState extends ConsumerState<KaveriAuthLayout> with Single
         route = RouteNames.authDriver;
         break;
       case AppRole.admin:
-        roleLabel = 'Subdivision User';
+        roleLabel = 'Admin User';
         route = RouteNames.authAdmin;
         break;
     }
@@ -96,7 +96,6 @@ class _KaveriAuthLayoutState extends ConsumerState<KaveriAuthLayout> with Single
     _triggerToast('Switched to $roleLabel');
     ref.read(selectedRoleProvider.notifier).set(role);
 
-    // Wait a brief moment for toast animation initiation, then navigate
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
         context.go(route);
@@ -104,35 +103,46 @@ class _KaveriAuthLayoutState extends ConsumerState<KaveriAuthLayout> with Single
     });
   }
 
+  List<Color> _getRoleColors(AppRole role) {
+    switch (role) {
+      case AppRole.consumer:
+        return [const Color(0xFF38BDF8), const Color(0xFF0284C7), const Color(0xFF0369A1)];
+      case AppRole.seller:
+        return [const Color(0xFF34D399), const Color(0xFF059669), const Color(0xFF047857)];
+      case AppRole.driver:
+        return [const Color(0xFFFBBF24), const Color(0xFFD97706), const Color(0xFFB45309)];
+      case AppRole.admin:
+        return [const Color(0xFFC084FC), const Color(0xFF9333EA), const Color(0xFF7E22CE)];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Get all roles except the currently active one
     final switchOptions = AppRole.values.where((r) => r != widget.activeRole).toList();
+    final gradientColors = _getRoleColors(widget.activeRole);
+    final baseColor = gradientColors.last;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0369A1), // Sky Blue/Teal base
+      backgroundColor: baseColor,
       body: Stack(
         children: [
-          // Elegant Sky Blue to Cyan gradient
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF38BDF8), Color(0xFF0284C7), Color(0xFF0369A1)],
+                colors: gradientColors,
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
             ),
           ),
-
-          // Bottom background curves / waves visual representation
           Positioned(
             bottom: -50,
             left: -50,
             right: -50,
             child: Opacity(
-              opacity: 0.1,
+              opacity: 0.05,
               child: Container(
-                height: 200,
+                height: 250,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
@@ -140,8 +150,6 @@ class _KaveriAuthLayoutState extends ConsumerState<KaveriAuthLayout> with Single
               ),
             ),
           ),
-
-          // Main Form Content
           SafeArea(
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
@@ -151,7 +159,6 @@ class _KaveriAuthLayoutState extends ConsumerState<KaveriAuthLayout> with Single
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     child: Column(
                       children: [
-                        // Top Switcher Row
                         Container(
                           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                           decoration: BoxDecoration(
@@ -164,18 +171,10 @@ class _KaveriAuthLayoutState extends ConsumerState<KaveriAuthLayout> with Single
                             children: switchOptions.map((role) {
                               String label = '';
                               switch (role) {
-                                case AppRole.consumer:
-                                  label = 'Consumer';
-                                  break;
-                                case AppRole.seller:
-                                  label = 'Tanker Owner';
-                                  break;
-                                case AppRole.driver:
-                                  label = 'Driver';
-                                  break;
-                                case AppRole.admin:
-                                  label = 'Subdivision';
-                                  break;
+                                case AppRole.consumer: label = 'Consumer'; break;
+                                case AppRole.seller: label = 'Tanker Owner'; break;
+                                case AppRole.driver: label = 'Driver'; break;
+                                case AppRole.admin: label = 'Admin'; break;
                               }
 
                               return Expanded(
@@ -207,130 +206,46 @@ class _KaveriAuthLayoutState extends ConsumerState<KaveriAuthLayout> with Single
                             }).toList(),
                           ),
                         ),
-
-                        const SizedBox(height: 32),
-
-                        // Emblem
+                        const SizedBox(height: 40),
                         Container(
-                          width: 120,
-                          height: 120,
+                          width: 90,
+                          height: 90,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFF0369A1),
-                            border: Border.all(color: const Color(0xFFFBBF24), width: 4), // Gold rim
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
+                            color: Colors.white.withOpacity(0.15),
+                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
                           ),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              // Droplet background detail
-                              Icon(
-                                Icons.water_drop,
-                                color: Colors.white.withOpacity(0.1),
-                                size: 85,
-                              ),
-                              // Crest content
-                              const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.water_drop_rounded,
-                                    color: Colors.white,
-                                    size: 40,
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'ಕಾವೇರಿ',
-                                    style: TextStyle(
-                                      color: Color(0xFFFBBF24),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                  Text(
-                                    'WATERBUDDY',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                          child: const Center(
+                            child: Icon(Icons.water_drop_rounded, color: Colors.white, size: 45),
                           ),
                         ),
-
-                        const SizedBox(height: 24),
-
-                        // Board Text
+                        const SizedBox(height: 16),
                         const Text(
-                          'Bangalore Water Supply and\nSewerage Board',
+                          'WATERBUDDY',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            height: 1.2,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-
-                        const SizedBox(height: 32),
-
-                        // Role Header
+                        const SizedBox(height: 40),
                         Text(
                           widget.title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
                           textAlign: TextAlign.center,
                         ),
                         if (widget.subtitle.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           Text(
                             widget.subtitle,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
-                              fontSize: 13,
-                            ),
+                            style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13),
                             textAlign: TextAlign.center,
                           ),
                         ],
-
                         const SizedBox(height: 28),
-
-                        // Inserted children forms
                         widget.child,
-
                         const SizedBox(height: 40),
-
-                        // Footer / Copyright Sanchari Kaveri Style
-                        Text(
-                          'Version 1.0.34',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '© 2026, All Rights Reserved by BWSSB, Bangalore',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
-                            fontSize: 11,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
@@ -338,8 +253,6 @@ class _KaveriAuthLayoutState extends ConsumerState<KaveriAuthLayout> with Single
               ],
             ),
           ),
-
-          // Animated Top Banner Switch Toast
           if (_showToast)
             Positioned(
               top: 50,
@@ -352,14 +265,10 @@ class _KaveriAuthLayoutState extends ConsumerState<KaveriAuthLayout> with Single
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10B981), // Emerald banner
+                      color: const Color(0xFF10B981),
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
+                        BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4)),
                       ],
                     ),
                     child: Row(
@@ -368,14 +277,7 @@ class _KaveriAuthLayoutState extends ConsumerState<KaveriAuthLayout> with Single
                       children: [
                         const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
                         const SizedBox(width: 10),
-                        Text(
-                          _toastMessage,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        Text(_toastMessage, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
