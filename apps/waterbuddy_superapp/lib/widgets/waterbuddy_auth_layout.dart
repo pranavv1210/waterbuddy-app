@@ -155,10 +155,13 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout> wit
               physics: const BouncingScrollPhysics(),
               slivers: [
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    child: Column(
-                      children: [
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        child: Column(
+                          children: [
                         Container(
                           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                           decoration: BoxDecoration(
@@ -250,7 +253,9 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout> wit
                     ),
                   ),
                 ),
-              ],
+              ),
+            ),
+          ],
             ),
           ),
           if (_showToast)

@@ -160,9 +160,247 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     // Premium Color Palette
     const primary = Color(0xFF0F172A); // Dark Slate
     const accent = Color(0xFF38BDF8); // Light Blue
-    const surface = Colors.white;
     const background = Color(0xFFF8FAFC);
 
+    final size = MediaQuery.of(context).size;
+    final isDesktop = size.width > 800;
+
+    if (isDesktop) {
+      return PopScope(
+        canPop: !_isLocationConfirmed && !isSearching,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          if (isSearching) {
+            await ref.read(searchingControllerProvider.notifier).cancelOrder();
+          } else if (_isLocationConfirmed) {
+            setState(() => _isLocationConfirmed = false);
+          }
+        },
+        child: Scaffold(
+          backgroundColor: background,
+          body: Row(
+            children: [
+              // Left Pane: Booking controls
+              Container(
+                width: 420,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 24,
+                      offset: const Offset(4, 0),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.water_drop_rounded, color: Color(0xFF38BDF8), size: 28),
+                                SizedBox(width: 8),
+                                Text(
+                                  'WaterBuddy',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF0F172A),
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            _buildActionsBar(user),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                      
+                      // Dynamic Control Content
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (isSearching)
+                                _SearchingBottomSheet(orderId: searchingState.orderId!)
+                              else if (!_isLocationConfirmed) ...[
+                                _isMovingMap || (_selectedLocation != null && _currentAddress != null && !_isLocationConfirmed && _isManualSelection)
+                                    ? _buildConfirmLocationView(primary)
+                                    : _buildDiscoveryView(user, primary, accent),
+                              ] else ...[
+                                Row(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => setState(() => _isLocationConfirmed = false),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFF1F5F9),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A), size: 20),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'Choose Tank Size',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF0F172A),
+                                        letterSpacing: -0.3,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                _buildLocationBar(),
+                                const SizedBox(height: 20),
+                                ...tankOptionsData.map((data) => _buildTankListItem(data, primary)),
+                                const SizedBox(height: 32),
+                                _buildBookButton(primary),
+                              ]
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Right Pane: Live Map
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: FlutterMap(
+                        mapController: _mapController,
+                        options: MapOptions(
+                          initialCenter: _currentLocation ?? _defaultLocation,
+                          initialZoom: 15,
+                          interactionOptions: InteractionOptions(
+                            flags: _isLocationConfirmed ? InteractiveFlag.none : InteractiveFlag.all,
+                          ),
+                          onPositionChanged: _onMapPositionChanged,
+                          onMapEvent: (event) async {
+                            if (event is MapEventMoveEnd) {
+                              setState(() => _isMovingMap = false);
+                              if (_selectedLocation != null) {
+                                await _getAddressFromLatLng(_selectedLocation!);
+                              }
+                            }
+                          },
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.waterbuddy.customer',
+                          ),
+                          if (_currentLocation != null)
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: _currentLocation!,
+                                  width: 80,
+                                  height: 80,
+                                  child: _buildUserDot(),
+                                ),
+                                if (_isLocationConfirmed && _selectedLocation != null)
+                                  Marker(
+                                    point: _selectedLocation!,
+                                    width: 80,
+                                    height: 80,
+                                    child: const Icon(
+                                      Icons.location_on_rounded,
+                                      color: Color(0xFFEF4444),
+                                      size: 44,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Fixed pin in map center
+                    if (!_isLocationConfirmed)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 40),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: primary.withOpacity(0.3),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: const Text(
+                                  'Confirm Delivery Location',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Icon(
+                                Icons.location_on_rounded,
+                                color: Color(0xFFEF4444),
+                                size: 48,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      
+                    // Geolocate Floating button
+                    Positioned(
+                      bottom: 24,
+                      right: 24,
+                      child: FloatingActionButton(
+                        onPressed: _determinePosition,
+                        backgroundColor: Colors.white,
+                        foregroundColor: primary,
+                        elevation: 4,
+                        mini: true,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: _isLoadingLocation 
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.my_location_rounded, size: 20),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Mobile / Tablet full Stack layout
     return PopScope(
       canPop: !_isLocationConfirmed && !isSearching,
       onPopInvokedWithResult: (didPop, result) async {
@@ -179,114 +417,135 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         drawer: _buildDrawer(user),
         body: Stack(
           children: [
-          // 1. FULL SCREEN MAP BACKGROUND
-          Positioned.fill(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: _currentLocation ?? _defaultLocation,
-                initialZoom: 15,
-                interactionOptions: InteractionOptions(
-                  flags: _isLocationConfirmed ? InteractiveFlag.none : InteractiveFlag.all,
-                ),
-                onPositionChanged: _onMapPositionChanged,
-                onMapEvent: (event) async {
-                  if (event is MapEventMoveEnd) {
-                    setState(() => _isMovingMap = false);
-                    if (_selectedLocation != null) {
-                      await _getAddressFromLatLng(_selectedLocation!);
+            // 1. FULL SCREEN MAP BACKGROUND
+            Positioned.fill(
+              child: FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: _currentLocation ?? _defaultLocation,
+                  initialZoom: 15,
+                  interactionOptions: InteractionOptions(
+                    flags: _isLocationConfirmed ? InteractiveFlag.none : InteractiveFlag.all,
+                  ),
+                  onPositionChanged: _onMapPositionChanged,
+                  onMapEvent: (event) async {
+                    if (event is MapEventMoveEnd) {
+                      setState(() => _isMovingMap = false);
+                      if (_selectedLocation != null) {
+                        await _getAddressFromLatLng(_selectedLocation!);
+                      }
                     }
-                  }
-                },
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.waterbuddy.customer',
+                  },
                 ),
-                if (_currentLocation != null)
-                  MarkerLayer(
-                    markers: [
-                      // User Current Location Dot (Real GPS)
-                      Marker(
-                        point: _currentLocation!,
-                        width: 80,
-                        height: 80,
-                        child: _buildUserDot(),
-                      ),
-                      if (_isLocationConfirmed && _selectedLocation != null)
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.waterbuddy.customer',
+                  ),
+                  if (_currentLocation != null)
+                    MarkerLayer(
+                      markers: [
+                        // User Current Location Dot (Real GPS)
                         Marker(
-                          point: _selectedLocation!,
+                          point: _currentLocation!,
                           width: 80,
                           height: 80,
-                          child: const Icon(
-                            Icons.location_on_rounded,
-                            color: Color(0xFFEF4444),
-                            size: 44,
-                          ),
+                          child: _buildUserDot(),
                         ),
-                    ],
-                  ),
-              ],
-            ),
-          ),
-
-          // 2. FIXED CENTER PIN (Uber-style selection)
-          if (!_isLocationConfirmed)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 40),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: primary,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: primary.withOpacity(0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
+                        if (_isLocationConfirmed && _selectedLocation != null)
+                          Marker(
+                            point: _selectedLocation!,
+                            width: 80,
+                            height: 80,
+                            child: const Icon(
+                              Icons.location_on_rounded,
+                              color: Color(0xFFEF4444),
+                              size: 44,
+                            ),
                           ),
-                        ],
-                      ),
-                      child: const Text(
-                        'Confirm Delivery Location',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    const Icon(
-                      Icons.location_on_rounded,
-                      color: Color(0xFFEF4444),
-                      size: 48,
-                    ),
-                  ],
-                ),
+                ],
               ),
             ),
 
-          // 2. TOP LOCATION BAR (Uber style)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Row(
-                  children: [
-                    if (!_isLocationConfirmed) ...[
-                      Builder(
-                        builder: (context) => GestureDetector(
-                          onTap: () => Scaffold.of(context).openDrawer(),
+            // 2. FIXED CENTER PIN (Uber-style selection)
+            if (!_isLocationConfirmed)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 40),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: primary,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primary.withOpacity(0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: const Text(
+                          'Confirm Delivery Location',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Icon(
+                        Icons.location_on_rounded,
+                        color: Color(0xFFEF4444),
+                        size: 48,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // 2. TOP LOCATION BAR (Uber style)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Row(
+                    children: [
+                      if (!_isLocationConfirmed) ...[
+                        Builder(
+                          builder: (context) => GestureDetector(
+                            onTap: () => Scaffold.of(context).openDrawer(),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(Icons.menu_rounded, color: Color(0xFF0F172A), size: 24),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                      ] else ...[
+                        GestureDetector(
+                          onTap: () => setState(() => _isLocationConfirmed = false),
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -300,67 +559,46 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                                 ),
                               ],
                             ),
-                            child: const Icon(Icons.menu_rounded, color: Color(0xFF0F172A), size: 24),
+                            child: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A), size: 24),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                    ] else ...[
-                      GestureDetector(
-                        onTap: () => setState(() => _isLocationConfirmed = false),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
-                                blurRadius: 20,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A), size: 24),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
+                        const SizedBox(width: 12),
+                      ],
+                      Expanded(child: _buildLocationBar()),
+                      if (!_isLocationConfirmed) ...[
+                        const SizedBox(width: 12),
+                        _buildActionsBar(user),
+                      ],
                     ],
-                    Expanded(child: _buildLocationBar()),
-                    if (!_isLocationConfirmed) ...[
-                      const SizedBox(width: 12),
-                      _buildActionsBar(user),
-                    ],
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // 3. FLOATING LOCATION BUTTON
-          Positioned(
-            bottom: 380, // Above bottom sheet + nav bar
-            right: 16,
-            child: FloatingActionButton(
-              onPressed: _determinePosition,
-              backgroundColor: Colors.white,
-              foregroundColor: primary,
-              elevation: 4,
-              mini: true,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: _isLoadingLocation 
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.my_location_rounded, size: 20),
+            // 3. FLOATING LOCATION BUTTON
+            Positioned(
+              bottom: 380, // Above bottom sheet + nav bar
+              right: 16,
+              child: FloatingActionButton(
+                onPressed: _determinePosition,
+                backgroundColor: Colors.white,
+                foregroundColor: primary,
+                elevation: 4,
+                mini: true,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: _isLoadingLocation 
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.my_location_rounded, size: 20),
+              ),
             ),
-          ),
 
-          // 4. BOTTOM SHEET (Uber Style)
-          _buildBottomSheet(user, primary, accent, widget.activeOrder),
-        ],
+            // 4. BOTTOM SHEET (Uber Style)
+            _buildBottomSheet(user, primary, accent, widget.activeOrder),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildLocationBar() {
     final locText = _isMovingMap 
@@ -1295,77 +1533,14 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
   Widget build(BuildContext context) {
     final searchingState = ref.watch(searchingControllerProvider);
     final activeOrder = ref.watch(activeOrderProvider).value;
+    final isDesktop = MediaQuery.of(context).size.width > 800;
 
     const primaryColor = Color(0xFF0F172A);
     const accentColor = Color(0xFF38BDF8);
 
     if (searchingState.hasTimedOut) {
-      return Positioned(
-        bottom: 0,
-        left: 0,
-        right: 0,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            boxShadow: [
-              BoxShadow(
-                color: primaryColor.withOpacity(0.15),
-                blurRadius: 30,
-                offset: const Offset(0, -10),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF2F2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.timer_off_rounded, size: 48, color: Color(0xFFEF4444)),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'No tankers available',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF0F172A), letterSpacing: -0.5),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'All our partners are currently busy in your area. Please try again in a few minutes.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    await ref.read(searchingControllerProvider.notifier).cancelOrder();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                    elevation: 0,
-                  ),
-                  child: const Text('Try Again', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Container(
+      final timedOutContent = Container(
+        padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -1379,147 +1554,221 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Modern progress line
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-              child: LinearProgressIndicator(
-                backgroundColor: accentColor.withOpacity(0.1),
-                color: accentColor,
-                minHeight: 6,
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFEF2F2),
+                shape: BoxShape.circle,
               ),
+              child: const Icon(Icons.timer_off_rounded, size: 48, color: Color(0xFFEF4444)),
             ),
-            Padding(
-              padding: const EdgeInsets.all(28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Finding your tanker...',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF0F172A),
-                          letterSpacing: -1.0,
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF38BDF8)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Broadcasting your request to 5 nearby partners.',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  // Order details card (Modern style)
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(Icons.water_drop_rounded, color: Color(0xFF38BDF8), size: 28),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _getTankLabel(activeOrder?.tankSize ?? 15000),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 18,
-                                  color: Color(0xFF0F172A),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${activeOrder?.tankSize?.toInt() ?? 15000} Litres • COD',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: Color(0xFF94A3B8),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF0F9FF),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFBAE6FD)),
-                          ),
-                          child: const Text(
-                            'SEARCHING',
-                            style: TextStyle(
-                              color: Color(0xFF0369A1),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  // Cancel Button (Modern outlined)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: OutlinedButton(
-                      onPressed: () async {
-                        await ref.read(searchingControllerProvider.notifier).cancelOrder();
-                        if (context.mounted) {
-                          context.go(RouteNames.home);
-                        }
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFEF4444),
-                        side: const BorderSide(color: Color(0xFFF1F5F9), width: 2),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                      ),
-                      child: const Text('Cancel Request', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 24),
+            const Text(
+              'No tankers available',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF0F172A), letterSpacing: -0.5),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'All our partners are currently busy in your area. Please try again in a few minutes.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () async {
+                  await ref.read(searchingControllerProvider.notifier).cancelOrder();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  elevation: 0,
+                ),
+                child: const Text('Try Again', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
               ),
             ),
           ],
         ),
+      );
+
+      if (isDesktop) {
+        return timedOutContent;
+      } else {
+        return Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: timedOutContent,
+        );
+      }
+    }
+
+    final searchingContent = Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withOpacity(0.15),
+            blurRadius: 30,
+            offset: const Offset(0, -10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Modern progress line
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            child: LinearProgressIndicator(
+              backgroundColor: accentColor.withOpacity(0.1),
+              color: accentColor,
+              minHeight: 6,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Finding your tanker...',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF0F172A),
+                        letterSpacing: -1.0,
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF38BDF8)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Broadcasting your request to 5 nearby partners.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                // Order details card (Modern style)
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.water_drop_rounded, color: Color(0xFF38BDF8), size: 28),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _getTankLabel(activeOrder?.tankSize ?? 15000),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                  color: Color(0xFF0F172A)),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${activeOrder?.tankSize?.toInt() ?? 15000} Litres • COD',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Color(0xFF94A3B8)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0F9FF),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFBAE6FD)),
+                        ),
+                        child: const Text(
+                          'SEARCHING',
+                          style: TextStyle(
+                            color: Color(0xFF0369A1),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+                // Cancel Button (Modern outlined)
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      await ref.read(searchingControllerProvider.notifier).cancelOrder();
+                      if (context.mounted) {
+                        context.go(RouteNames.home);
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFEF4444),
+                      side: const BorderSide(color: Color(0xFFF1F5F9), width: 2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    ),
+                    child: const Text('Cancel Request', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
+
+    if (isDesktop) {
+      return searchingContent;
+    } else {
+      return Positioned(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: searchingContent,
+      );
+    }
   }
 }
 

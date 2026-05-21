@@ -155,6 +155,44 @@ final sellerOnlineProvider = StateNotifierProvider<SellerOnlineController, bool>
   ),
 );
 
+class DriverOnlineController extends StateNotifier<bool> {
+  DriverOnlineController(this._firestore, this._user) : super(false) {
+    _watchSelf();
+  }
+  final FirebaseFirestore _firestore;
+  final User? _user;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _selfSub;
+
+  void _watchSelf() {
+    if (_user == null) return;
+    _selfSub = _firestore.collection('drivers').doc(_user.uid).snapshots().listen((doc) {
+      state = doc.data()?['isOnline'] as bool? ?? false;
+    });
+  }
+
+  Future<void> setOnline(bool value) async {
+    if (_user == null) return;
+    await _firestore.collection('drivers').doc(_user.uid).set({
+      'uid': _user.uid,
+      'isOnline': value,
+      'lastActiveAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  @override
+  void dispose() {
+    _selfSub?.cancel();
+    super.dispose();
+  }
+}
+
+final driverOnlineProvider = StateNotifierProvider<DriverOnlineController, bool>(
+  (ref) => DriverOnlineController(
+    ref.watch(firestoreProvider),
+    ref.watch(currentUserProvider),
+  ),
+);
+
 final onlineSellersProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
   return ref
       .watch(firestoreProvider)

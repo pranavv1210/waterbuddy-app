@@ -1,10 +1,9 @@
-import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/app_role.dart';
-import '../../../core/services/auth/auth_service.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/waterbuddy_auth_layout.dart';
@@ -18,21 +17,50 @@ class DriverOtpScreen extends ConsumerStatefulWidget {
 
 class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen> with SingleTickerProviderStateMixin {
   final _otp = TextEditingController();
-  bool _loading = false;
-  String? _error;
 
   late final AnimationController _animController;
   late final Animation<double> _fadeAnimation;
+
+  Timer? _timer;
+  int _countdown = 30;
 
   @override
   void initState() {
     super.initState();
     _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 450))..forward();
     _fadeAnimation = CurvedAnimation(parent: _animController, curve: Curves.easeInOut);
+    _startTimer();
+  }
+
+  void _startTimer() {
+    setState(() => _countdown = 30);
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_countdown > 0) {
+          _countdown--;
+        } else {
+          timer.cancel();
+        }
+      });
+    });
+  }
+
+  void _resendOtp() {
+    if (_countdown > 0) return;
+    final extra = GoRouterState.of(context).extra as Map<String, dynamic>? ?? const {};
+    final phoneNumber = (extra['phone'] ?? extra['phoneNumber'] as String?) ?? '';
+    ref.read(authControllerProvider.notifier).sendOtp(phoneNumber, role: AppRole.driver);
+    _startTimer();
   }
 
   @override
   void dispose() {
+    _timer?.cancel();
     _otp.dispose();
     _animController.dispose();
     super.dispose();
@@ -40,9 +68,17 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authControllerProvider);
     final extra = GoRouterState.of(context).extra as Map<String, dynamic>? ?? const {};
-    final isSignUp = extra['isSignUp'] as bool? ?? true;
-    final phoneNumber = (extra['phoneNumber'] as String?) ?? '';
+    final phoneNumber = (extra['phone'] ?? extra['phoneNumber'] as String?) ?? '';
+    final fullName = (extra['fullName'] as String?) ?? '';
+    final email = (extra['email'] as String?) ?? '';
+    
+    ref.listen(authControllerProvider, (_, next) {
+      if (next.isVerified && mounted) {
+        context.go(RouteNames.driverDashboard);
+      }
+    });
 
     return PopScope(
       canPop: false,
@@ -83,9 +119,9 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen> with SingleTi
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0EA5E9).withOpacity(0.1),
+                    color: const Color(0xFFF59E0B).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF0EA5E9).withOpacity(0.3)),
+                    border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
                   ),
                   child: const Text(
                     'Development OTP: 123456',
@@ -97,10 +133,12 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen> with SingleTi
                 TextField(
                   controller: _otp,
                   keyboardType: TextInputType.number,
+                  maxLength: 6,
                   style: const TextStyle(color: Colors.white, fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.w600),
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
                     hintText: '------',
+                    counterText: '',
                     hintStyle: TextStyle(color: Colors.white.withOpacity(0.2), letterSpacing: 8),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.04),
@@ -114,60 +152,61 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen> with SingleTi
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFF38BDF8)),
+                      borderSide: const BorderSide(color: Color(0xFFF59E0B)),
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
                 FilledButton(
-                  onPressed: _loading
+                  onPressed: authState.isLoading
                       ? null
                       : () async {
-                          setState(() { _loading = true; _error = null; });
-                          try {
-                            final auth = ref.read(authServiceProvider);
-                            await auth.signInWithDevelopmentOtp(
-                              phoneNumber: phoneNumber,
-                              otpCode: _otp.text.trim(),
-                            );
-                            if (isSignUp) {
-                              await auth.upsertDriverProfile(
-                                fullName: (extra['fullName'] as String?) ?? '',
-                                phoneNumber: phoneNumber,
-                                email: (extra['email'] as String?) ?? '',
-                                licenseNumber: (extra['licenseNumber'] as String?) ?? '',
-                                aadhaarNumber: (extra['aadhaarNumber'] as String?) ?? '',
-                                panNumber: (extra['panNumber'] as String?) ?? '',
-                                driverPhotoUrl: (extra['driverPhotoUrl'] as String?) ?? '',
-                                licenseUploadUrl: (extra['licenseUploadUrl'] as String?) ?? '',
-                                aadhaarUploadUrl: (extra['aadhaarUploadUrl'] as String?) ?? '',
-                                panUploadUrl: (extra['panUploadUrl'] as String?) ?? '',
-                                address: (extra['address'] as String?) ?? '',
-                                emergencyContact: (extra['emergencyContact'] as String?) ?? '',
+                          final ok = await ref.read(authControllerProvider.notifier).verifyOtp(
+                                _otp.text.trim(),
+                                role: AppRole.driver,
+                                fullName: fullName,
+                                email: email,
                               );
-                            }
-                            if (!mounted) return;
-                            context.go(RouteNames.driverDashboard);
-                          } on AuthFailure catch (e) {
-                            setState(() => _error = e.message);
-                          } catch (_) {
-                            setState(() => _error = 'Unable to verify driver OTP.');
-                          } finally {
-                            if (mounted) setState(() => _loading = false);
-                          }
+                          if (ok && mounted) context.go(RouteNames.driverDashboard);
                         },
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: const Color(0xFF0EA5E9),
+                    backgroundColor: const Color(0xFFF59E0B),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: _loading
+                  child: authState.isLoading
                       ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : const Text('Verify OTP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
-                if (_error != null) ...[
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Didn\'t receive code? ',
+                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+                    ),
+                    TextButton(
+                      onPressed: _countdown == 0 && !authState.isLoading ? _resendOtp : null,
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFFF59E0B),
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        _countdown > 0 ? 'Resend in ${_countdown}s' : 'Resend OTP',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: _countdown > 0 ? Colors.white.withOpacity(0.4) : const Color(0xFFF59E0B),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (authState.errorMessage != null) ...[
                   const SizedBox(height: 16),
-                  Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 13), textAlign: TextAlign.center),
+                  Text(authState.errorMessage!, style: const TextStyle(color: Colors.redAccent, fontSize: 13), textAlign: TextAlign.center),
                 ],
               ],
             ),

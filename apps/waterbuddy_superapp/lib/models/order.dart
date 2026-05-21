@@ -58,6 +58,7 @@ class Order {
   String? get deliveryAddress => location['address'] as String?;
   double get latitude => (location['latitude'] as num?)?.toDouble() ?? 0.0;
   double get longitude => (location['longitude'] as num?)?.toDouble() ?? 0.0;
+  String get tankLabel => '${tankSize.toInt()}L Tanker';
 }
 
 class TrackingData {

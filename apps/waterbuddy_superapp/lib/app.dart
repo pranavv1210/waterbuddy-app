@@ -52,10 +52,7 @@ class _WaterBuddySuperAppState extends ConsumerState<WaterBuddySuperApp> {
       theme: AppTheme.light(),
       routerConfig: router,
       builder: (context, child) {
-        return child ??
-            const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
+        return child ?? const Scaffold(body: Center(child: CircularProgressIndicator()));
       },
     );
   }

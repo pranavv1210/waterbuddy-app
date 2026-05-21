@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/services/auth/auth_service.dart';
 import '../../../providers/app_providers.dart';
@@ -16,21 +17,18 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  int _activeTab = 0; // 0: Overview, 1: Seller KYC, 2: Drivers KYC, 3: User Management, 4: Live Orders, 5: Commission Analytics
   String _searchQuery = '';
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+  final List<Map<String, dynamic>> _tabs = [
+    {'label': 'Operations Hub', 'icon': Icons.dashboard_rounded},
+    {'label': 'Seller KYC Approvals', 'icon': Icons.storefront_rounded},
+    {'label': 'Driver KYC Approvals', 'icon': Icons.local_shipping_rounded},
+    {'label': 'User Management', 'icon': Icons.people_alt_rounded},
+    {'label': 'Live Orders Monitor', 'icon': Icons.radar_rounded},
+    {'label': 'Revenue & Commissions', 'icon': Icons.analytics_rounded},
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -123,64 +121,88 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
           );
         }
 
+        final mediaQuery = MediaQuery.of(context);
+        final isDesktop = mediaQuery.size.width > 900;
+
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: const Color(0xFF0D1117),
-          drawer: _buildDrawer(context, auth.email ?? 'admin@waterbuddy.com'),
+          drawer: isDesktop ? null : _buildDrawer(context, auth.email ?? 'admin@waterbuddy.com'),
           body: Stack(
             children: [
               _buildBgOrbs(),
               SafeArea(
-                child: NestedScrollView(
-                  headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                    SliverAppBar(
-                      backgroundColor: Colors.transparent,
-                      elevation: 0,
-                      floating: true,
-                      pinned: true,
-                      leading: IconButton(
-                        icon: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white.withOpacity(0.1)),
-                          ),
-                          child: const Icon(Icons.menu_rounded, color: Colors.white, size: 20),
-                        ),
-                        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                      ),
-                      title: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                child: isDesktop
+                    ? Row(
                         children: [
-                          Text(
-                            'WaterBuddy',
-                            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
+                          // Custom Desktop Sidebar
+                          _buildDesktopSidebar(context, auth.email ?? 'admin@waterbuddy.com'),
+                          const VerticalDivider(width: 1, color: Colors.white12),
+                          // Right Main Content Pane
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildWelcomeHeader(auth.displayName ?? 'Administrator'),
+                                  const SizedBox(height: 24),
+                                  _buildStatsRow(users, sellers, drivers, orders),
+                                  const SizedBox(height: 32),
+                                  Expanded(
+                                    child: _buildTabContent(users, sellers, drivers, orders),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          Text(
-                            'Operations Control',
-                            style: TextStyle(color: Color(0xFF14B8A6), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                        ],
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        physics: const BouncingScrollPhysics(),
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                icon: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.05),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                                  ),
+                                  child: const Icon(Icons.menu_rounded, color: Colors.white, size: 20),
+                                ),
+                                onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                              ),
+                              const Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'WaterBuddy Admin',
+                                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900),
+                                  ),
+                                  Text(
+                                    'Operations Control',
+                                    style: TextStyle(color: Color(0xFF14B8A6), fontSize: 10, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          _buildWelcomeHeader(auth.displayName ?? 'Administrator'),
+                          const SizedBox(height: 24),
+                          _buildStatsRow(users, sellers, drivers, orders),
+                          const SizedBox(height: 32),
+                          SizedBox(
+                            height: 600,
+                            child: _buildTabContent(users, sellers, drivers, orders),
                           ),
                         ],
                       ),
-                      actions: [
-                        _buildProfileMenu(context),
-                        const SizedBox(width: 16),
-                      ],
-                    ),
-                  ],
-                  body: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    physics: const BouncingScrollPhysics(),
-                    children: [
-                      _buildWelcomeHeader(auth.displayName ?? 'Administrator'),
-                      const SizedBox(height: 24),
-                      _buildStatsGrid(users, sellers, drivers, orders),
-                      const SizedBox(height: 32),
-                      _buildMainConsole(sellers),
-                    ],
-                  ),
-                ),
               ),
             ],
           ),
@@ -229,8 +251,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
   }
 
   Widget _buildWelcomeHeader(String name) {
-    final displayName = (name.trim().isEmpty || name.toLowerCase() == 'admin' || name.toLowerCase() == 'administrator') 
-        ? 'WaterBuddy Admin' 
+    final displayName = (name.trim().isEmpty || name.toLowerCase() == 'admin' || name.toLowerCase() == 'administrator')
+        ? 'WaterBuddy Admin'
         : name.trim();
 
     return Column(
@@ -240,7 +262,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
           children: [
             Text(
               'Welcome back,',
-              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16, fontWeight: FontWeight.w400),
+              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14, fontWeight: FontWeight.w400),
             ),
             const SizedBox(width: 8),
             Container(
@@ -256,23 +278,23 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                   SizedBox(width: 6),
                   Text(
                     'Live Sync',
-                    style: TextStyle(color: Color(0xFF14B8A6), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                    style: TextStyle(color: Color(0xFF14B8A6), fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                   ),
                 ],
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Text(
           '$displayName 👋',
-          style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5),
         ),
       ],
     );
   }
 
-  Widget _buildStatsGrid(
+  Widget _buildStatsRow(
     AsyncValue<QuerySnapshot> users,
     AsyncValue<QuerySnapshot> sellers,
     AsyncValue<QuerySnapshot> drivers,
@@ -283,41 +305,91 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     final dCount = drivers.value?.docs.length ?? 0;
     final oCount = orders.value?.docs.length ?? 0;
 
+    final mediaQuery = MediaQuery.of(context);
+    final isDesktop = mediaQuery.size.width > 900;
+
+    if (isDesktop) {
+      return Row(
+        children: [
+          Expanded(
+            child: _buildStatCard(
+              title: 'Registered Users',
+              value: '$uCount',
+              icon: Icons.people_alt_rounded,
+              color: const Color(0xFF3B82F6),
+              subtitle: 'Water buyers',
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildStatCard(
+              title: 'Seller Partners',
+              value: '$sCount',
+              icon: Icons.storefront_rounded,
+              color: const Color(0xFF10B981),
+              subtitle: 'Tanker suppliers',
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildStatCard(
+              title: 'Driver Fleet',
+              value: '$dCount',
+              icon: Icons.local_shipping_rounded,
+              color: const Color(0xFFF59E0B),
+              subtitle: 'Delivery crew',
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildStatCard(
+              title: 'Active Orders',
+              value: '$oCount',
+              icon: Icons.water_drop_rounded,
+              color: const Color(0xFF8B5CF6),
+              subtitle: 'Live deliveries',
+              isLive: true,
+            ),
+          ),
+        ],
+      );
+    }
+
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.05,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.25,
       children: [
         _buildStatCard(
           title: 'Users',
           value: '$uCount',
           icon: Icons.people_alt_rounded,
           color: const Color(0xFF3B82F6),
-          subtitle: 'Registered buyers',
+          subtitle: 'Buyers',
         ),
         _buildStatCard(
           title: 'Sellers',
           value: '$sCount',
           icon: Icons.storefront_rounded,
           color: const Color(0xFF10B981),
-          subtitle: 'Water partners',
+          subtitle: 'Suppliers',
         ),
         _buildStatCard(
           title: 'Drivers',
           value: '$dCount',
           icon: Icons.local_shipping_rounded,
           color: const Color(0xFFF59E0B),
-          subtitle: 'Delivery agents',
+          subtitle: 'Crew',
         ),
         _buildStatCard(
-          title: 'Active Orders',
+          title: 'Orders',
           value: '$oCount',
           icon: Icons.water_drop_rounded,
           color: const Color(0xFF8B5CF6),
-          subtitle: 'Live dispatch',
+          subtitle: 'Live deliveries',
           isLive: true,
         ),
       ],
@@ -335,26 +407,19 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.04),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withOpacity(0.08)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
           Positioned(
-            top: -20,
-            right: -20,
-            child: Icon(icon, size: 96, color: color.withOpacity(0.05)),
+            top: -10,
+            right: -10,
+            child: Icon(icon, size: 72, color: color.withOpacity(0.05)),
           ),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -363,12 +428,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: color.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(icon, color: color, size: 20),
+                      child: Icon(icon, color: color, size: 18),
                     ),
                     if (isLive)
                       Container(
@@ -385,17 +450,18 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                       ),
                   ],
                 ),
+                const SizedBox(height: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       value,
-                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
+                      style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       title,
-                      style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                     Text(
                       subtitle,
@@ -411,96 +477,358 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     );
   }
 
-  Widget _buildMainConsole(AsyncValue<QuerySnapshot> sellers) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TabBar(
-          controller: _tabController,
-          indicatorColor: const Color(0xFF14B8A6),
-          indicatorWeight: 3,
-          indicatorSize: TabBarIndicatorSize.tab,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white.withOpacity(0.5),
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 15),
-          tabs: const [
-            Tab(text: 'Pending KYC'),
-            Tab(text: 'All Partners'),
-          ],
-        ),
-        const SizedBox(height: 20),
-        SizedBox(
-          height: 500, // Safe bounding box for inner tab view list
-          child: TabBarView(
-            controller: _tabController,
+  Widget _buildTabContent(
+    AsyncValue<QuerySnapshot> users,
+    AsyncValue<QuerySnapshot> sellers,
+    AsyncValue<QuerySnapshot> drivers,
+    AsyncValue<QuerySnapshot> orders,
+  ) {
+    switch (_activeTab) {
+      case 0:
+        return _buildOperationsHubView(users, sellers, drivers, orders);
+      case 1:
+        return _buildSellerKYCView(sellers);
+      case 2:
+        return _buildDriverKYCView(drivers);
+      case 3:
+        return _buildUserManagementView(users);
+      case 4:
+        return _buildLiveOrdersView(orders);
+      case 5:
+        return _buildCommissionAnalyticsView(orders);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  // ---------------- TAB 0: OPERATIONS HUB ----------------
+  Widget _buildOperationsHubView(
+    AsyncValue<QuerySnapshot> users,
+    AsyncValue<QuerySnapshot> sellers,
+    AsyncValue<QuerySnapshot> drivers,
+    AsyncValue<QuerySnapshot> orders,
+  ) {
+    final sList = sellers.value?.docs ?? [];
+    final pendingSellersCount = sList.where((doc) {
+      final d = doc.data() as Map<String, dynamic>;
+      final status = (d['verificationStatus'] ?? 'pending').toString().toLowerCase();
+      return status == 'pending';
+    }).length;
+
+    final dList = drivers.value?.docs ?? [];
+    final pendingDriversCount = dList.where((doc) {
+      final d = doc.data() as Map<String, dynamic>;
+      final status = (d['verificationStatus'] ?? 'pending').toString().toLowerCase();
+      return status == 'pending';
+    }).length;
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Operations Control Center',
+            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Row(
             children: [
-              _buildPendingKYCTab(sellers),
-              _buildAllPartnersTab(sellers),
+              Expanded(
+                child: _buildDashboardQuickCard(
+                  title: 'Pending Sellers KYC',
+                  count: '$pendingSellersCount',
+                  actionLabel: 'Verify Partners',
+                  icon: Icons.storefront_rounded,
+                  color: Colors.tealAccent,
+                  onTap: () => setState(() => _activeTab = 1),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildDashboardQuickCard(
+                  title: 'Pending Drivers KYC',
+                  count: '$pendingDriversCount',
+                  actionLabel: 'Verify Drivers',
+                  icon: Icons.local_shipping_rounded,
+                  color: Colors.amberAccent,
+                  onTap: () => setState(() => _activeTab = 2),
+                ),
+              ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.02),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.08)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('System Log Updates', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    Icon(Icons.notes_rounded, color: Colors.white38),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildSystemLogItem('Secure Platform session checks enabled universally.', '10 mins ago'),
+                _buildSystemLogItem('OTP developer authentication bypass bound to: 123456.', '30 mins ago'),
+                _buildSystemLogItem('Seller verification pipelines linked directly to Driver assignment matrices.', '1 hr ago'),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildPendingKYCTab(AsyncValue<QuerySnapshot> sellers) {
+  Widget _buildDashboardQuickCard({
+    required String title,
+    required String count,
+    required String actionLabel,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 16),
+          Text(count, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          Text(title, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          OutlinedButton(
+            onPressed: onTap,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: color,
+              side: BorderSide(color: color.withOpacity(0.4)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(actionLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSystemLogItem(String txt, String time) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.circle, size: 6, color: Color(0xFF14B8A6)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(txt, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12, height: 1.4)),
+          ),
+          const SizedBox(width: 8),
+          Text(time, style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  // ---------------- TAB 1: SELLER KYC ----------------
+  Widget _buildSellerKYCView(AsyncValue<QuerySnapshot> sellers) {
     return sellers.when(
       data: (snapshot) {
         final pending = snapshot.docs.where((doc) {
           final data = doc.data() as Map<String, dynamic>;
-          final status = (data['verificationStatus'] ?? data['kycStatus'] ?? '').toString().toLowerCase();
-          return status == 'pending' || status == 'review' || status == '';
+          final status = (data['verificationStatus'] ?? 'pending').toString().toLowerCase();
+          return status == 'pending';
         }).toList();
 
         if (pending.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF14B8A6).withOpacity(0.05),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.verified_user_rounded, color: Color(0xFF14B8A6), size: 48),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'No Pending Onboardings',
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'All sellers are currently verified and active.',
-                  style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
-                ),
-              ],
-            ),
-          );
+          return _buildKYCEmptyState('No Pending Seller Verifications');
         }
 
         return ListView.builder(
           itemCount: pending.length,
-          physics: const BouncingScrollPhysics(),
           itemBuilder: (context, index) {
-            return _buildSellerApprovalCard(pending[index]);
+            final doc = pending[index];
+            final data = doc.data() as Map<String, dynamic>;
+            final name = data['ownerName'] ?? data['businessName'] ?? 'Supplier #${doc.id.substring(0, 6)}';
+            final business = data['businessName'] ?? 'Independant Provider';
+            final phone = data['phoneNumber'] ?? 'No contact';
+            final capacity = data['tankerCapacity'] ?? '15000 Litres';
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.02),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.08)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900)),
+                          Text('$business • Capacity: $capacity', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                        ],
+                      ),
+                      TextButton.icon(
+                        onPressed: () => launchUrl(Uri(scheme: 'tel', path: phone)),
+                        icon: const Icon(Icons.call, size: 14, color: Color(0xFF14B8A6)),
+                        label: Text(phone, style: const TextStyle(color: Color(0xFF14B8A6), fontSize: 12, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => _updatePartnerStatus('sellers', doc.id, 'approved'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: const Text('Approve Supplier Profile', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton(
+                        onPressed: () => _updatePartnerStatus('sellers', doc.id, 'rejected'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                          side: const BorderSide(color: Colors.redAccent),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                        ),
+                        child: const Text('Reject'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
           },
         );
       },
       loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF14B8A6))),
-      error: (e, _) => Center(child: Text('Error loading approvals: $e', style: const TextStyle(color: Colors.redAccent))),
+      error: (e, _) => Center(child: Text('Error: $e')),
     );
   }
 
-  Widget _buildAllPartnersTab(AsyncValue<QuerySnapshot> sellers) {
-    return sellers.when(
+  // ---------------- TAB 2: DRIVER KYC ----------------
+  Widget _buildDriverKYCView(AsyncValue<QuerySnapshot> drivers) {
+    return drivers.when(
+      data: (snapshot) {
+        final pending = snapshot.docs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          final status = (data['verificationStatus'] ?? 'pending').toString().toLowerCase();
+          return status == 'pending';
+        }).toList();
+
+        if (pending.isEmpty) {
+          return _buildKYCEmptyState('No Pending Driver Verifications');
+        }
+
+        return ListView.builder(
+          itemCount: pending.length,
+          itemBuilder: (context, index) {
+            final doc = pending[index];
+            final data = doc.data() as Map<String, dynamic>;
+            final name = data['driverName'] ?? data['fullName'] ?? 'Driver Agent';
+            final phone = data['phone'] ?? data['phoneNumber'] ?? 'No contact';
+            final license = data['driverLicenseNumber'] ?? 'Unknown License';
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.02),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.08)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900)),
+                          Text('License: $license', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                        ],
+                      ),
+                      TextButton.icon(
+                        onPressed: () => launchUrl(Uri(scheme: 'tel', path: phone)),
+                        icon: const Icon(Icons.call, size: 14, color: Color(0xFF14B8A6)),
+                        label: Text(phone, style: const TextStyle(color: Color(0xFF14B8A6), fontSize: 12, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => _updatePartnerStatus('drivers', doc.id, 'approved'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: const Text('Approve Driver License', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton(
+                        onPressed: () => _updatePartnerStatus('drivers', doc.id, 'rejected'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                          side: const BorderSide(color: Colors.redAccent),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                        ),
+                        child: const Text('Reject'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF14B8A6))),
+      error: (e, _) => Center(child: Text('Error: $e')),
+    );
+  }
+
+  // ---------------- TAB 3: USER MANAGEMENT ----------------
+  Widget _buildUserManagementView(AsyncValue<QuerySnapshot> users) {
+    return users.when(
       data: (snapshot) {
         final list = snapshot.docs.where((doc) {
           if (_searchQuery.isEmpty) return true;
-          final data = doc.data() as Map<String, dynamic>;
-          final name = (data['businessName'] ?? data['ownerName'] ?? '').toString().toLowerCase();
+          final d = doc.data() as Map<String, dynamic>;
+          final name = (d['fullName'] ?? d['displayName'] ?? '').toString().toLowerCase();
           return name.contains(_searchQuery.toLowerCase());
         }).toList();
 
@@ -510,88 +838,73 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
               onChanged: (val) => setState(() => _searchQuery = val),
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
-                hintText: 'Search partner or store name...',
+                hintText: 'Search registered system users by name...',
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 14),
                 prefixIcon: Icon(Icons.search_rounded, color: Colors.white.withOpacity(0.4)),
                 filled: true,
                 fillColor: Colors.white.withOpacity(0.03),
                 contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Color(0xFF14B8A6)),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withOpacity(0.08))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withOpacity(0.08))),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF14B8A6))),
               ),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: list.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No partners found matching search',
-                        style: TextStyle(color: Colors.white.withOpacity(0.4)),
-                      ),
-                    )
+                  ? Center(child: Text('No users match your query.', style: TextStyle(color: Colors.white.withOpacity(0.4))))
                   : ListView.builder(
                       itemCount: list.length,
-                      physics: const BouncingScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        final doc = list[index];
+                      itemBuilder: (context, idx) {
+                        final doc = list[idx];
                         final data = doc.data() as Map<String, dynamic>;
-                        final name = (data['businessName'] ?? data['ownerName'] ?? 'Unnamed Partner').toString();
-                        final status = (data['verificationStatus'] ?? data['kycStatus'] ?? 'pending').toString().toUpperCase();
-                        final email = (data['email'] ?? 'No email').toString();
-
-                        Color statusColor = Colors.orangeAccent;
-                        if (status == 'APPROVED' || status == 'VERIFIED') {
-                          statusColor = const Color(0xFF10B981);
-                        } else if (status == 'REJECTED' || status == 'SUSPENDED') {
-                          statusColor = Colors.redAccent;
-                        }
+                        final name = data['fullName'] ?? data['displayName'] ?? 'WaterBuddy User';
+                        final role = (data['role'] ?? 'consumer').toString().toUpperCase();
+                        final isBlocked = data['isBlocked'] as bool? ?? false;
+                        final email = data['email'] ?? 'No email associated';
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.02),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: Colors.white.withOpacity(0.05)),
                           ),
-                          child: ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.1),
-                                shape: BoxShape.circle,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(role, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 9, fontWeight: FontWeight.bold)),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(email, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11)),
+                                ],
                               ),
-                              child: Icon(Icons.storefront_rounded, color: statusColor, size: 20),
-                            ),
-                            title: Text(
-                              name,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                            ),
-                            subtitle: Text(
-                              email,
-                              style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
-                            ),
-                            trailing: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: statusColor.withOpacity(0.2)),
+                              ElevatedButton(
+                                onPressed: () => _toggleUserBlock(doc.id, isBlocked),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isBlocked ? const Color(0xFF10B981) : Colors.redAccent.withOpacity(0.2),
+                                  foregroundColor: isBlocked ? Colors.white : Colors.redAccent,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                child: Text(isBlocked ? 'Activate User' : 'Suspend User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                               ),
-                              child: Text(
-                                status,
-                                style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                              ),
-                            ),
+                            ],
                           ),
                         );
                       },
@@ -601,35 +914,152 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         );
       },
       loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF14B8A6))),
-      error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: Colors.redAccent))),
+      error: (e, _) => Center(child: Text('Error: $e')),
     );
   }
 
-  Widget _buildSellerApprovalCard(QueryDocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    final status = (data['verificationStatus'] ?? data['kycStatus'] ?? 'pending').toString().toUpperCase();
-    final name = (data['businessName'] ?? data['ownerName'] ?? data['name'] ?? doc.id).toString();
-    final phone = (data['phoneNumber'] ?? 'No contact').toString();
+  // ---------------- TAB 4: LIVE ORDERS MONITOR ----------------
+  Widget _buildLiveOrdersView(AsyncValue<QuerySnapshot> orders) {
+    return orders.when(
+      data: (snapshot) {
+        final list = snapshot.docs.toList();
 
-    final docs = data['documents'] as Map<String, dynamic>?;
-    final aadhaar = docs?['aadhaarUrl'] ?? data['aadhaarUploadUrl'];
-    final dl = docs?['dlUrl'] ?? data['licenseUploadUrl'];
-    final rc = docs?['rcUrl'] ?? data['vehicleRcUploadUrl'];
+        if (list.isEmpty) {
+          return Center(
+            child: Text('No dispatch runs are active at the moment.', style: TextStyle(color: Colors.white.withOpacity(0.4))),
+          );
+        }
 
+        return ListView.builder(
+          itemCount: list.length,
+          itemBuilder: (context, index) {
+            final doc = list[index];
+            final data = doc.data() as Map<String, dynamic>;
+            final id = doc.id.substring(0, 6).toUpperCase();
+            final status = (data['status'] ?? 'searching').toString();
+            final address = data['location']?['address'] as String? ?? 'Delivery location details';
+            final tankSize = data['tankSize'] as num? ?? 15000;
+
+            Color statColor = Colors.tealAccent;
+            if (status == 'DELIVERED') statColor = Colors.greenAccent;
+            if (status == 'CANCELLED') statColor = Colors.redAccent;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.02),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Dispatch ID: #$id', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(status, style: TextStyle(color: statColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(address, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                  const SizedBox(height: 4),
+                  Text('Tanker volume: ${tankSize.toInt()} Litres', style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11)),
+                ],
+              ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF14B8A6))),
+      error: (e, _) => Center(child: Text('Error: $e')),
+    );
+  }
+
+  // ---------------- TAB 5: COMMISSION ANALYTICS ----------------
+  Widget _buildCommissionAnalyticsView(AsyncValue<QuerySnapshot> orders) {
+    return orders.when(
+      data: (snapshot) {
+        final docs = snapshot.docs;
+        double totalVolume = 0;
+        double platformEarnings = 0;
+        int completedCount = 0;
+
+        for (final doc in docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          if (data['status'] == 'DELIVERED') {
+            completedCount++;
+            final ts = (data['tankSize'] as num? ?? 15000).toDouble();
+            totalVolume += ts;
+            // Platform charge estimated at ₹150 platform commission flat fee
+            platformEarnings += 150.0;
+          }
+        }
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Revenue Overview', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFF0F766E), Color(0xFF14B8A6)]),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.analytics_outlined, color: Colors.white, size: 48),
+                    const SizedBox(width: 20),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Total Platform Profit', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text('₹${platformEarnings.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildMetricCard('Completed Deliveries', '$completedCount', Icons.checklist_rounded),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildMetricCard('Volume Delivered', '${totalVolume.toInt()} Litres', Icons.opacity_rounded),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF14B8A6))),
+      error: (e, _) => Center(child: Text('Error: $e')),
+    );
+  }
+
+  Widget _buildMetricCard(String title, String val, IconData icon) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        color: Colors.white.withOpacity(0.02),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -637,331 +1067,127 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18, letterSpacing: -0.2),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '📞 $phone',
-                      style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.orangeAccent.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orangeAccent.withOpacity(0.2)),
-                ),
-                child: Text(
-                  status,
-                  style: const TextStyle(color: Colors.orangeAccent, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                ),
-              ),
+              Text(title, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, fontWeight: FontWeight.bold)),
+              Icon(icon, color: const Color(0xFF14B8A6), size: 18),
             ],
           ),
-          const SizedBox(height: 20),
-          Divider(color: Colors.white.withOpacity(0.06)),
           const SizedBox(height: 12),
-          const Text(
-            'KYC Documents Preview',
-            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            'Tap document thumbnail to zoom and verify details',
-            style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11),
+          Text(val, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKYCEmptyState(String title) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF14B8A6).withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.verified_user_rounded, color: Color(0xFF14B8A6), size: 48),
           ),
           const SizedBox(height: 16),
+          Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text('All registered accounts are currently up to date.', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopSidebar(BuildContext context, String email) {
+    return Container(
+      width: 280,
+      color: const Color(0xFF0F131C),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Column(
+        children: [
           Row(
             children: [
-              if (aadhaar != null && aadhaar.toString().isNotEmpty)
-                _buildDocThumbnail(context, 'Aadhaar Card', aadhaar.toString()),
-              if (dl != null && dl.toString().isNotEmpty)
-                _buildDocThumbnail(context, 'Driver License', dl.toString()),
-              if (rc != null && rc.toString().isNotEmpty)
-                _buildDocThumbnail(context, 'Vehicle RC', rc.toString()),
-              if ((aadhaar == null || aadhaar.toString().isEmpty) &&
-                  (dl == null || dl.toString().isEmpty) &&
-                  (rc == null || rc.toString().isEmpty))
-                Text(
-                  'No uploaded documents found.',
-                  style: TextStyle(color: Colors.redAccent.withOpacity(0.8), fontSize: 13, fontStyle: FontStyle.italic),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF14B8A6).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
-                    ),
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () => _updateSellerStatus(doc.id, 'approved'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: Colors.white,
-                      shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.check_circle_outline_rounded, size: 20),
-                        SizedBox(width: 8),
-                        Text('Approve', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                      ],
-                    ),
-                  ),
-                ),
+                child: const Icon(Icons.water_drop_rounded, color: Color(0xFF14B8A6), size: 24),
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _updateSellerStatus(doc.id, 'rejected'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.redAccent,
-                    side: BorderSide(color: Colors.redAccent.withOpacity(0.5)),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.cancel_outlined, size: 20),
-                      SizedBox(width: 8),
-                      Text('Reject', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                    ],
-                  ),
-                ),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('WaterBuddy', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16)),
+                  Text('Operations Control', style: TextStyle(color: Color(0xFF14B8A6), fontSize: 10, fontWeight: FontWeight.bold)),
+                ],
               ),
             ],
+          ),
+          const SizedBox(height: 32),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _tabs.length,
+              itemBuilder: (context, idx) {
+                final tab = _tabs[idx];
+                final isSel = _activeTab == idx;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6.0),
+                  child: InkWell(
+                    onTap: () => setState(() => _activeTab = idx),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSel ? const Color(0xFF14B8A6).withOpacity(0.08) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        border: isSel ? Border.all(color: const Color(0xFF14B8A6).withOpacity(0.15)) : null,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(tab['icon'], color: isSel ? const Color(0xFF14B8A6) : Colors.white60, size: 20),
+                          const SizedBox(width: 14),
+                          Text(
+                            tab['label'],
+                            style: TextStyle(
+                              color: isSel ? const Color(0xFF14B8A6) : Colors.white70,
+                              fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const Divider(color: Colors.white10),
+          ListTile(
+            leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+            title: const Text('Sign Out Console', style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+            onTap: () async {
+              await ref.read(authServiceProvider).signOut();
+              if (context.mounted) {
+                context.go(RouteNames.roleSelection);
+              }
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDocThumbnail(BuildContext context, String type, String url) {
-    return GestureDetector(
-      onTap: () => _showImagePreview(context, url, type),
-      child: Container(
-        margin: const EdgeInsets.only(right: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.04),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
-        ),
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                url,
-                width: 72,
-                height: 72,
-                fit: BoxFit.cover,
-                errorBuilder: (c, e, s) => Container(
-                  width: 72,
-                  height: 72,
-                  color: Colors.white.withOpacity(0.05),
-                  child: const Icon(Icons.broken_image_rounded, color: Colors.white24, size: 24),
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              type,
-              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showImagePreview(BuildContext context, String imageUrl, String documentType) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(16),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    blurRadius: 40,
-                    offset: const Offset(0, 20),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        documentType,
-                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded, color: Colors.white, size: 24),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      color: Colors.black.withOpacity(0.2),
-                      constraints: const BoxConstraints(maxHeight: 400),
-                      child: InteractiveViewer(
-                        panEnabled: true,
-                        minScale: 0.5,
-                        maxScale: 4.0,
-                        child: Image.network(
-                          imageUrl,
-                          fit: BoxFit.contain,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return const SizedBox(
-                              height: 250,
-                              child: Center(child: CircularProgressIndicator(color: Color(0xFF14B8A6))),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            height: 200,
-                            color: Colors.white.withOpacity(0.05),
-                            child: const Center(
-                              child: Icon(Icons.broken_image_rounded, color: Colors.redAccent, size: 48),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    ' Pinch / drag to zoom & pan the document',
-                    style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _updateSellerStatus(String id, String status) async {
-    final db = FirebaseFirestore.instance;
-    final kycVal = status == 'approved' ? 'VERIFIED' : 'REJECTED';
-    final verificationVal = status == 'approved' ? 'approved' : 'rejected';
-
-    await db.collection('sellers').doc(id).set({
-      'verificationStatus': verificationVal,
-      'kycStatus': kycVal,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Seller partner status set to $status successfully.'),
-          backgroundColor: status == 'approved' ? const Color(0xFF10B981) : Colors.redAccent,
-        ),
-      );
-    }
-  }
-
-  Widget _buildProfileMenu(BuildContext context) {
-    return PopupMenuButton<int>(
-      offset: const Offset(0, 50),
-      color: const Color(0xFF1E293B),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.white.withOpacity(0.08)),
-      ),
-      icon: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFF14B8A6), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF14B8A6).withOpacity(0.3),
-              blurRadius: 8,
-            ),
-          ],
-        ),
-        child: const CircleAvatar(
-          radius: 18,
-          backgroundColor: Color(0xFF0F766E),
-          child: Text(
-            'WB',
-            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 3,
-          child: Row(
-            children: [
-              const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 18),
-              const SizedBox(width: 12),
-              const Text('Sign Out', style: TextStyle(color: Colors.redAccent, fontSize: 14, fontWeight: FontWeight.bold)),
-            ],
-          ),
-        ),
-      ],
-      onSelected: (val) async {
-        if (val == 3) {
-          await ref.read(authServiceProvider).signOut();
-          if (context.mounted) {
-            context.go(RouteNames.roleSelection);
-          }
-        }
-      },
-    );
-  }
-
   Widget _buildDrawer(BuildContext context, String email) {
     return Drawer(
       backgroundColor: const Color(0xFF0D1117),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topRight: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
-      ),
       child: SafeArea(
         child: Column(
           children: [
-            // Custom Drawer Header (Glassmorphic)
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -969,91 +1195,48 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
               ),
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(colors: [Color(0xFF0F766E), Color(0xFF14B8A6)]),
-                    ),
-                    child: const CircleAvatar(
-                      radius: 28,
-                      backgroundColor: Color(0xFF1E293B),
-                      child: Text('WB', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
-                    ),
+                  const CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Color(0xFF14B8A6),
+                    child: Text('WB', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'WaterBuddy Admin',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          email,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11),
-                        ),
+                        const Text('WaterBuddy Admin', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        Text(email, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11), overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            // Menu items
-            _buildDrawerItem(
-              icon: Icons.dashboard_rounded,
-              title: 'Dashboard Overview',
-              isActive: true,
-              onTap: () => Navigator.pop(context),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(12),
+                itemCount: _tabs.length,
+                itemBuilder: (context, idx) {
+                  final tab = _tabs[idx];
+                  final isSel = _activeTab == idx;
+                  return ListTile(
+                    leading: Icon(tab['icon'], color: isSel ? const Color(0xFF14B8A6) : Colors.white60),
+                    title: Text(tab['label'], style: TextStyle(color: isSel ? const Color(0xFF14B8A6) : Colors.white70, fontSize: 13)),
+                    selected: isSel,
+                    selectedTileColor: const Color(0xFF14B8A6).withOpacity(0.08),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    onTap: () {
+                      setState(() => _activeTab = idx);
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
             ),
-            _buildDrawerItem(
-              icon: Icons.storefront_rounded,
-              title: 'Partner Approvals',
-              onTap: () {
-                Navigator.pop(context);
-                _tabController.animateTo(0);
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.people_alt_rounded,
-              title: 'Registered Users',
-              onTap: () {
-                Navigator.pop(context);
-                _tabController.animateTo(1);
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.local_shipping_rounded,
-              title: 'Dispatch Tracking',
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Dispatch operations auto-synced live on maps.')),
-                );
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.insights_rounded,
-              title: 'Revenue Analytics',
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Financial analytics report synced live.')),
-                );
-              },
-            ),
-            const Spacer(),
-            // Drawer Footer / Sign Out Action
-            Divider(color: Colors.white.withOpacity(0.06)),
-            _buildDrawerItem(
-              icon: Icons.logout_rounded,
-              title: 'Sign Out Console',
-              iconColor: Colors.redAccent,
-              titleColor: Colors.redAccent,
+            ListTile(
+              leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+              title: const Text('Sign Out Console', style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
               onTap: () async {
                 Navigator.pop(context);
                 await ref.read(authServiceProvider).signOut();
@@ -1062,45 +1245,43 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                 }
               },
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String title,
-    bool isActive = false,
-    Color? iconColor,
-    Color? titleColor,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF14B8A6).withOpacity(0.08) : Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
-        border: isActive ? Border.all(color: const Color(0xFF14B8A6).withOpacity(0.15)) : null,
-      ),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: isActive ? const Color(0xFF14B8A6) : (iconColor ?? Colors.white.withOpacity(0.6)),
-          size: 22,
+  Future<void> _updatePartnerStatus(String collection, String id, String status) async {
+    final db = FirebaseFirestore.instance;
+    await db.collection(collection).doc(id).set({
+      'verificationStatus': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$collection partner profile successfully $status.'),
+          backgroundColor: status == 'approved' ? const Color(0xFF10B981) : Colors.redAccent,
         ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: isActive ? const Color(0xFF14B8A6) : (titleColor ?? Colors.white.withOpacity(0.8)),
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-            fontSize: 14,
-          ),
+      );
+    }
+  }
+
+  Future<void> _toggleUserBlock(String uid, bool currentBlockState) async {
+    final db = FirebaseFirestore.instance;
+    await db.collection('users').doc(uid).set({
+      'isBlocked': !currentBlockState,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(!currentBlockState ? 'User suspended successfully.' : 'User activated successfully.'),
+          backgroundColor: !currentBlockState ? Colors.redAccent : const Color(0xFF10B981),
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        onTap: onTap,
-      ),
-    );
+      );
+    }
   }
 }

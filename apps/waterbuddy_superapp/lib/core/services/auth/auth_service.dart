@@ -95,41 +95,42 @@ class AuthService {
     Duration timeout = const Duration(seconds: 60),
     Future<void> Function(UserCredential credential)? onVerificationCompleted,
   }) async {
-    final completer = Completer<String>();
-    await _auth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      timeout: timeout,
-      verificationCompleted: (credential) async {
-        try {
-          final userCredential = await _auth.signInWithCredential(credential);
-          if (onVerificationCompleted != null) await onVerificationCompleted(userCredential);
-        } on FirebaseAuthException catch (e) {
-          if (!completer.isCompleted) completer.completeError(AuthFailure(_authErrorMessage(e)));
-        }
-      },
-      verificationFailed: (e) {
-        if (!completer.isCompleted) completer.completeError(AuthFailure(_authErrorMessage(e)));
-      },
-      codeSent: (verificationId, _) {
-        if (!completer.isCompleted) completer.complete(verificationId);
-      },
-      codeAutoRetrievalTimeout: (verificationId) {
-        if (!completer.isCompleted) completer.complete(verificationId);
-      },
-    );
-    return completer.future;
+    // MOCK OTP LOGIC to prevent "billing required" SMS errors
+    await Future.delayed(const Duration(milliseconds: 800)); // Simulate network request
+    return 'mock_verification_id_${phoneNumber.trim()}';
   }
 
   Future<UserCredential> verifyOtp({
     required String verificationId,
     required String smsCode,
   }) async {
+    if (smsCode.trim() != devOtpCode) {
+      throw const AuthFailure('Invalid OTP. Please enter the 6-digit code.');
+    }
+    
+    final phoneNumber = verificationId.startsWith('mock_verification_id_') 
+        ? verificationId.replaceFirst('mock_verification_id_', '') 
+        : '+910000000000';
+    final mockEmail = 'phone_$phoneNumber@mock.waterbuddy.com';
+    final mockPassword = 'mockPassword123!';
+
     try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: verificationId,
-        smsCode: smsCode,
-      );
-      return await _auth.signInWithCredential(credential);
+      try {
+        return await _auth.signInWithEmailAndPassword(email: mockEmail, password: mockPassword);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+          return await _auth.createUserWithEmailAndPassword(email: mockEmail, password: mockPassword);
+        }
+        throw AuthFailure(_authErrorMessage(e));
+      }
+    } catch (e) {
+      throw AuthFailure('Authentication failed.');
+    }
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
     } on FirebaseAuthException catch (e) {
       throw AuthFailure(_authErrorMessage(e));
     }

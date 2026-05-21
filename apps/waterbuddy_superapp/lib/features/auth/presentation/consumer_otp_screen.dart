@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,15 +21,46 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen> with Sing
   late final AnimationController _animController;
   late final Animation<double> _fadeAnimation;
 
+  Timer? _timer;
+  int _countdown = 30;
+
   @override
   void initState() {
     super.initState();
     _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 450))..forward();
     _fadeAnimation = CurvedAnimation(parent: _animController, curve: Curves.easeInOut);
+    _startTimer();
+  }
+
+  void _startTimer() {
+    setState(() => _countdown = 30);
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_countdown > 0) {
+          _countdown--;
+        } else {
+          timer.cancel();
+        }
+      });
+    });
+  }
+
+  void _resendOtp() {
+    if (_countdown > 0) return;
+    final extra = GoRouterState.of(context).extra as Map<String, dynamic>? ?? const {};
+    final phoneNumber = (extra['phone'] as String?) ?? '';
+    ref.read(authControllerProvider.notifier).sendOtp(phoneNumber, role: AppRole.consumer);
+    _startTimer();
   }
 
   @override
   void dispose() {
+    _timer?.cancel();
     _otp.dispose();
     _animController.dispose();
     super.dispose();
@@ -40,6 +71,8 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen> with Sing
     final authState = ref.watch(authControllerProvider);
     final extra = GoRouterState.of(context).extra as Map<String, dynamic>? ?? const {};
     final phoneNumber = (extra['phone'] as String?) ?? '';
+    final fullName = (extra['fullName'] as String?) ?? '';
+    final email = (extra['email'] as String?) ?? '';
     
     ref.listen(authControllerProvider, (_, next) {
       if (next.isVerified && mounted) {
@@ -100,10 +133,12 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen> with Sing
                 TextField(
                   controller: _otp,
                   keyboardType: TextInputType.number,
+                  maxLength: 6,
                   style: const TextStyle(color: Colors.white, fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.w600),
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
                     hintText: '------',
+                    counterText: '',
                     hintStyle: TextStyle(color: Colors.white.withOpacity(0.2), letterSpacing: 8),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.04),
@@ -126,12 +161,11 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen> with Sing
                   onPressed: authState.isLoading
                       ? null
                       : () async {
-                          final ok = await ref.read(authControllerProvider.notifier).verifyDevelopmentOtp(
-                                otpCode: _otp.text.trim(),
+                          final ok = await ref.read(authControllerProvider.notifier).verifyOtp(
+                                _otp.text.trim(),
                                 role: AppRole.consumer,
-                                fullName: (extra['fullName'] as String?) ?? '',
-                                email: (extra['email'] as String?) ?? '',
-                                phoneNumber: phoneNumber,
+                                fullName: fullName,
+                                email: email,
                               );
                           if (ok && mounted) context.go(RouteNames.consumerHome);
                         },
@@ -143,6 +177,32 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen> with Sing
                   child: authState.isLoading
                       ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : const Text('Verify OTP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Didn\'t receive code? ',
+                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+                    ),
+                    TextButton(
+                      onPressed: _countdown == 0 && !authState.isLoading ? _resendOtp : null,
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF38BDF8),
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        _countdown > 0 ? 'Resend in ${_countdown}s' : 'Resend OTP',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: _countdown > 0 ? Colors.white.withOpacity(0.4) : const Color(0xFF38BDF8),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 if (authState.errorMessage != null) ...[
                   const SizedBox(height: 16),
