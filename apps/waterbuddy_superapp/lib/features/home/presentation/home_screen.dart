@@ -1664,7 +1664,9 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                     color: Color(0xFF64748B),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+                const WaterDropSearchAnimation(),
+                const SizedBox(height: 16),
                 // Order details card (Modern style)
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -1771,5 +1773,169 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
     }
   }
 }
+
+class WaterDropSearchAnimation extends StatefulWidget {
+  const WaterDropSearchAnimation({super.key});
+
+  @override
+  State<WaterDropSearchAnimation> createState() => _WaterDropSearchAnimationState();
+}
+
+class _WaterDropSearchAnimationState extends State<WaterDropSearchAnimation> with TickerProviderStateMixin {
+  late final AnimationController _rippleController;
+  late final AnimationController _floatController;
+
+  @override
+  void initState() {
+    super.initState();
+    _rippleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat();
+
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _rippleController.dispose();
+    _floatController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 170,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Concentric water wave ripples
+          ...List.generate(3, (index) {
+            final delayFraction = index / 3.0;
+            return AnimatedBuilder(
+              animation: _rippleController,
+              builder: (context, child) {
+                double progress = _rippleController.value - delayFraction;
+                if (progress < 0) progress += 1.0;
+                
+                final scale = 1.0 + (progress * 2.2);
+                final opacity = (1.0 - progress).clamp(0.0, 1.0);
+                
+                return Container(
+                  width: 54,
+                  height: 54,
+                  transform: Matrix4.identity()..scale(scale),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF38BDF8).withOpacity(opacity * 0.4),
+                      width: 2.0 - (progress * 1.2),
+                    ),
+                    gradient: RadialGradient(
+                      colors: [
+                        const Color(0xFF38BDF8).withOpacity(opacity * 0.12),
+                        const Color(0xFF0EA5E9).withOpacity(opacity * 0.04),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }),
+          
+          // Outer orbiting tiny water droplets representing signal search
+          AnimatedBuilder(
+            animation: _rippleController,
+            builder: (context, child) {
+              return Transform.rotate(
+                angle: _rippleController.value * 2 * 3.14159,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Positioned(
+                      top: 18,
+                      child: Container(
+                        width: 5,
+                        height: 5,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF0EA5E9),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 18,
+                      child: Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF38BDF8),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+
+          // Central premium floating water droplet
+          AnimatedBuilder(
+            animation: _floatController,
+            builder: (context, child) {
+              final yOffset = _floatController.value * -10.0;
+              final scale = 1.0 + (_floatController.value * 0.04);
+              return Transform.translate(
+                offset: Offset(0, yOffset),
+                child: Transform.scale(
+                  scale: scale,
+                  child: Container(
+                    width: 68,
+                    height: 68,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0EA5E9).withOpacity(0.2),
+                          blurRadius: 15,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: const Color(0xFF38BDF8).withOpacity(0.25),
+                        width: 2.0,
+                      ),
+                    ),
+                    child: ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [Color(0xFF38BDF8), Color(0xFF0EA5E9)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ).createShader(bounds),
+                      child: const Icon(
+                        Icons.water_drop_rounded,
+                        size: 34,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 
 

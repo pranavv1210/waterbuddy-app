@@ -26,7 +26,7 @@ class DriverAuthLandingScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () => context.push(RouteNames.authDriverLogin),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFD97706),
+                backgroundColor: const Color(0xFF2563EB),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -38,7 +38,7 @@ class DriverAuthLandingScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () => context.push(RouteNames.authDriverSignup),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFD97706),
+                backgroundColor: const Color(0xFF2563EB),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

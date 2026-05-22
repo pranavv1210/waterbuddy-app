@@ -96,7 +96,7 @@ class AuthService {
     Future<void> Function(UserCredential credential)? onVerificationCompleted,
   }) async {
     // MOCK OTP LOGIC to prevent "billing required" SMS errors
-    await Future.delayed(const Duration(milliseconds: 800)); // Simulate network request
+    await Future.delayed(const Duration(milliseconds: 50)); // Simulate network request
     return 'mock_verification_id_${phoneNumber.trim()}';
   }
 

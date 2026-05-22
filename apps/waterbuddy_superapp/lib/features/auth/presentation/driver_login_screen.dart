@@ -14,7 +14,7 @@ class DriverLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
-  final _mobile = TextEditingController();
+  final _mobile = TextEditingController(text: '9988776655');
 
   @override
   void dispose() {
@@ -69,7 +69,7 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
               },
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: const Color(0xFFD97706),
+                backgroundColor: const Color(0xFF2563EB),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               child: const Text('Send OTP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -110,7 +110,7 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFF59E0B)),
+            borderSide: const BorderSide(color: Color(0xFF3B82F6)),
           ),
         ),
       ),

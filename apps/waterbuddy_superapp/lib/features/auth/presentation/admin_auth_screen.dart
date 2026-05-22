@@ -86,7 +86,7 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> with SingleTi
                   onPressed: _loading ? null : _loginWithEmail,
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: const Color(0xFFEF4444),
+                    backgroundColor: const Color(0xFF1E40AF),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   child: _loading

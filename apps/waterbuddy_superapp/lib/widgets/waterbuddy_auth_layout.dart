@@ -106,13 +106,13 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout> wit
   List<Color> _getRoleColors(AppRole role) {
     switch (role) {
       case AppRole.consumer:
-        return [const Color(0xFF38BDF8), const Color(0xFF0284C7), const Color(0xFF0369A1)];
+        return [const Color(0xFF38BDF8), const Color(0xFF0EA5E9), const Color(0xFF0284C7)];
       case AppRole.seller:
-        return [const Color(0xFF34D399), const Color(0xFF059669), const Color(0xFF047857)];
+        return [const Color(0xFF22D3EE), const Color(0xFF06B6D4), const Color(0xFF0891B2)];
       case AppRole.driver:
-        return [const Color(0xFFFBBF24), const Color(0xFFD97706), const Color(0xFFB45309)];
+        return [const Color(0xFF60A5FA), const Color(0xFF3B82F6), const Color(0xFF2563EB)];
       case AppRole.admin:
-        return [const Color(0xFFC084FC), const Color(0xFF9333EA), const Color(0xFF7E22CE)];
+        return [const Color(0xFF1D4ED8), const Color(0xFF1E40AF), const Color(0xFF0F172A)];
     }
   }
 

@@ -93,8 +93,7 @@ class _DesktopSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFF0F172A); // Dark Slate
-    const activeTeal = Color(0xFF14B8A6);
+    const primary = Color(0xFF0F2B5B); // Dark Navy Water
 
     return Container(
       width: 280,
@@ -110,7 +109,7 @@ class _DesktopSidebar extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF0EA5E9), Color(0xFF14B8A6)],
+                    colors: [Color(0xFF38BDF8), Color(0xFF0EA5E9)],
                   ),
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -204,7 +203,7 @@ class _SidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const activeColor = Color(0xFF14B8A6);
+    const activeColor = Color(0xFF0EA5E9);
     const unselectedColor = Color(0xFF64748B);
 
     return InkWell(

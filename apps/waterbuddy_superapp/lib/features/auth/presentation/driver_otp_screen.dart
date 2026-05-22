@@ -16,7 +16,7 @@ class DriverOtpScreen extends ConsumerStatefulWidget {
 }
 
 class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen> with SingleTickerProviderStateMixin {
-  final _otp = TextEditingController();
+  final _otp = TextEditingController(text: '123456');
 
   late final AnimationController _animController;
   late final Animation<double> _fadeAnimation;
@@ -119,9 +119,9 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen> with SingleTi
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withOpacity(0.1),
+                    color: const Color(0xFF3B82F6).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
+                    border: Border.all(color: const Color(0xFF3B82F6).withOpacity(0.3)),
                   ),
                   child: const Text(
                     'Development OTP: 123456',
@@ -152,7 +152,7 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen> with SingleTi
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFFF59E0B)),
+                      borderSide: const BorderSide(color: Color(0xFF3B82F6)),
                     ),
                   ),
                 ),
@@ -171,7 +171,7 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen> with SingleTi
                         },
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: const Color(0xFFF59E0B),
+                    backgroundColor: const Color(0xFF2563EB),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   child: authState.isLoading
@@ -189,7 +189,7 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen> with SingleTi
                     TextButton(
                       onPressed: _countdown == 0 && !authState.isLoading ? _resendOtp : null,
                       style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFFF59E0B),
+                        foregroundColor: const Color(0xFF3B82F6),
                         padding: EdgeInsets.zero,
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -198,7 +198,7 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen> with SingleTi
                         _countdown > 0 ? 'Resend in ${_countdown}s' : 'Resend OTP',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: _countdown > 0 ? Colors.white.withOpacity(0.4) : const Color(0xFFF59E0B),
+                          color: _countdown > 0 ? Colors.white.withOpacity(0.4) : const Color(0xFF3B82F6),
                         ),
                       ),
                     ),

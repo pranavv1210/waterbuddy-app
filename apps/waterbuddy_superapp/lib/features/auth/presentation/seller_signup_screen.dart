@@ -99,31 +99,31 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
               DocumentUploadField(
                 controller: _licenseUrl,
                 label: 'Driver License Document',
-                themeColor: const Color(0xFF10B981),
+                themeColor: const Color(0xFF06B6D4),
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _aadhaarUrl,
                 label: 'Aadhaar Card Document',
-                themeColor: const Color(0xFF10B981),
+                themeColor: const Color(0xFF06B6D4),
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _panUrl,
                 label: 'PAN Card Document',
-                themeColor: const Color(0xFF10B981),
+                themeColor: const Color(0xFF06B6D4),
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _rcUrl,
                 label: 'Vehicle RC Document',
-                themeColor: const Color(0xFF10B981),
+                themeColor: const Color(0xFF06B6D4),
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _photoUrl,
                 label: 'Tanker Photos',
-                themeColor: const Color(0xFF10B981),
+                themeColor: const Color(0xFF06B6D4),
                 isPhoto: true,
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
@@ -138,7 +138,7 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
                 onPressed: _loading ? null : _submit,
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFF059669),
+                  backgroundColor: const Color(0xFF0891B2),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: _loading
@@ -198,7 +198,7 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF10B981)),
+            borderSide: const BorderSide(color: Color(0xFF06B6D4)),
           ),
         ),
       ),

@@ -68,7 +68,7 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                 onPressed: _loading ? null : _submit,
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFF059669),
+                  backgroundColor: const Color(0xFF0891B2),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: _loading
@@ -118,7 +118,7 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF10B981)),
+            borderSide: const BorderSide(color: Color(0xFF06B6D4)),
           ),
         ),
       ),

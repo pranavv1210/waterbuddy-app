@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static ThemeData light() {
-    const primary = Color(0xFF0F172A);
+    const primary = Color(0xFF0F2B5B);
     const accent = Color(0xFF38BDF8);
 
     return ThemeData(

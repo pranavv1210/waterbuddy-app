@@ -16,7 +16,7 @@ class ConsumerOtpScreen extends ConsumerStatefulWidget {
 }
 
 class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen> with SingleTickerProviderStateMixin {
-  final _otp = TextEditingController();
+  final _otp = TextEditingController(text: '123456');
 
   late final AnimationController _animController;
   late final Animation<double> _fadeAnimation;

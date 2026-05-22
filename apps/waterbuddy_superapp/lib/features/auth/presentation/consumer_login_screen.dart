@@ -15,7 +15,7 @@ class ConsumerLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
-  final _phone = TextEditingController();
+  final _phone = TextEditingController(text: '9876543210');
 
   @override
   void dispose() {

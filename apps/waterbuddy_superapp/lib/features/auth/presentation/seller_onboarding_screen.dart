@@ -26,7 +26,7 @@ class SellerAuthLandingScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () => context.push(RouteNames.authSellerLogin),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF059669),
+                backgroundColor: const Color(0xFF0891B2),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -38,7 +38,7 @@ class SellerAuthLandingScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () => context.push(RouteNames.authSellerSignup),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF059669),
+                backgroundColor: const Color(0xFF0891B2),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

@@ -86,26 +86,26 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
               DocumentUploadField(
                 controller: _driverPhoto,
                 label: 'Driver Photo',
-                themeColor: const Color(0xFFF59E0B),
+                themeColor: const Color(0xFF3B82F6),
                 isPhoto: true,
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _licenseUpload,
                 label: 'Driver License Document',
-                themeColor: const Color(0xFFF59E0B),
+                themeColor: const Color(0xFF3B82F6),
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _aadhaarUpload,
                 label: 'Aadhaar Card Document',
-                themeColor: const Color(0xFFF59E0B),
+                themeColor: const Color(0xFF3B82F6),
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _panUpload,
                 label: 'PAN Card Document',
-                themeColor: const Color(0xFFF59E0B),
+                themeColor: const Color(0xFF3B82F6),
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 20),
@@ -140,7 +140,7 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
                 },
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFFD97706),
+                  backgroundColor: const Color(0xFF2563EB),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: const Text('Continue to OTP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -192,7 +192,7 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFF59E0B)),
+            borderSide: const BorderSide(color: Color(0xFF3B82F6)),
           ),
         ),
       ),
