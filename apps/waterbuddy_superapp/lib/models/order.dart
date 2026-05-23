@@ -4,6 +4,8 @@ class Order {
   const Order({
     required this.id,
     required this.customerId,
+    required this.customerName,
+    required this.customerPhone,
     required this.sellerId,
     required this.tankSize,
     required this.status,
@@ -23,6 +25,8 @@ class Order {
     return Order(
       id: document.id,
       customerId: data['customerId'] as String? ?? '',
+      customerName: data['customerName'] as String? ?? '',
+      customerPhone: data['customerPhone'] as String? ?? '',
       sellerId: data['sellerId'] as String?,
       tankSize: data['tankSize'] as num? ?? 0,
       status: data['status'] as String? ?? 'SEARCHING',
@@ -42,6 +46,8 @@ class Order {
 
   final String id;
   final String customerId;
+  final String customerName;
+  final String customerPhone;
   final String? sellerId;
   final num tankSize;
   final String status;

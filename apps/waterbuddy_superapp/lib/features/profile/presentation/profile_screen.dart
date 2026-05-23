@@ -1,261 +1,203 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
+import '../../../widgets/operations_ui.dart';
 import '../../orders/providers/order_providers.dart';
-import '../../../core/services/auth/auth_service.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(authStateProvider);
-    final ordersAsync = ref.watch(orderHistoryProvider);
+    final user = ref.watch(authStateProvider).value;
+    final orders = ref.watch(orderHistoryProvider);
+
+    if (user == null) {
+      return const Scaffold(
+        body: OpsEmptyState(
+          icon: Icons.lock_outline_rounded,
+          title: 'Not signed in',
+          message: 'Please sign in to view your WaterBuddy profile.',
+        ),
+      );
+    }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F8),
-      body: SafeArea(
-        child: userAsync.when(
-          data: (user) {
-            if (user == null) {
-              return const Center(child: Text('Please log in.'));
-            }
-
-            final orderCount = ordersAsync.when(
-              data: (orders) => orders.where((o) => o.status == 'DELIVERED').length,
-              loading: () => 0,
-              error: (_, __) => 0,
-            );
-
-            return CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'My Profile',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF0F172A),
-                            letterSpacing: -1.5,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.settings_outlined, color: Color(0xFF486581)),
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Settings coming soon!')),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
+      backgroundColor: OpsColors.surface,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        title: const Text(
+          'Profile',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          OpsCard(
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 32,
+                  backgroundImage: user.photoURL == null
+                      ? null
+                      : NetworkImage(user.photoURL!),
+                  child: user.photoURL == null
+                      ? const Icon(Icons.person_rounded, size: 30)
+                      : null,
                 ),
-                SliverToBoxAdapter(
-                  child: _buildProfileHeader(user, orderCount),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate(
-                      [
-                        _buildActionCard(
-                          context,
-                          icon: Icons.history_rounded,
-                          title: 'Order History',
-                          subtitle: 'View your past and current deliveries',
-                          onTap: () => context.go(RouteNames.orders),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.displayName ?? 'WaterBuddy user',
+                        style: const TextStyle(
+                          color: OpsColors.ink,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
                         ),
-                        const SizedBox(height: 16),
-                        _buildActionCard(
-                          context,
-                          icon: Icons.support_agent_rounded,
-                          title: 'Help & Support',
-                          subtitle: 'Get help with your orders',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Support section coming soon!')),
-                            );
-                          },
+                      ),
+                      Text(
+                        user.email ??
+                            user.phoneNumber ??
+                            'Contact not recorded',
+                        style: const TextStyle(
+                          color: OpsColors.muted,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(height: 16),
-                        _buildActionCard(
-                          context,
-                          icon: Icons.logout_rounded,
-                          title: 'Logout',
-                          subtitle: 'Sign out of your account',
-                          isDestructive: true,
-                          onTap: () async {
-                            final authService = ref.read(authServiceProvider);
-                            await authService.signOut();
-                            if (context.mounted) {
-                              context.go(RouteNames.splash);
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 40),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileHeader(User user, int orderCount) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.25),
-            blurRadius: 30,
-            offset: const Offset(0, 15),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.2), width: 4),
-              image: user.photoURL != null
-                  ? DecorationImage(
-                      image: NetworkImage(user.photoURL!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
             ),
-            child: user.photoURL == null
-                ? const Center(
-                    child: Icon(Icons.person, size: 50, color: Colors.white),
-                  )
-                : null,
           ),
           const SizedBox(height: 16),
-          Text(
-            user.displayName ?? 'Customer',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            user.email ?? user.phoneNumber ?? 'No Contact Info',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildStatItem(orderCount.toString(), 'Orders'),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24),
-                height: 40,
-                width: 1,
-                color: Colors.white.withOpacity(0.2),
+          orders.when(
+            data: (list) => OpsCard(
+              child: _ProfileMetric(
+                label: 'Orders placed',
+                value: '${list.length}',
+                icon: Icons.receipt_long_rounded,
               ),
-              _buildStatItem('1', 'Locations'),
-            ],
+            ),
+            loading: () => const LinearProgressIndicator(minHeight: 2),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+          const SizedBox(height: 16),
+          _ProfileAction(
+            icon: Icons.history_rounded,
+            title: 'Order history',
+            subtitle: 'View current and completed tanker bookings',
+            onTap: () => context.go(RouteNames.orders),
+          ),
+          _ProfileAction(
+            icon: Icons.payment_rounded,
+            title: 'Payments',
+            subtitle: 'Open payment records for your orders',
+            onTap: () => context.go(RouteNames.payments),
+          ),
+          _ProfileAction(
+            icon: Icons.support_agent_rounded,
+            title: 'Support',
+            subtitle: AppConstants.supportEmail,
+            onTap: () {
+              launchUrl(Uri(
+                scheme: 'mailto',
+                path: AppConstants.supportEmail,
+                query: 'subject=WaterBuddy support',
+              ));
+            },
+          ),
+          _ProfileAction(
+            icon: Icons.logout_rounded,
+            title: 'Logout',
+            subtitle: 'Sign out of this device',
+            destructive: true,
+            onTap: () async {
+              await ref.read(authServiceProvider).signOut();
+              await ref.read(selectedRoleProvider.notifier).clear();
+              if (context.mounted) context.go(RouteNames.roleSelection);
+            },
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildStatItem(String value, String label) {
-    return Column(
+class _ProfileMetric extends StatelessWidget {
+  const _ProfileMetric({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
       children: [
+        Icon(icon, color: OpsColors.blue),
+        const SizedBox(width: 12),
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
-            fontSize: 22,
+            color: OpsColors.ink,
+            fontSize: 24,
             fontWeight: FontWeight.w900,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(width: 8),
         Text(
           label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+          style: const TextStyle(
+            color: OpsColors.muted,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildActionCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
-    final color = isDestructive ? const Color(0xFFEF4444) : const Color(0xFF0F172A);
-    final accentColor = const Color(0xFF38BDF8);
-    final bgColor = isDestructive ? const Color(0xFFFFF1F2) : Colors.white;
+class _ProfileAction extends StatelessWidget {
+  const _ProfileAction({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.destructive = false,
+  });
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool destructive;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = destructive ? OpsColors.red : OpsColors.ink;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: OpsCard(
+        onTap: onTap,
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDestructive ? color.withOpacity(0.1) : accentColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(icon, color: isDestructive ? color : accentColor, size: 28),
-            ),
-            const SizedBox(width: 20),
+            Icon(icon, color: color),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,23 +206,22 @@ class ProfileScreen extends ConsumerWidget {
                     title,
                     style: TextStyle(
                       color: color,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const SizedBox(height: 4),
                   Text(
                     subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Color(0xFF829AB1),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                      color: OpsColors.muted,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: const Color(0xFFBCCCDC).withOpacity(0.5)),
+            const Icon(Icons.chevron_right_rounded, color: OpsColors.muted),
           ],
         ),
       ),
