@@ -21,18 +21,23 @@ class WaterBuddyAuthLayout extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<WaterBuddyAuthLayout> createState() => _WaterBuddyAuthLayoutState();
+  ConsumerState<WaterBuddyAuthLayout> createState() =>
+      _WaterBuddyAuthLayoutState();
 }
 
-class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout> with SingleTickerProviderStateMixin {
+class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _toastController;
   late final Animation<Offset> _toastOffset;
+  final ScrollController _scrollController = ScrollController();
   String _toastMessage = '';
   bool _showToast = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    FocusManager.instance.addListener(_handleFocusChange);
     _toastController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -40,13 +45,41 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout> wit
     _toastOffset = Tween<Offset>(
       begin: const Offset(0, -1.5),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _toastController, curve: Curves.easeOutBack));
+    ).animate(
+        CurvedAnimation(parent: _toastController, curve: Curves.easeOutBack));
   }
 
   @override
   void dispose() {
+    FocusManager.instance.removeListener(_handleFocusChange);
+    WidgetsBinding.instance.removeObserver(this);
+    _scrollController.dispose();
     _toastController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    _ensureFocusedFieldVisible(const Duration(milliseconds: 280));
+  }
+
+  void _handleFocusChange() {
+    _ensureFocusedFieldVisible(const Duration(milliseconds: 90));
+  }
+
+  void _ensureFocusedFieldVisible(Duration delay) {
+    final focusedContext = FocusManager.instance.primaryFocus?.context;
+    if (focusedContext == null) return;
+
+    Future.delayed(delay, () {
+      if (!mounted || !focusedContext.mounted) return;
+      Scrollable.ensureVisible(
+        focusedContext,
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      );
+    });
   }
 
   void _triggerToast(String message) {
@@ -95,201 +128,287 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout> wit
 
     _triggerToast('Switched to $roleLabel');
     ref.read(selectedRoleProvider.notifier).set(role);
-
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        context.go(route);
-      }
-    });
+    context.go(route);
   }
 
   List<Color> _getRoleColors(AppRole role) {
     switch (role) {
       case AppRole.consumer:
-        return [const Color(0xFF38BDF8), const Color(0xFF0EA5E9), const Color(0xFF0284C7)];
+        return [
+          const Color(0xFF38BDF8),
+          const Color(0xFF0EA5E9),
+          const Color(0xFF0284C7)
+        ];
       case AppRole.seller:
-        return [const Color(0xFF22D3EE), const Color(0xFF06B6D4), const Color(0xFF0891B2)];
+        return [
+          const Color(0xFF22D3EE),
+          const Color(0xFF06B6D4),
+          const Color(0xFF0891B2)
+        ];
       case AppRole.driver:
-        return [const Color(0xFF60A5FA), const Color(0xFF3B82F6), const Color(0xFF2563EB)];
+        return [
+          const Color(0xFF60A5FA),
+          const Color(0xFF3B82F6),
+          const Color(0xFF2563EB)
+        ];
       case AppRole.admin:
-        return [const Color(0xFF1D4ED8), const Color(0xFF1E40AF), const Color(0xFF0F172A)];
+        return [
+          const Color(0xFF1D4ED8),
+          const Color(0xFF1E40AF),
+          const Color(0xFF0F172A)
+        ];
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final switchOptions = AppRole.values.where((r) => r != widget.activeRole).toList();
+    final switchOptions =
+        AppRole.values.where((r) => r != widget.activeRole).toList();
     final gradientColors = _getRoleColors(widget.activeRole);
     final baseColor = gradientColors.last;
+    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+    final keyboardOpen = keyboardHeight > 0;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: baseColor,
-      body: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: gradientColors,
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -50,
-            left: -50,
-            right: -50,
-            child: Opacity(
-              opacity: 0.05,
-              child: Container(
-                height: 250,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: gradientColors,
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
               ),
             ),
-          ),
-          SafeArea(
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 500),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                        child: Column(
-                          children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white.withOpacity(0.15)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: switchOptions.map((role) {
-                              String label = '';
-                              switch (role) {
-                                case AppRole.consumer: label = 'Consumer'; break;
-                                case AppRole.seller: label = 'Tanker Owner'; break;
-                                case AppRole.driver: label = 'Driver'; break;
-                                case AppRole.admin: label = 'Admin'; break;
-                              }
+            Positioned(
+              bottom: -50,
+              left: -50,
+              right: -50,
+              child: Opacity(
+                opacity: 0.05,
+                child: Container(
+                  height: 250,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: AnimatedPadding(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                padding: EdgeInsets.only(bottom: keyboardHeight),
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 500),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 16),
+                            child: Column(
+                              children: [
+                                AnimatedSize(
+                                  duration: const Duration(milliseconds: 220),
+                                  curve: Curves.easeOutCubic,
+                                  child: keyboardOpen
+                                      ? const SizedBox.shrink()
+                                      : Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 8, horizontal: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.08),
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            border: Border.all(
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.15)),
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: switchOptions.map((role) {
+                                              String label = '';
+                                              switch (role) {
+                                                case AppRole.consumer:
+                                                  label = 'Consumer';
+                                                  break;
+                                                case AppRole.seller:
+                                                  label = 'Tanker Owner';
+                                                  break;
+                                                case AppRole.driver:
+                                                  label = 'Driver';
+                                                  break;
+                                                case AppRole.admin:
+                                                  label = 'Admin';
+                                                  break;
+                                              }
 
-                              return Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                                  child: OutlinedButton(
-                                    onPressed: () => _switchRole(role),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: Colors.white,
-                                      side: BorderSide(color: Colors.white.withOpacity(0.4), width: 1),
-                                      padding: const EdgeInsets.symmetric(vertical: 10),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      label,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: -0.2,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                              return Expanded(
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(horizontal: 4),
+                                                  child: OutlinedButton(
+                                                    onPressed: () =>
+                                                        _switchRole(role),
+                                                    style: OutlinedButton
+                                                        .styleFrom(
+                                                      foregroundColor:
+                                                          Colors.white,
+                                                      side: BorderSide(
+                                                          color: Colors.white
+                                                              .withValues(
+                                                                  alpha: 0.4),
+                                                          width: 1),
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          vertical: 10),
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(14),
+                                                      ),
+                                                    ),
+                                                    child: Text(
+                                                      label,
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        letterSpacing: 0,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ),
+                                        ),
+                                ),
+                                SizedBox(height: keyboardOpen ? 12 : 40),
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 220),
+                                  curve: Curves.easeOutCubic,
+                                  width: keyboardOpen ? 48 : 90,
+                                  height: keyboardOpen ? 48 : 90,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                    border: Border.all(
+                                        color:
+                                            Colors.white.withValues(alpha: 0.3),
+                                        width: 2),
+                                  ),
+                                  child: Center(
+                                    child: Icon(Icons.water_drop_rounded,
+                                        color: Colors.white,
+                                        size: keyboardOpen ? 26 : 45),
                                   ),
                                 ),
-                              );
-                            }).toList(),
+                                SizedBox(height: keyboardOpen ? 8 : 16),
+                                Text(
+                                  'WATERBUDDY',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: keyboardOpen ? 18 : 24,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                SizedBox(height: keyboardOpen ? 16 : 40),
+                                Text(
+                                  widget.title,
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: keyboardOpen ? 18 : 20,
+                                      fontWeight: FontWeight.w600),
+                                  textAlign: TextAlign.center,
+                                ),
+                                if (widget.subtitle.isNotEmpty &&
+                                    !keyboardOpen) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    widget.subtitle,
+                                    style: TextStyle(
+                                        color:
+                                            Colors.white.withValues(alpha: 0.8),
+                                        fontSize: 13),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                                SizedBox(height: keyboardOpen ? 14 : 28),
+                                widget.child,
+                                SizedBox(height: keyboardOpen ? 16 : 24),
+                              ],
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 40),
-                        Container(
-                          width: 90,
-                          height: 90,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.15),
-                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
-                          ),
-                          child: const Center(
-                            child: Icon(Icons.water_drop_rounded, color: Colors.white, size: 45),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'WATERBUDDY',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        Text(
-                          widget.title,
-                          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
-                          textAlign: TextAlign.center,
-                        ),
-                        if (widget.subtitle.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.subtitle,
-                            style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13),
-                            textAlign: TextAlign.center,
-                          ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_showToast)
+              Positioned(
+                top: 50,
+                left: 24,
+                right: 24,
+                child: SlideTransition(
+                  position: _toastOffset,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981),
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4)),
                         ],
-                        const SizedBox(height: 28),
-                        widget.child,
-                        const SizedBox(height: 40),
-                      ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.check_circle_rounded,
+                              color: Colors.white, size: 20),
+                          const SizedBox(width: 10),
+                          Text(_toastMessage,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
-            ),
-          ),
-          if (_showToast)
-            Positioned(
-              top: 50,
-              left: 24,
-              right: 24,
-              child: SlideTransition(
-                position: _toastOffset,
-                child: Material(
-                  color: Colors.transparent,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981),
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4)),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                        const SizedBox(width: 10),
-                        Text(_toastMessage, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }

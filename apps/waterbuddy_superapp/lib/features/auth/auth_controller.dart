@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/app_role.dart';
@@ -112,7 +114,12 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> verifyOtp(String smsCode, {required AppRole role, String? fullName, String? email}) async {
+  Future<bool> verifyOtp(
+    String smsCode, {
+    required AppRole role,
+    String? fullName,
+    String? email,
+  }) async {
     final verificationId = state.verificationId;
     final phone = state.phoneNumber;
 
@@ -149,13 +156,17 @@ class AuthController extends StateNotifier<AuthState> {
         throw const AuthFailure('Unable to sign in. Please try again.');
       }
 
-      await _authService.upsertUserProfile(
-        role: role,
-        fullName: fullName,
-        email: email,
-        phoneNumber: phone,
-        authProvider: 'otp',
-        isVerified: true,
+      unawaited(
+        _authService
+            .upsertUserProfile(
+              role: role,
+              fullName: fullName,
+              email: email,
+              phoneNumber: phone,
+              authProvider: 'otp',
+              isVerified: true,
+            )
+            .catchError((_) {}),
       );
 
       state = state.copyWith(
@@ -181,8 +192,6 @@ class AuthController extends StateNotifier<AuthState> {
       return false;
     }
   }
-
-
 
   Future<bool> signInWithGoogle({required AppRole role}) async {
     state = state.copyWith(

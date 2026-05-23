@@ -45,8 +45,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _controller.forward();
 
-    // Ensure the splash screen is shown for at least 2.5 seconds
-    Future.delayed(const Duration(milliseconds: 2500), () {
+    // Keep the branded splash perceptible without blocking a ready app.
+    Future.delayed(const Duration(milliseconds: 700), () {
       if (mounted) {
         setState(() {
           _minDurationPassed = true;
@@ -128,9 +128,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           width: 2,
                         ),
                       ),

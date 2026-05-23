@@ -22,7 +22,8 @@ class AuthService {
   final AdminAccessService _adminAccessService;
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
-    serverClientId: '979686341816-gi2haph462optrduomb8m8rqm99jfc54.apps.googleusercontent.com',
+    serverClientId:
+        '979686341816-gi2haph462optrduomb8m8rqm99jfc54.apps.googleusercontent.com',
   );
   static const String devOtpCode = '123456';
 
@@ -57,7 +58,8 @@ class AuthService {
     required String password,
   }) async {
     try {
-      return await _auth.signInWithEmailAndPassword(email: email.trim(), password: password);
+      return await _auth.signInWithEmailAndPassword(
+          email: email.trim(), password: password);
     } on FirebaseAuthException catch (e) {
       throw AuthFailure(_authErrorMessage(e));
     }
@@ -68,7 +70,8 @@ class AuthService {
     required String password,
   }) async {
     try {
-      return await _auth.createUserWithEmailAndPassword(email: email.trim(), password: password);
+      return await _auth.createUserWithEmailAndPassword(
+          email: email.trim(), password: password);
     } on FirebaseAuthException catch (e) {
       throw AuthFailure(_authErrorMessage(e));
     }
@@ -95,8 +98,6 @@ class AuthService {
     Duration timeout = const Duration(seconds: 60),
     Future<void> Function(UserCredential credential)? onVerificationCompleted,
   }) async {
-    // MOCK OTP LOGIC to prevent "billing required" SMS errors
-    await Future.delayed(const Duration(milliseconds: 50)); // Simulate network request
     return 'mock_verification_id_${phoneNumber.trim()}';
   }
 
@@ -107,25 +108,14 @@ class AuthService {
     if (smsCode.trim() != devOtpCode) {
       throw const AuthFailure('Invalid OTP. Please enter the 6-digit code.');
     }
-    
-    final phoneNumber = verificationId.startsWith('mock_verification_id_') 
-        ? verificationId.replaceFirst('mock_verification_id_', '') 
-        : '+910000000000';
-    final mockEmail = 'phone_$phoneNumber@mock.waterbuddy.com';
-    final mockPassword = 'mockPassword123!';
 
-    try {
-      try {
-        return await _auth.signInWithEmailAndPassword(email: mockEmail, password: mockPassword);
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
-          return await _auth.createUserWithEmailAndPassword(email: mockEmail, password: mockPassword);
-        }
-        throw AuthFailure(_authErrorMessage(e));
-      }
-    } catch (e) {
-      throw AuthFailure('Authentication failed.');
-    }
+    final phoneNumber = verificationId.startsWith('mock_verification_id_')
+        ? verificationId.replaceFirst('mock_verification_id_', '')
+        : '+910000000000';
+    return signInWithDevelopmentOtp(
+      phoneNumber: phoneNumber,
+      otpCode: smsCode,
+    );
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
@@ -301,6 +291,45 @@ class AuthService {
     }, SetOptions(merge: true));
   }
 
+  Future<void> upsertOwnerDriverProfile({
+    required String fullName,
+    required String phoneNumber,
+    required String email,
+    required String licenseNumber,
+    required String aadhaarNumber,
+    required String driverPhotoUrl,
+    required String licenseUploadUrl,
+    required String aadhaarUploadUrl,
+    required String address,
+    String? panNumber,
+    String? panUploadUrl,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) throw const AuthFailure('User not authenticated.');
+
+    final now = FieldValue.serverTimestamp();
+    await _firestore.collection('drivers').doc(user.uid).set({
+      'uid': user.uid,
+      'sellerId': user.uid,
+      'driverName': fullName,
+      'phone': phoneNumber,
+      'email': email,
+      'driverLicenseNumber': licenseNumber,
+      'aadhaarNumber': aadhaarNumber,
+      'panNumber': panNumber,
+      'driverPhotoUrl': driverPhotoUrl,
+      'licenseUploadUrl': licenseUploadUrl,
+      'aadhaarUploadUrl': aadhaarUploadUrl,
+      'panUploadUrl': panUploadUrl,
+      'address': address,
+      'ownerDriver': true,
+      'verificationStatus': 'pending',
+      'isOnline': false,
+      'createdAt': now,
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+  }
+
   Future<String?> getUserRole(String uid) async {
     final doc = await _firestore.collection('users').doc(uid).get();
     return doc.data()?['role'] as String?;
@@ -316,7 +345,8 @@ class AuthService {
 
   Future<bool> isAuthorizedAdmin(User user) async {
     if (!_adminAccessService.isAuthorizedAdmin(user)) return false;
-    if (user.email == 'waterbuddyapp.wb@gmail.com' || user.email == 'admin@waterbuddy.com') {
+    if (user.email == 'waterbuddyapp.wb@gmail.com' ||
+        user.email == 'admin@waterbuddy.com') {
       return true;
     }
     final adminDoc = await _firestore.collection('admins').doc(user.uid).get();

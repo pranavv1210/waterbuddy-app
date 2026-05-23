@@ -6,7 +6,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../routes/route_names.dart';
-import '../../../widgets/async_state_view.dart';
 import '../models/assigned_order_tracking.dart';
 import '../providers/tracking_providers.dart';
 
@@ -21,12 +20,14 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     // Get orderId from query params and start watching
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final orderId = GoRouterState.of(context).uri.queryParameters['orderId'];
       if (orderId != null) {
-        ref.read(trackingControllerProvider.notifier).startWatchingOrder(orderId);
+        ref
+            .read(trackingControllerProvider.notifier)
+            .startWatchingOrder(orderId);
       }
     });
   }
@@ -56,11 +57,16 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline_rounded, size: 64, color: Color(0xFFEF4444)),
+                  const Icon(Icons.error_outline_rounded,
+                      size: 64, color: Color(0xFFEF4444)),
                   const SizedBox(height: 24),
                   const Text(
                     'Something went wrong',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF0F172A), letterSpacing: -0.5),
+                    style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF0F172A),
+                        letterSpacing: -0.5),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -74,13 +80,16 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                     height: 56,
                     child: ElevatedButton(
                       onPressed: () {
-                        ref.read(trackingControllerProvider.notifier).clearError();
+                        ref
+                            .read(trackingControllerProvider.notifier)
+                            .clearError();
                         context.go(RouteNames.home);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0F172A),
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18)),
                         elevation: 0,
                       ),
                       child: const Text('Back to Home'),
@@ -95,14 +104,17 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     }
 
     final body = uiState.when(
-      data: (state) => _TrackingScreenBody(state: state, trackingState: trackingState),
+      data: (state) =>
+          _TrackingScreenBody(state: state, trackingState: trackingState),
       error: (err, __) => Scaffold(
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text('Error loading tracking: $err'),
-              TextButton(onPressed: () => context.go(RouteNames.home), child: const Text('Go Home')),
+              TextButton(
+                  onPressed: () => context.go(RouteNames.home),
+                  child: const Text('Go Home')),
             ],
           ),
         ),
@@ -139,12 +151,13 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
   @override
   void didUpdateWidget(_TrackingScreenBody oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     final oldTracking = oldWidget.trackingState.tracking;
     final newTracking = widget.trackingState.tracking;
-    
-    if (newTracking != null && 
-        (oldTracking?.lat != newTracking.lat || oldTracking?.lng != newTracking.lng)) {
+
+    if (newTracking != null &&
+        (oldTracking?.lat != newTracking.lat ||
+            oldTracking?.lng != newTracking.lng)) {
       // Smoothly pan map to new location
       _mapController.move(LatLng(newTracking.lat, newTracking.lng), 15.0);
     }
@@ -179,25 +192,30 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                 ? FlutterMap(
                     mapController: _mapController,
                     options: MapOptions(
-                      initialCenter: LatLng(widget.trackingState.tracking!.lat, widget.trackingState.tracking!.lng),
+                      initialCenter: LatLng(widget.trackingState.tracking!.lat,
+                          widget.trackingState.tracking!.lng),
                       initialZoom: 15.0,
                     ),
                     children: [
                       TileLayer(
-                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         userAgentPackageName: 'com.waterbuddy.customer',
                       ),
                       TweenAnimationBuilder<double>(
                         tween: Tween<double>(begin: 0, end: 1),
                         duration: const Duration(seconds: 2),
-                        key: ValueKey('${widget.trackingState.tracking!.lat}_${widget.trackingState.tracking!.lng}'),
+                        key: ValueKey(
+                            '${widget.trackingState.tracking!.lat}_${widget.trackingState.tracking!.lng}'),
                         builder: (context, value, child) {
                           // Simple interpolation, assuming we don't have access to old widget in builder
                           // It's better to just build the MarkerLayer
                           return MarkerLayer(
                             markers: [
                               Marker(
-                                point: LatLng(widget.trackingState.tracking!.lat, widget.trackingState.tracking!.lng),
+                                point: LatLng(
+                                    widget.trackingState.tracking!.lat,
+                                    widget.trackingState.tracking!.lng),
                                 width: 60,
                                 height: 60,
                                 child: const Icon(
@@ -226,12 +244,19 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
             left: 0,
             right: 0,
             child: Container(
-              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 10, left: 16, right: 16, bottom: 10),
+              padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 10,
+                  left: 16,
+                  right: 16,
+                  bottom: 10),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.black.withOpacity(0.4), Colors.transparent],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.4),
+                    Colors.transparent
+                  ],
                 ),
               ),
               child: Row(
@@ -239,14 +264,18 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                   CircleAvatar(
                     backgroundColor: Colors.white,
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded, color: primaryColor),
+                      icon: const Icon(Icons.arrow_back_rounded,
+                          color: primaryColor),
                       onPressed: () => context.go(RouteNames.home),
                     ),
                   ),
                   const SizedBox(width: 16),
                   const Text(
                     'Order Status',
-                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800),
                   ),
                 ],
               ),
@@ -260,10 +289,11 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(40)),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryColor.withOpacity(0.15),
+                    color: primaryColor.withValues(alpha: 0.15),
                     blurRadius: 30,
                     offset: const Offset(0, -10),
                   ),
@@ -321,7 +351,8 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                                 color: const Color(0xFFF0F9FF),
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: const Icon(Icons.water_drop_rounded, color: accentColor),
+                              child: const Icon(Icons.water_drop_rounded,
+                                  color: accentColor),
                             ),
                           ],
                         ),
@@ -343,17 +374,21 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                                   CircleAvatar(
                                     radius: 28,
                                     backgroundColor: const Color(0xFFE2E8F0),
-                                    backgroundImage: widget.state.driver.avatarUrl.isNotEmpty
-                                        ? NetworkImage(widget.state.driver.avatarUrl)
-                                        : null,
+                                    backgroundImage:
+                                        widget.state.driver.avatarUrl.isNotEmpty
+                                            ? NetworkImage(
+                                                widget.state.driver.avatarUrl)
+                                            : null,
                                     child: widget.state.driver.avatarUrl.isEmpty
-                                        ? const Icon(Icons.person_rounded, color: Color(0xFF64748B))
+                                        ? const Icon(Icons.person_rounded,
+                                            color: Color(0xFF64748B))
                                         : null,
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           children: [
@@ -367,25 +402,37 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                                               ),
                                             ),
                                             const SizedBox(width: 6),
-                                            const Icon(Icons.verified_rounded, size: 16, color: Color(0xFF22C55E)),
+                                            const Icon(Icons.verified_rounded,
+                                                size: 16,
+                                                color: Color(0xFF22C55E)),
                                           ],
                                         ),
                                         Text(
                                           '${widget.state.vehicle.typeLabel} • ${widget.state.vehicle.plateLabel}',
-                                          style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13),
+                                          style: const TextStyle(
+                                              color: Color(0xFF64748B),
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13),
                                         ),
                                         Row(
                                           children: [
-                                            const Icon(Icons.star_rounded, size: 14, color: Color(0xFFF59E0B)),
+                                            const Icon(Icons.star_rounded,
+                                                size: 14,
+                                                color: Color(0xFFF59E0B)),
                                             const SizedBox(width: 4),
                                             Text(
                                               widget.state.driver.ratingLabel,
-                                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 13),
                                             ),
                                             const SizedBox(width: 8),
                                             Text(
-                                              widget.state.driver.deliveriesLabel,
-                                              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                                              widget
+                                                  .state.driver.deliveriesLabel,
+                                              style: const TextStyle(
+                                                  color: Color(0xFF94A3B8),
+                                                  fontSize: 12),
                                             ),
                                           ],
                                         ),
@@ -394,18 +441,23 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                                   ),
                                 ],
                               ),
-                              const Divider(height: 24, color: Color(0xFFF1F5F9)),
+                              const Divider(
+                                  height: 24, color: Color(0xFFF1F5F9)),
                               Row(
                                 children: [
                                   Expanded(
                                     child: ElevatedButton.icon(
-                                      onPressed: () => _callDriver(widget.state.driver.phoneNumber),
-                                      icon: const Icon(Icons.call_rounded, size: 20),
+                                      onPressed: () => _callDriver(
+                                          widget.state.driver.phoneNumber),
+                                      icon: const Icon(Icons.call_rounded,
+                                          size: 20),
                                       label: const Text('Call Driver'),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: primaryColor,
                                         foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
                                         elevation: 0,
                                       ),
                                     ),
@@ -413,13 +465,25 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: OutlinedButton.icon(
-                                      onPressed: () {}, // Chat placeholder
-                                      icon: const Icon(Icons.chat_bubble_rounded, size: 20),
+                                      onPressed: widget
+                                              .state.driver.phoneNumber.isEmpty
+                                          ? null
+                                          : () => launchUrl(Uri(
+                                                scheme: 'sms',
+                                                path: widget
+                                                    .state.driver.phoneNumber,
+                                              )),
+                                      icon: const Icon(
+                                          Icons.chat_bubble_rounded,
+                                          size: 20),
                                       label: const Text('Message'),
                                       style: OutlinedButton.styleFrom(
                                         foregroundColor: primaryColor,
-                                        side: const BorderSide(color: Color(0xFFE2E8F0)),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        side: const BorderSide(
+                                            color: Color(0xFFE2E8F0)),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
                                       ),
                                     ),
                                   ),
@@ -453,9 +517,10 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                             ),
                           ],
                         ),
-                        
+
                         // Safety buffer for bottom navigation if any
-                        SizedBox(height: MediaQuery.of(context).padding.bottom + 10),
+                        SizedBox(
+                            height: MediaQuery.of(context).padding.bottom + 10),
                       ],
                     ),
                   ),
@@ -526,11 +591,17 @@ class _InfoChip extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF0F2B5B)),
+              style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                  color: Color(0xFF0F2B5B)),
             ),
             Text(
               title,
-              style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                  fontSize: 10,
+                  color: Color(0xFF94A3B8),
+                  fontWeight: FontWeight.w600),
             ),
           ],
         ),
