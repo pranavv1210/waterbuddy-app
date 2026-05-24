@@ -608,11 +608,12 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF151C2C).withOpacity(0.85),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -627,10 +628,10 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
+                Text(
                   'Delivery Location',
                   style: TextStyle(
-                    color: Color(0xFF64748B),
+                    color: Colors.white.withOpacity(0.4),
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
@@ -641,7 +642,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Color(0xFF0F172A),
+                    color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
@@ -658,11 +659,12 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF151C2C).withOpacity(0.85),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -671,7 +673,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF64748B)),
+            icon: Icon(Icons.notifications_none_rounded, color: Colors.white.withOpacity(0.6)),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -690,7 +692,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
               margin: const EdgeInsets.only(right: 4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF0EA5E9).withOpacity(0.1),
+                color: const Color(0xFF0EA5E9).withOpacity(0.18),
               ),
               child: ClipOval(
                 child: user?.photoURL != null
@@ -720,11 +722,12 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         right: 0,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFF151C2C).withOpacity(0.88),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            border: Border.all(color: Colors.white.withOpacity(0.06)),
             boxShadow: [
               BoxShadow(
-                color: primary.withOpacity(0.12),
+                color: Colors.black.withOpacity(0.3),
                 blurRadius: 30,
                 offset: const Offset(0, -10),
               ),
@@ -739,7 +742,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -761,11 +764,12 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFF151C2C).withOpacity(0.88),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border.all(color: Colors.white.withOpacity(0.06)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withOpacity(0.3),
                 blurRadius: 25,
                 offset: const Offset(0, -5),
               ),
@@ -779,7 +783,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -794,7 +798,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: Colors.white,
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -827,15 +831,15 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFF0F9FF) : Colors.white,
+          color: isSelected ? const Color(0xFF0EA5E9).withOpacity(0.12) : Colors.white.withOpacity(0.02),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFFF1F5F9),
-            width: 2,
+            color: isSelected ? const Color(0xFF38BDF8) : Colors.white.withOpacity(0.06),
+            width: 1.8,
           ),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: const Color(0xFF38BDF8).withOpacity(0.1),
+              color: const Color(0xFF38BDF8).withOpacity(0.15),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -846,12 +850,12 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFFF1F5F9),
+                color: isSelected ? const Color(0xFF38BDF8) : Colors.white.withOpacity(0.04),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 data['icon'],
-                color: isSelected ? Colors.white : const Color(0xFF64748B),
+                color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
                 size: 26,
               ),
             ),
@@ -862,8 +866,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 children: [
                   Text(
                     data['size'],
-                    style: TextStyle(
-                      color: primary,
+                    style: const TextStyle(
+                      color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                     ),
@@ -871,8 +875,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   const SizedBox(height: 2),
                   Text(
                     '${data['litres'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} Litres • Express',
-                    style: const TextStyle(
-                      color: Color(0xFF94A3B8),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -885,8 +889,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
               children: [
                 Text(
                   '₹${data['basePrice']}',
-                  style: TextStyle(
-                    color: primary,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
@@ -895,7 +899,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   const Text(
                     'Best Value',
                     style: TextStyle(
-                      color: Color(0xFF0EA5E9),
+                      color: Color(0xFF38BDF8),
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                     ),
@@ -917,13 +921,13 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: const LinearGradient(
-          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          colors: [Color(0xFF0EA5E9), Color(0xFF14B8A6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.3),
+            color: const Color(0xFF0EA5E9).withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -979,12 +983,14 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
 
   Widget _buildDrawer(User? user) {
     return Drawer(
+      backgroundColor: const Color(0xFF090D16),
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(
-              color: Color(0xFF0F2B5B), // primary
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A).withOpacity(0.4),
+              border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.06))),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1016,23 +1022,23 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.home_rounded, color: Color(0xFF64748B)),
-            title: const Text('Home'),
+            leading: const Icon(Icons.home_rounded, color: Colors.white70),
+            title: const Text('Home', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             onTap: () {
               Navigator.pop(context);
             },
           ),
           ListTile(
-            leading: const Icon(Icons.receipt_long_rounded, color: Color(0xFF64748B)),
-            title: const Text('History'),
+            leading: const Icon(Icons.receipt_long_rounded, color: Colors.white70),
+            title: const Text('History', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             onTap: () {
               Navigator.pop(context);
               context.go(RouteNames.orders);
             },
           ),
           ListTile(
-            leading: const Icon(Icons.person_rounded, color: Color(0xFF64748B)),
-            title: const Text('Profile'),
+            leading: const Icon(Icons.person_rounded, color: Colors.white70),
+            title: const Text('Profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             onTap: () {
               Navigator.pop(context);
               context.go(RouteNames.profile);
@@ -1072,18 +1078,18 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                color: Colors.white.withOpacity(0.04),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: Colors.white.withOpacity(0.08)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.search_rounded, color: primary.withOpacity(0.6), size: 22),
+                  const Icon(Icons.search_rounded, color: Colors.white70, size: 22),
                   const SizedBox(width: 12),
                   Text(
                     'Where to deliver?',
                     style: TextStyle(
-                      color: primary.withOpacity(0.5),
+                      color: Colors.white.withOpacity(0.5),
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1098,7 +1104,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF0F172A),
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 12),
@@ -1214,13 +1220,13 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Confirm Delivery Location',
-                      style: TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                     Text(
                       _currentAddress ?? 'Selecting location...',
-                      style: const TextStyle(color: Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1254,7 +1260,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 _isManualSelection = false;
               });
             },
-            child: const Text('Change', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+            child: Text('Change', style: TextStyle(color: Colors.white.withOpacity(0.6), fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -1373,11 +1379,11 @@ class _RecentDeliveryTile extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.04),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.history_rounded, color: Color(0xFF64748B), size: 20),
+              child: const Icon(Icons.history_rounded, color: Colors.white70, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -1389,15 +1395,15 @@ class _RecentDeliveryTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Color(0xFF0F172A),
+                      color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
                     _formatDate(date),
-                    style: const TextStyle(
-                      color: Color(0xFF94A3B8),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.4),
                       fontSize: 12,
                     ),
                   ),

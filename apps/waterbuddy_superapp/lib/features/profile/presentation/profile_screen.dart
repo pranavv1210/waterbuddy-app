@@ -16,6 +16,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).value;
     final orders = ref.watch(orderHistoryProvider);
+    final darkBg = const Color(0xFF090D16);
 
     if (user == null) {
       return const Scaffold(
@@ -28,29 +29,46 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: OpsColors.surface,
+      backgroundColor: darkBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
         title: const Text(
           'Profile',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+            letterSpacing: -0.8,
+          ),
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           OpsCard(
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundImage: user.photoURL == null
-                      ? null
-                      : NetworkImage(user.photoURL!),
-                  child: user.photoURL == null
-                      ? const Icon(Icons.person_rounded, size: 30)
-                      : null,
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0EA5E9), Color(0xFF14B8A6)],
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 30,
+                    backgroundColor: const Color(0xFF1E293B),
+                    backgroundImage: user.photoURL == null
+                        ? null
+                        : NetworkImage(user.photoURL!),
+                    child: user.photoURL == null
+                        ? const Icon(Icons.person_rounded, size: 28, color: Colors.white70)
+                        : null,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -58,20 +76,23 @@ class ProfileScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user.displayName ?? 'WaterBuddy user',
+                        user.displayName ?? 'WaterBuddy User',
                         style: const TextStyle(
-                          color: OpsColors.ink,
+                          color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
+                          letterSpacing: -0.3,
                         ),
                       ),
+                      const SizedBox(height: 2),
                       Text(
                         user.email ??
                             user.phoneNumber ??
                             'Contact not recorded',
-                        style: const TextStyle(
-                          color: OpsColors.muted,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.5),
                           fontWeight: FontWeight.w600,
+                          fontSize: 13,
                         ),
                       ),
                     ],
@@ -92,7 +113,7 @@ class ProfileScreen extends ConsumerWidget {
             loading: () => const LinearProgressIndicator(minHeight: 2),
             error: (_, __) => const SizedBox.shrink(),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           _ProfileAction(
             icon: Icons.history_rounded,
             title: 'Order history',
@@ -154,7 +175,7 @@ class _ProfileMetric extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            color: OpsColors.ink,
+            color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.w900,
           ),
@@ -162,9 +183,9 @@ class _ProfileMetric extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           label,
-          style: const TextStyle(
-            color: OpsColors.muted,
-            fontWeight: FontWeight.w700,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.5),
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
@@ -189,7 +210,7 @@ class _ProfileAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = destructive ? OpsColors.red : OpsColors.ink;
+    final color = destructive ? OpsColors.red : Colors.white;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: OpsCard(
@@ -209,19 +230,21 @@ class _ProfileAction extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                     ),
                   ),
+                  const SizedBox(height: 1),
                   Text(
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: OpsColors.muted,
+                    style: TextStyle(
+                      color: destructive ? color.withOpacity(0.7) : Colors.white.withOpacity(0.4),
                       fontWeight: FontWeight.w600,
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: OpsColors.muted),
+            Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.2)),
           ],
         ),
       ),

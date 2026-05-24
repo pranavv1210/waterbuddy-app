@@ -13,12 +13,13 @@ class OrdersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(orderHistoryProvider);
+    final darkBg = const Color(0xFF090D16);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FB),
+      backgroundColor: darkBg,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         title: const Text(
@@ -26,8 +27,8 @@ class OrdersScreen extends ConsumerWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w900,
-            color: Color(0xFF0F172A),
-            letterSpacing: -1.0,
+            color: Colors.white,
+            letterSpacing: -0.8,
           ),
         ),
       ),
@@ -47,12 +48,12 @@ class OrdersScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               const Text('Failed to load orders',
                   style: TextStyle(
-                      fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+                      fontWeight: FontWeight.w800, color: Colors.white)),
               const SizedBox(height: 8),
               Text(e.toString(),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      color: Color(0xFF64748B), fontSize: 12)),
+                  style: TextStyle(
+                      color: Colors.white.withOpacity(0.5), fontSize: 12)),
             ],
           ),
         ),
@@ -86,13 +87,13 @@ class _OrderList extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
               child: Text(
                 sectionLabel,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white.withOpacity(0.4),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -146,14 +147,14 @@ class _OrderCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF151C2C).withOpacity(0.6),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFF1F5F9)),
+          border: Border.all(color: Colors.white.withOpacity(0.06)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -182,16 +183,16 @@ class _OrderCard extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w900,
-                            color: Color(0xFF0F172A),
+                            color: Colors.white,
                             letterSpacing: -0.5,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           timeStr,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF94A3B8),
+                            color: Colors.white.withOpacity(0.4),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -204,6 +205,7 @@ class _OrderCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: statusColor.withOpacity(0.15)),
                     ),
                     child: Text(
                       _statusLabel(order.status),
@@ -219,9 +221,9 @@ class _OrderCard extends StatelessWidget {
             ),
 
             // Divider
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Divider(height: 1, color: Color(0xFFF1F5F9)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Divider(height: 1, color: Colors.white.withOpacity(0.06)),
             ),
 
             // Bottom row: location + payment + arrow
@@ -229,17 +231,17 @@ class _OrderCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
                 children: [
-                  const Icon(Icons.location_on_rounded,
-                      size: 14, color: Color(0xFF94A3B8)),
+                  Icon(Icons.location_on_rounded,
+                      size: 14, color: Colors.white.withOpacity(0.4)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       address,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF64748B),
+                        color: Colors.white.withOpacity(0.6),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -247,16 +249,16 @@ class _OrderCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     order.paymentType,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
-                      color: Color(0xFF94A3B8),
+                      color: Colors.white.withOpacity(0.4),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   if (isActive || order.status == 'DELIVERED') ...[
                     const SizedBox(width: 4),
-                    const Icon(Icons.chevron_right_rounded,
-                        size: 16, color: Color(0xFF94A3B8)),
+                    Icon(Icons.chevron_right_rounded,
+                        size: 16, color: Colors.white.withOpacity(0.4)),
                   ],
                 ],
               ),
@@ -293,7 +295,7 @@ class _OrderCard extends StatelessWidget {
       case 'ON_THE_WAY':
         return const Color(0xFFF59E0B);
       case 'DELIVERED':
-        return const Color(0xFF10B981);
+        return const Color(0xFF14B8A6);
       case 'CANCELLED':
         return const Color(0xFFEF4444);
       default:
@@ -341,13 +343,14 @@ class _EmptyState extends StatelessWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A).withOpacity(0.06),
+                color: Colors.white.withOpacity(0.04),
                 shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.08)),
               ),
               child: const Icon(
                 Icons.receipt_long_rounded,
                 size: 48,
-                color: Color(0xFF0F172A),
+                color: Colors.white70,
               ),
             ),
             const SizedBox(height: 24),
@@ -356,33 +359,41 @@ class _EmptyState extends StatelessWidget {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF0F172A),
+                color: Colors.white,
                 letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Your water delivery history will\nappear here once you place an order.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF94A3B8),
+                color: Colors.white.withOpacity(0.5),
                 height: 1.5,
               ),
             ),
             const SizedBox(height: 32),
-            SizedBox(
+            Container(
               width: 180,
+              height: 52,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0EA5E9), Color(0xFF14B8A6)],
+                ),
+              ),
               child: ElevatedButton.icon(
                 onPressed: () => context.go(RouteNames.home),
                 icon: const Icon(Icons.water_drop_rounded, size: 18),
-                label: const Text('Book Water Now'),
+                label: const Text('Book Water Now', style: TextStyle(fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F172A),
+                  backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
+                  shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   elevation: 0,
                 ),
               ),

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -72,7 +73,7 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
     if (focusedContext == null) return;
 
     Future.delayed(delay, () {
-      if (!mounted || !focusedContext.mounted) return;
+      if (!focusedContext.mounted) return;
       Scrollable.ensureVisible(
         focusedContext,
         duration: const Duration(milliseconds: 240),
@@ -135,27 +136,23 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
     switch (role) {
       case AppRole.consumer:
         return [
-          const Color(0xFF38BDF8),
-          const Color(0xFF0EA5E9),
-          const Color(0xFF0284C7)
+          const Color(0xFF0EA5E9), // Radiant Sky Blue
+          const Color(0xFF0F766E), // Muted Teal
         ];
       case AppRole.seller:
         return [
-          const Color(0xFF22D3EE),
-          const Color(0xFF06B6D4),
-          const Color(0xFF0891B2)
+          const Color(0xFF14B8A6), // Teal Glow
+          const Color(0xFF0891B2), // Rich Cyan
         ];
       case AppRole.driver:
         return [
-          const Color(0xFF60A5FA),
-          const Color(0xFF3B82F6),
-          const Color(0xFF2563EB)
+          const Color(0xFF6366F1), // Violet
+          const Color(0xFF3B82F6), // Blue
         ];
       case AppRole.admin:
         return [
-          const Color(0xFF1D4ED8),
-          const Color(0xFF1E40AF),
-          const Color(0xFF0F172A)
+          const Color(0xFFEC4899), // Pink
+          const Color(0xFF4F46E5), // Royal Indigo
         ];
     }
   }
@@ -165,40 +162,47 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
     final switchOptions =
         AppRole.values.where((r) => r != widget.activeRole).toList();
     final gradientColors = _getRoleColors(widget.activeRole);
-    final baseColor = gradientColors.last;
+    final darkBg = const Color(0xFF090D16); // Obsidian deep dark background
     final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
     final keyboardOpen = keyboardHeight > 0;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: baseColor,
+      backgroundColor: darkBg,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Stack(
           children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: gradientColors,
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+            // Ambient glowing background orbs
+            Positioned(
+              top: -120,
+              left: -120,
+              child: Container(
+                width: 320,
+                height: 320,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: gradientColors[0].withOpacity(0.28),
                 ),
               ),
             ),
             Positioned(
-              bottom: -50,
-              left: -50,
-              right: -50,
-              child: Opacity(
-                opacity: 0.05,
-                child: Container(
-                  height: 250,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                  ),
+              bottom: -80,
+              right: -100,
+              child: Container(
+                width: 280,
+                height: 280,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: gradientColors[1].withOpacity(0.25),
                 ),
+              ),
+            ),
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 85, sigmaY: 85),
+                child: Container(color: Colors.transparent),
               ),
             ),
             SafeArea(
@@ -230,13 +234,11 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                                           padding: const EdgeInsets.symmetric(
                                               vertical: 8, horizontal: 8),
                                           decoration: BoxDecoration(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.08),
+                                            color: Colors.white.withOpacity(0.04),
                                             borderRadius:
                                                 BorderRadius.circular(20),
                                             border: Border.all(
-                                                color: Colors.white
-                                                    .withValues(alpha: 0.15)),
+                                                color: Colors.white.withOpacity(0.08)),
                                           ),
                                           child: Row(
                                             mainAxisAlignment:
@@ -248,7 +250,7 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                                                   label = 'Consumer';
                                                   break;
                                                 case AppRole.seller:
-                                                  label = 'Tanker Owner';
+                                                  label = 'Owner';
                                                   break;
                                                 case AppRole.driver:
                                                   label = 'Driver';
@@ -268,11 +270,9 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                                                     style: OutlinedButton
                                                         .styleFrom(
                                                       foregroundColor:
-                                                          Colors.white,
+                                                          Colors.white.withOpacity(0.8),
                                                       side: BorderSide(
-                                                          color: Colors.white
-                                                              .withValues(
-                                                                  alpha: 0.4),
+                                                          color: Colors.white.withOpacity(0.12),
                                                           width: 1),
                                                       padding: const EdgeInsets
                                                           .symmetric(
@@ -289,8 +289,7 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                                                       style: const TextStyle(
                                                         fontSize: 12,
                                                         fontWeight:
-                                                            FontWeight.w700,
-                                                        letterSpacing: 0,
+                                                            FontWeight.bold,
                                                       ),
                                                       maxLines: 1,
                                                       overflow:
@@ -307,20 +306,26 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                                 AnimatedContainer(
                                   duration: const Duration(milliseconds: 220),
                                   curve: Curves.easeOutCubic,
-                                  width: keyboardOpen ? 48 : 90,
-                                  height: keyboardOpen ? 48 : 90,
+                                  width: keyboardOpen ? 48 : 88,
+                                  height: keyboardOpen ? 48 : 88,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.white.withValues(alpha: 0.15),
+                                    color: Colors.white.withOpacity(0.04),
                                     border: Border.all(
-                                        color:
-                                            Colors.white.withValues(alpha: 0.3),
-                                        width: 2),
+                                        color: Colors.white.withOpacity(0.12),
+                                        width: 1.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: gradientColors[0].withOpacity(0.15),
+                                        blurRadius: 20,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
                                   ),
                                   child: Center(
                                     child: Icon(Icons.water_drop_rounded,
-                                        color: Colors.white,
-                                        size: keyboardOpen ? 26 : 45),
+                                        color: gradientColors[0],
+                                        size: keyboardOpen ? 24 : 44),
                                   ),
                                 ),
                                 SizedBox(height: keyboardOpen ? 8 : 16),
@@ -330,7 +335,7 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                                     color: Colors.white,
                                     fontSize: keyboardOpen ? 18 : 24,
                                     fontWeight: FontWeight.w900,
-                                    letterSpacing: 1,
+                                    letterSpacing: 1.5,
                                   ),
                                 ),
                                 SizedBox(height: keyboardOpen ? 16 : 40),
@@ -338,8 +343,9 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                                   widget.title,
                                   style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: keyboardOpen ? 18 : 20,
-                                      fontWeight: FontWeight.w600),
+                                      fontSize: keyboardOpen ? 18 : 22,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.5),
                                   textAlign: TextAlign.center,
                                 ),
                                 if (widget.subtitle.isNotEmpty &&
@@ -348,9 +354,9 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                                   Text(
                                     widget.subtitle,
                                     style: TextStyle(
-                                        color:
-                                            Colors.white.withValues(alpha: 0.8),
-                                        fontSize: 13),
+                                        color: Colors.white.withOpacity(0.5),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500),
                                     textAlign: TextAlign.center,
                                   ),
                                 ],
@@ -380,13 +386,15 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                       padding: const EdgeInsets.symmetric(
                           vertical: 14, horizontal: 20),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
+                        gradient: LinearGradient(
+                          colors: [const Color(0xFF10B981), const Color(0xFF059669)],
+                        ),
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.15),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4)),
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6)),
                         ],
                       ),
                       child: Row(
@@ -399,8 +407,8 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                           Text(_toastMessage,
                               style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600)),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),

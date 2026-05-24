@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,6 +22,7 @@ class MainShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mediaQuery = MediaQuery.of(context);
     final isDesktop = mediaQuery.size.width > 800;
+    final darkBg = const Color(0xFF090D16);
 
     return PopScope(
       canPop: _currentIndex == 0,
@@ -30,7 +32,7 @@ class MainShell extends ConsumerWidget {
       },
       child: isDesktop
           ? Scaffold(
-              backgroundColor: const Color(0xFFF8FAFC),
+              backgroundColor: darkBg,
               body: Row(
                 children: [
                   _DesktopSidebar(
@@ -38,7 +40,7 @@ class MainShell extends ConsumerWidget {
                     onTap: (index) => _navigate(context, index),
                     onSignOut: () => _handleSignOut(context, ref),
                   ),
-                  const VerticalDivider(width: 1, color: Color(0xFFE2E8F0)),
+                  VerticalDivider(width: 1, color: Colors.white.withOpacity(0.06)),
                   Expanded(
                     child: child,
                   ),
@@ -46,6 +48,7 @@ class MainShell extends ConsumerWidget {
               ),
             )
           : Scaffold(
+              backgroundColor: darkBg,
               body: child,
               bottomNavigationBar: _WaterBuddyNavBar(
                 currentIndex: _currentIndex,
@@ -93,11 +96,11 @@ class _DesktopSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFF0F2B5B); // Dark Navy Water
+    const activeColor = Color(0xFF0EA5E9);
 
     return Container(
       width: 280,
-      color: Colors.white,
+      color: const Color(0xFF0F172A).withOpacity(0.55),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,27 +119,29 @@ class _DesktopSidebar extends StatelessWidget {
                 child: const Icon(Icons.water_drop_rounded, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 14),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'WaterBuddy',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: primary,
-                      letterSpacing: -0.5,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'WaterBuddy',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Superapp Platform',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF64748B),
+                    Text(
+                      'Superapp Platform',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white.withOpacity(0.4),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -167,7 +172,7 @@ class _DesktopSidebar extends StatelessWidget {
           const Spacer(),
 
           // Logout Action at bottom
-          const Divider(color: Color(0xFFE2E8F0)),
+          Divider(color: Colors.white.withOpacity(0.06)),
           const SizedBox(height: 10),
           ListTile(
             leading: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 22),
@@ -204,7 +209,7 @@ class _SidebarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const activeColor = Color(0xFF0EA5E9);
-    const unselectedColor = Color(0xFF64748B);
+    final unselectedColor = Colors.white.withOpacity(0.4);
 
     return InkWell(
       onTap: onTap,
@@ -226,7 +231,7 @@ class _SidebarItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? activeColor : const Color(0xFF334155),
+                color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
               ),
             ),
           ],
@@ -247,53 +252,55 @@ class _WaterBuddyNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFF0F2B5B);
-    const unselected = Color(0xFF94A3B8);
-    const bg = Colors.white;
+    const primary = Color(0xFF0EA5E9);
+    final unselected = Colors.white.withOpacity(0.35);
+    final bg = const Color(0xFF0F172A).withOpacity(0.85);
 
     return Container(
       decoration: BoxDecoration(
-        color: bg,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        color: Colors.transparent,
+        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06))),
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(
-                icon: Icons.home_rounded,
-                label: 'Home',
-                isSelected: currentIndex == 0,
-                primaryColor: primary,
-                unselectedColor: unselected,
-                onTap: () => onTap(0),
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            color: bg,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _NavItem(
+                      icon: Icons.home_rounded,
+                      label: 'Home',
+                      isSelected: currentIndex == 0,
+                      primaryColor: primary,
+                      unselectedColor: unselected,
+                      onTap: () => onTap(0),
+                    ),
+                    _NavItem(
+                      icon: Icons.receipt_long_rounded,
+                      label: 'History',
+                      isSelected: currentIndex == 1,
+                      primaryColor: primary,
+                      unselectedColor: unselected,
+                      onTap: () => onTap(1),
+                    ),
+                    _NavItem(
+                      icon: Icons.person_rounded,
+                      label: 'Profile',
+                      isSelected: currentIndex == 2,
+                      primaryColor: primary,
+                      unselectedColor: unselected,
+                      onTap: () => onTap(2),
+                    ),
+                  ],
+                ),
               ),
-              _NavItem(
-                icon: Icons.receipt_long_rounded,
-                label: 'History',
-                isSelected: currentIndex == 1,
-                primaryColor: primary,
-                unselectedColor: unselected,
-                onTap: () => onTap(1),
-              ),
-              _NavItem(
-                icon: Icons.person_rounded,
-                label: 'Profile',
-                isSelected: currentIndex == 2,
-                primaryColor: primary,
-                unselectedColor: unselected,
-                onTap: () => onTap(2),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -326,7 +333,7 @@ class _NavItem extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? primaryColor.withOpacity(0.08) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
@@ -340,7 +347,7 @@ class _NavItem extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
                 color: color,
               ),
             ),

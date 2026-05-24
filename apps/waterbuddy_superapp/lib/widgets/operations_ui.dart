@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
 class OpsColors {
-  static const ink = Color(0xFF111827);
-  static const muted = Color(0xFF6B7280);
-  static const line = Color(0xFFE5E7EB);
-  static const surface = Color(0xFFF8FAFC);
+  static const ink = Colors.white;
+  static const muted = Color(0xFF94A3B8); // Slate cool grey
+  static const line = Color(0xFF1E293B); // Deep slate line
+  static const surface = Color(0xFF090D16); // Obsidian deep dark
+  static const cardBg = Color(0xFF151C2C); // Translucent slate card
   static const blue = Color(0xFF0EA5E9);
-  static const green = Color(0xFF10B981);
+  static const green = Color(0xFF14B8A6);
   static const amber = Color(0xFFF59E0B);
   static const red = Color(0xFFEF4444);
 }
@@ -36,6 +37,7 @@ class OpsScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.sizeOf(context).width >= 900;
+    final headerBg = const Color(0xFF0F172A).withOpacity(0.4);
 
     if (isWide) {
       return Scaffold(
@@ -68,13 +70,13 @@ class OpsScaffold extends StatelessWidget {
       backgroundColor: OpsColors.surface,
       appBar: AppBar(
         titleSpacing: 20,
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
+        backgroundColor: headerBg,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white)),
             Text(
               subtitle,
               style: const TextStyle(
@@ -88,16 +90,26 @@ class OpsScaffold extends StatelessWidget {
         actions: actions,
       ),
       body: body,
-      bottomNavigationBar: NavigationBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        selectedIndex: activeIndex,
-        onDestinationSelected: onTabChanged,
-        indicatorColor: accent.withValues(alpha: 0.12),
-        destinations: [
-          for (final tab in tabs)
-            NavigationDestination(icon: Icon(tab.icon), label: tab.label),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06))),
+        ),
+        child: NavigationBar(
+          backgroundColor: const Color(0xFF0F172A),
+          surfaceTintColor: Colors.transparent,
+          selectedIndex: activeIndex,
+          onDestinationSelected: onTabChanged,
+          indicatorColor: accent.withOpacity(0.15),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          destinations: [
+            for (final tab in tabs)
+              NavigationDestination(
+                icon: Icon(tab.icon, color: Colors.white.withOpacity(0.6)),
+                selectedIcon: Icon(tab.icon, color: accent),
+                label: tab.label,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -127,14 +139,14 @@ class OpsCard extends StatelessWidget {
     final content = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: OpsColors.line),
-        boxShadow: const [
+        color: OpsColors.cardBg.withOpacity(0.65),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 16,
-            offset: Offset(0, 8),
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -144,7 +156,7 @@ class OpsCard extends StatelessWidget {
     if (onTap == null) return content;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: content,
     );
   }
@@ -159,10 +171,11 @@ class OpsStatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Text(
         label,
@@ -202,18 +215,19 @@ class OpsEmptyState extends StatelessWidget {
             Container(
               width: 76,
               height: 76,
-              decoration: const BoxDecoration(
-                color: Color(0xFFEFF6FF),
+              decoration: BoxDecoration(
+                color: OpsColors.blue.withOpacity(0.12),
                 shape: BoxShape.circle,
+                border: Border.all(color: OpsColors.blue.withOpacity(0.2)),
               ),
-              child: Icon(icon, color: OpsColors.blue, size: 34),
+              child: const Icon(Icons.water_drop_outlined, color: OpsColors.blue, size: 34),
             ),
             const SizedBox(height: 18),
             Text(
               title,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: OpsColors.ink,
+                color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
               ),
@@ -246,7 +260,7 @@ Color orderStatusColor(String status) {
       return OpsColors.blue;
     case 'ASSIGNED':
     case 'DRIVER_ASSIGNED':
-      return const Color(0xFF6366F1);
+      return const Color(0xFF8B5CF6);
     case 'ON_THE_WAY':
     case 'ARRIVED':
       return OpsColors.amber;
@@ -282,9 +296,9 @@ class _OpsTopBar extends StatelessWidget {
     return Container(
       height: 76,
       padding: const EdgeInsets.symmetric(horizontal: 28),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: OpsColors.line)),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A).withOpacity(0.4),
+        border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.06))),
       ),
       child: Row(
         children: [
@@ -296,7 +310,7 @@ class _OpsTopBar extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: OpsColors.ink,
+                    color: Colors.white,
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
                   ),
@@ -341,9 +355,9 @@ class _OpsSidebar extends StatelessWidget {
     return Container(
       width: 280,
       padding: const EdgeInsets.fromLTRB(18, 24, 18, 18),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(right: BorderSide(color: OpsColors.line)),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A).withOpacity(0.55),
+        border: Border(right: BorderSide(color: Colors.white.withOpacity(0.06))),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,8 +368,9 @@ class _OpsSidebar extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
+                  color: accent.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: accent.withOpacity(0.2)),
                 ),
                 child: Icon(Icons.water_drop_rounded, color: accent),
               ),
@@ -369,7 +384,7 @@ class _OpsSidebar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: OpsColors.ink,
+                        color: Colors.white,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -398,9 +413,9 @@ class _OpsSidebar extends StatelessWidget {
                 final selected = activeIndex == index;
                 return ListTile(
                   selected: selected,
-                  selectedTileColor: accent.withValues(alpha: 0.1),
+                  selectedTileColor: accent.withOpacity(0.12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   leading: Icon(
                     tab.icon,
@@ -409,7 +424,7 @@ class _OpsSidebar extends StatelessWidget {
                   title: Text(
                     tab.label,
                     style: TextStyle(
-                      color: selected ? OpsColors.ink : OpsColors.muted,
+                      color: selected ? Colors.white : OpsColors.muted,
                       fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
                     ),
                   ),
