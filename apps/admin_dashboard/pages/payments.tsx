@@ -108,8 +108,8 @@ export default function PaymentsPage() {
 
   return (
     <AppShell>
-      <div className="space-y-10">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="space-y-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <nav className="mb-2 flex gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#14B8A6]">
               <span>Financials</span>
@@ -142,8 +142,8 @@ export default function PaymentsPage() {
 
         {!loading && !error ? (
           <>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-              <div className="relative group overflow-hidden rounded-3xl bg-[#0D1117]/60 border border-white/5 p-8 md:col-span-2 backdrop-blur-xl shadow-xl">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+              <div className="group relative overflow-hidden rounded-3xl border border-white/5 bg-[#0D1117]/60 p-6 md:col-span-2 backdrop-blur-xl shadow-xl">
                 <div className="relative z-10 flex h-full flex-col justify-between">
                   <div>
                     <div className="flex items-start justify-between">
@@ -155,11 +155,11 @@ export default function PaymentsPage() {
                         {growthPercentage.toFixed(1)}%
                       </span>
                     </div>
-                    <div className="mt-6 text-5xl font-black text-white tracking-tighter">
+                    <div className="mt-4 text-4xl font-black tracking-tighter text-white">
                       {formatCurrency(summary.totalRevenue)}
                     </div>
                   </div>
-                  <div className="mt-8 flex items-center gap-2 text-xs font-bold text-white/40 uppercase tracking-wider">
+                  <div className="mt-6 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white/40">
                     <span className="material-symbols-outlined text-[#14B8A6] text-lg">
                       trending_up
                     </span>
@@ -179,14 +179,14 @@ export default function PaymentsPage() {
                 </div>
               </div>
 
-              <div className="rounded-3xl bg-white/5 border border-white/5 p-8 backdrop-blur-xl transition-all hover:bg-white/[0.07]">
+              <div className="rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur-xl transition-all hover:bg-white/[0.07]">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#14B8A6]">
                   Platform Fee (15%)
                 </span>
-                <div className="mt-4 text-3xl font-black text-white tracking-tighter">
+                <div className="mt-4 text-3xl font-black tracking-tighter text-white">
                   {formatCurrency(commission)}
                 </div>
-                <div className="mt-8 h-2 w-full overflow-hidden rounded-full bg-white/5 border border-white/5">
+                <div className="mt-6 h-2 w-full overflow-hidden rounded-full border border-white/5 bg-white/5">
                   <div
                     className="h-full rounded-full bg-[#14B8A6] shadow-[0_0_15px_rgba(20,184,166,0.5)]"
                     style={{ width: `${commissionTargetRatio}%` }}
@@ -198,14 +198,14 @@ export default function PaymentsPage() {
                 </div>
               </div>
 
-              <div className="rounded-3xl bg-white/5 border border-white/5 p-8 backdrop-blur-xl transition-all hover:bg-white/[0.07]">
+              <div className="rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur-xl transition-all hover:bg-white/[0.07]">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">
                   Pending Settlements
                 </span>
                 <div className="mt-4 text-3xl font-black text-white tracking-tighter">
                   {formatCurrency(pendingPayoutAmount)}
                 </div>
-                <div className="mt-8 flex flex-col gap-3">
+                <div className="mt-6 flex flex-col gap-3">
                   <div className="flex items-center gap-3">
                     <div className="h-2 w-2 rounded-full bg-[#14B8A6]"></div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">
@@ -222,8 +222,8 @@ export default function PaymentsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-              <div className="flex flex-col gap-8 rounded-3xl bg-[#0D1117]/60 border border-white/5 p-8 lg:col-span-2 backdrop-blur-xl shadow-xl">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="flex flex-col gap-6 rounded-3xl border border-white/5 bg-[#0D1117]/60 p-6 lg:col-span-2 backdrop-blur-xl shadow-xl">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-black uppercase tracking-widest text-white">
@@ -245,7 +245,7 @@ export default function PaymentsPage() {
                   </div>
                 </div>
 
-                <div className="flex min-h-[300px] flex-1 items-end justify-between gap-4 px-4 pb-4">
+                <div className="flex min-h-[240px] flex-1 items-end justify-between gap-3 px-3 pb-3">
                   {weeklyRevenue.map((week) => {
                     const grossHeight = Math.max(
                       16,
@@ -294,7 +294,7 @@ export default function PaymentsPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col justify-between rounded-3xl bg-[#14B8A6] p-8 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]">
+              <div className="flex flex-col justify-between rounded-3xl bg-[#14B8A6] p-6 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]">
                 <div>
                   <div className="bg-white/20 w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
                     <span className="material-symbols-outlined text-2xl">
@@ -371,8 +371,8 @@ export default function PaymentsPage() {
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-3xl border border-white/5 bg-[#0D1117]/60 shadow-xl backdrop-blur-xl">
-              <div className="flex items-center justify-between border-b border-white/5 p-8">
+              <div className="overflow-hidden rounded-3xl border border-white/5 bg-[#0D1117]/60 shadow-xl backdrop-blur-xl">
+              <div className="flex items-center justify-between border-b border-white/5 p-6">
                 <div>
                   <h3 className="text-lg font-black tracking-tight text-white">
                     Settlement History

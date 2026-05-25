@@ -25,10 +25,10 @@ export default function HomePage() {
 
   return (
     <AppShell>
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Page Header */}
-        <div className="mb-10">
-          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">Overview</h1>
+        <div className="mb-6">
+          <h1 className="mb-1 text-3xl font-extrabold tracking-tight text-white">Overview</h1>
           <p className="text-white/60 font-medium">Monitoring real-time liquidity and delivery performance.</p>
         </div>
 
@@ -38,7 +38,7 @@ export default function HomePage() {
         {!loading && !error ? (
           <>
             {/* Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <MetricCard
                 title="Total Orders"
                 value={String(orders.length)}
@@ -66,7 +66,7 @@ export default function HomePage() {
             </div>
 
             {/* Charts and Orders Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <div className="lg:col-span-2">
                 <OrderTrends orders={orders} />
               </div>

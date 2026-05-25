@@ -80,8 +80,8 @@ export default function ComplaintsPage() {
 
   return (
     <AppShell>
-      <div className="space-y-10">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="space-y-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <nav className="mb-2 flex gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#14B8A6]">
               <span>Support</span>
@@ -117,8 +117,8 @@ export default function ComplaintsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-          <div className="flex flex-col justify-between rounded-2xl bg-[#0D1117]/60 border border-white/5 p-6 backdrop-blur-xl shadow-xl transition-all hover:bg-white/5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="flex flex-col justify-between rounded-2xl border border-white/5 bg-[#0D1117]/60 p-5 backdrop-blur-xl shadow-xl transition-all hover:bg-white/5">
             <div className="mb-6 flex items-start justify-between">
               <div className="bg-[#14B8A6]/10 w-10 h-10 rounded-xl flex items-center justify-center text-[#14B8A6]">
                 <span
@@ -142,7 +142,7 @@ export default function ComplaintsPage() {
             </div>
           </div>
 
-          <div className="flex flex-col justify-between rounded-2xl bg-[#14B8A6] p-6 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]">
+          <div className="flex flex-col justify-between rounded-2xl bg-[#14B8A6] p-5 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]">
             <div className="mb-6 flex items-start justify-between">
               <div className="bg-white/20 w-10 h-10 rounded-xl flex items-center justify-center">
                 <span
@@ -166,8 +166,8 @@ export default function ComplaintsPage() {
             </div>
           </div>
 
-          <div className="md:col-span-2 rounded-2xl bg-[#0D1117]/60 border border-white/5 p-6 backdrop-blur-xl shadow-xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="md:col-span-2 rounded-2xl border border-white/5 bg-[#0D1117]/60 p-5 backdrop-blur-xl shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
               <h4 className="text-xs font-bold text-white uppercase tracking-widest">
                 Weekly Volume
               </h4>
@@ -183,7 +183,7 @@ export default function ComplaintsPage() {
                 </p>
               </div>
             </div>
-            <div className="flex h-16 items-end gap-2 px-2">
+            <div className="flex h-14 items-end gap-2 px-2">
               {weeklySeries.buckets.map((value, index) => (
                 <div
                   key={index}
@@ -218,8 +218,8 @@ export default function ComplaintsPage() {
         </section>
 
         {!loading && !error ? (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="relative group overflow-hidden rounded-3xl bg-[#0D1117]/60 border border-white/5 p-8 lg:col-span-2 shadow-xl backdrop-blur-xl">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="group relative overflow-hidden rounded-3xl border border-white/5 bg-[#0D1117]/60 p-6 lg:col-span-2 shadow-xl backdrop-blur-xl">
               <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#14B8A6]/5 blur-3xl group-hover:bg-[#14B8A6]/10 transition-all"></div>
               <div className="relative z-10 flex h-full flex-col justify-center">
                 <h3 className="mb-2 text-2xl font-extrabold text-white tracking-tight">
@@ -241,7 +241,7 @@ export default function ComplaintsPage() {
               </div>
             </div>
 
-            <div className="flex flex-col justify-between rounded-3xl bg-white/5 border border-white/5 p-8 backdrop-blur-xl">
+            <div className="flex flex-col justify-between rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur-xl">
               <div>
                 <h4 className="mb-1 text-sm font-black text-white uppercase tracking-widest">
                   Sentiment AI

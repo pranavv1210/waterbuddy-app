@@ -78,12 +78,12 @@ export function SellersTable({
 
   return (
     <div className="overflow-hidden rounded-3xl border border-white/5 bg-[#0D1117]/60 shadow-xl backdrop-blur-xl">
-      <div className="flex flex-wrap items-center justify-between bg-white/[0.03] p-6 gap-4">
-        <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white/[0.03] p-4 sm:p-5">
+        <div className="flex flex-wrap gap-2.5">
           <button
             type="button"
             onClick={() => onChangeFilter("all")}
-            className={`rounded-full px-6 py-2 text-xs font-bold transition-all ${
+            className={`rounded-full px-5 py-2 text-xs font-bold transition-all ${
               activeFilter === "all"
                 ? "bg-[#14B8A6] text-white shadow-[0_0_15px_rgba(20,184,166,0.4)]"
                 : "bg-white/5 text-white/60 hover:bg-white/10"
@@ -94,7 +94,7 @@ export function SellersTable({
           <button
             type="button"
             onClick={() => onChangeFilter("pending")}
-            className={`rounded-full px-6 py-2 text-xs font-bold transition-all ${
+            className={`rounded-full px-5 py-2 text-xs font-bold transition-all ${
               activeFilter === "pending"
                 ? "bg-amber-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]"
                 : "bg-white/5 text-white/60 hover:bg-white/10"
@@ -105,7 +105,7 @@ export function SellersTable({
           <button
             type="button"
             onClick={() => onChangeFilter("inactive")}
-            className={`rounded-full px-6 py-2 text-xs font-bold transition-all ${
+            className={`rounded-full px-5 py-2 text-xs font-bold transition-all ${
               activeFilter === "inactive"
                 ? "bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]"
                 : "bg-white/5 text-white/60 hover:bg-white/10"
@@ -120,11 +120,11 @@ export function SellersTable({
         <table className="min-w-full border-collapse text-left">
           <thead className="bg-white/5 text-[10px] uppercase tracking-[0.2em] text-white/40">
             <tr>
-              <th className="px-8 py-5 font-bold">Seller Details</th>
-              <th className="px-6 py-5 font-bold">KYC Status</th>
-              <th className="px-6 py-5 font-bold">Platform Status</th>
-              <th className="px-6 py-5 text-center font-bold">Avg Rating</th>
-              <th className="px-8 py-5 text-right font-bold">Actions</th>
+              <th className="px-6 py-4 font-bold">Seller Details</th>
+              <th className="px-5 py-4 font-bold">KYC Status</th>
+              <th className="px-5 py-4 font-bold">Platform Status</th>
+              <th className="px-5 py-4 text-center font-bold">Avg Rating</th>
+              <th className="px-6 py-4 text-right font-bold">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5 text-sm">
@@ -137,7 +137,7 @@ export function SellersTable({
                   key={seller.id}
                   className="group transition-colors duration-200 hover:bg-white/5"
                 >
-                  <td className="px-8 py-6">
+                  <td className="px-6 py-5">
                     <div className="flex items-center gap-4">
                       <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-[#0F766E]/20 font-bold text-[#14B8A6] border border-[#14B8A6]/10 shadow-[0_0_15px_rgba(20,184,166,0.1)]">
                         {getInitials(seller.name)}
@@ -153,11 +153,11 @@ export function SellersTable({
                     </div>
                   </td>
 
-                  <td className="px-6 py-6">
+                  <td className="px-5 py-5">
                     <StatusBadge value={seller.kycStatus} />
                   </td>
 
-                  <td className="px-6 py-6">
+                  <td className="px-5 py-5">
                     <div className="flex items-center gap-3">
                       <button
                         type="button"
@@ -180,7 +180,7 @@ export function SellersTable({
                     </div>
                   </td>
 
-                  <td className="px-6 py-6 text-center">
+                  <td className="px-5 py-5 text-center">
                     {typeof seller.rating === "number" ? (
                       <div className="flex items-center justify-center gap-1 text-amber-400">
                         <span
@@ -205,7 +205,7 @@ export function SellersTable({
                     )}
                   </td>
 
-                  <td className="px-8 py-6 text-right">
+                  <td className="px-6 py-5 text-right">
                     <div className="flex justify-end gap-3">
                       {isPending ? (
                         <>
@@ -254,12 +254,12 @@ export function SellersTable({
       </div>
 
       {visibleSellers.length === 0 && (
-        <div className="p-16 text-center text-sm text-white/20">
+        <div className="p-8 text-center text-sm text-white/20">
           No sellers found matching the selected filter.
         </div>
       )}
 
-      <div className="flex items-center justify-between bg-white/[0.02] border-t border-white/5 px-8 py-6">
+      <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.02] px-6 py-4">
         <p className="text-xs font-medium text-white/40">
           Showing{" "}
           <span className="text-white/80">
@@ -275,7 +275,7 @@ export function SellersTable({
             type="button"
             onClick={() => onPageChange(Math.max(1, safePage - 1))}
             disabled={safePage === 1}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
           >
             <span className="material-symbols-outlined">chevron_left</span>
           </button>
@@ -285,7 +285,7 @@ export function SellersTable({
               key={pageNumber}
               type="button"
               onClick={() => onPageChange(pageNumber)}
-              className={`h-10 w-10 rounded-xl text-xs font-bold transition-all ${
+              className={`h-9 w-9 rounded-xl text-xs font-bold transition-all ${
                 pageNumber === safePage
                   ? "bg-[#14B8A6] text-white shadow-[0_0_15px_rgba(20,184,166,0.4)]"
                   : "bg-white/5 text-white/60 hover:bg-white/10"
@@ -299,7 +299,7 @@ export function SellersTable({
             type="button"
             onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
             disabled={safePage === totalPages}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
           >
             <span className="material-symbols-outlined">chevron_right</span>
           </button>

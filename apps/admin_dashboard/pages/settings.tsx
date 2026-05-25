@@ -82,8 +82,8 @@ export default function SettingsPage() {
 
   return (
     <AppShell>
-      <div className="space-y-10">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="space-y-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <nav className="mb-2 flex gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#14B8A6]">
               <span>System</span>
@@ -113,9 +113,9 @@ export default function SettingsPage() {
           </div>
         ) : null}
 
-        <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.15fr_0.85fr]">
-          <section className="rounded-[32px] border border-white/5 bg-[#0D1117]/60 p-8 shadow-xl backdrop-blur-xl">
-            <div className="mb-10 flex items-center justify-between gap-4">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <section className="rounded-[32px] border border-white/5 bg-[#0D1117]/60 p-6 shadow-xl backdrop-blur-xl">
+            <div className="mb-6 flex items-center justify-between gap-4">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#14B8A6]">Personalization</p>
                 <h2 className="mt-2 text-2xl font-black text-white tracking-tight">Identity & Profile</h2>
@@ -125,7 +125,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <form className="space-y-8" onSubmit={handleProfileSubmit}>
+            <form className="space-y-6" onSubmit={handleProfileSubmit}>
               <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Display Name</label>
                 <input
@@ -161,13 +161,13 @@ export default function SettingsPage() {
             </form>
           </section>
 
-          <section className="space-y-8">
-            <div className="rounded-[32px] border border-white/5 bg-[#0D1117]/60 p-8 shadow-xl backdrop-blur-xl">
+          <section className="space-y-6">
+            <div className="rounded-[32px] border border-white/5 bg-[#0D1117]/60 p-6 shadow-xl backdrop-blur-xl">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#14B8A6]">Global Behavior</p>
               <h2 className="mt-2 text-2xl font-black text-white tracking-tight">Preferences</h2>
 
-              <div className="mt-10 space-y-4">
-                <div className="space-y-3 mb-8">
+              <div className="mt-6 space-y-4">
+                <div className="mb-6 space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Default Entry Point</label>
                   <select
                     value={settings.defaultLanding}
@@ -200,7 +200,7 @@ export default function SettingsPage() {
                 ].map((setting) => (
                   <label
                     key={setting.key}
-                    className="flex items-center justify-between gap-6 rounded-2xl bg-white/[0.03] border border-white/5 px-6 py-5 cursor-pointer transition-all hover:bg-white/5"
+                    className="flex items-center justify-between gap-5 rounded-2xl border border-white/5 bg-white/[0.03] px-5 py-4 cursor-pointer transition-all hover:bg-white/5"
                   >
                     <span className="flex-1">
                       <span className="block text-xs font-black text-white uppercase tracking-wider">{setting.label}</span>
@@ -225,7 +225,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="relative overflow-hidden rounded-[32px] bg-[#14B8A6] p-8 text-white shadow-[0_0_40px_rgba(20,184,166,0.3)] group">
+            <div className="group relative overflow-hidden rounded-[32px] bg-[#14B8A6] p-6 text-white shadow-[0_0_40px_rgba(20,184,166,0.3)]">
               <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl group-hover:bg-white/10 transition-all duration-1000"></div>
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Active Authority</p>
               <h2 className="mt-3 text-2xl font-black tracking-tight">{currentUser?.displayName ?? "Primary Admin"}</h2>

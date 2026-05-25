@@ -73,15 +73,15 @@ export default function SellersPage() {
 
   return (
     <AppShell>
-      <section className="space-y-10">
-        <div className="flex flex-col items-end gap-6 lg:flex-row">
+      <section className="space-y-6">
+        <div className="flex flex-col items-end gap-5 lg:flex-row">
           <div className="flex-1">
             <nav className="mb-2 flex gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#14B8A6]">
               <span>Management</span>
               <span className="text-white/20">/</span>
               <span className="text-white/60">Seller Network</span>
             </nav>
-            <h2 className="text-4xl font-extrabold leading-tight text-white tracking-tight">
+            <h2 className="text-4xl font-extrabold leading-tight tracking-tight text-white">
               Seller Management
             </h2>
             <p className="mt-2 max-w-xl text-white/40 font-medium">
@@ -91,7 +91,7 @@ export default function SellersPage() {
           </div>
 
           <div className="flex gap-4">
-            <div className="flex min-w-[180px] items-center gap-4 rounded-2xl bg-white/5 border border-white/5 p-5 backdrop-blur-xl">
+            <div className="flex min-w-[180px] items-center gap-4 rounded-2xl border border-white/5 bg-white/5 p-4 backdrop-blur-xl">
               <div className="rounded-xl bg-[#14B8A6]/20 p-3 text-[#14B8A6]">
                 <span
                   className="material-symbols-outlined text-2xl"
@@ -110,7 +110,7 @@ export default function SellersPage() {
               </div>
             </div>
 
-            <div className="flex min-w-[180px] items-center gap-4 rounded-2xl bg-white/5 border border-white/5 p-5 backdrop-blur-xl">
+            <div className="flex min-w-[180px] items-center gap-4 rounded-2xl border border-white/5 bg-white/5 p-4 backdrop-blur-xl">
               <div className="rounded-xl bg-amber-500/20 p-3 text-amber-400">
                 <span
                   className="material-symbols-outlined text-2xl"
@@ -136,7 +136,7 @@ export default function SellersPage() {
         {actionError ? <ErrorState message={actionError} /> : null}
 
         {!loading && !error ? (
-          <div className="space-y-10">
+          <div className="space-y-6">
             <SellersTable
               sellers={sellers}
               activeFilter={activeFilter}
@@ -152,8 +152,8 @@ export default function SellersPage() {
               onRejectKyc={handleRejectKyc}
             />
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div className="relative overflow-hidden rounded-3xl bg-[#0D1117]/60 border border-white/5 p-8 text-white md:col-span-2 shadow-xl backdrop-blur-xl group">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="group relative overflow-hidden rounded-3xl border border-white/5 bg-[#0D1117]/60 p-6 text-white shadow-xl backdrop-blur-xl md:col-span-2">
                 <div className="relative z-10">
                   <h3 className="mb-1 text-xl font-bold tracking-tight">
                     Growth Forecast
@@ -181,7 +181,7 @@ export default function SellersPage() {
                 <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#14B8A6]/5 blur-3xl group-hover:bg-[#14B8A6]/10 transition-colors"></div>
               </div>
 
-              <div className="flex flex-col justify-between rounded-3xl bg-[#14B8A6] p-8 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]">
+              <div className="flex flex-col justify-between rounded-3xl bg-[#14B8A6] p-6 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]">
                 <div>
                   <div className="bg-white/20 w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
                     <span className="material-symbols-outlined text-2xl">

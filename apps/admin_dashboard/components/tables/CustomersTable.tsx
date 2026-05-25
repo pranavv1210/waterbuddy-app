@@ -23,27 +23,27 @@ export function CustomersTable({ customers, page, pageSize, onPageChange, onTogg
         <table className="min-w-full border-collapse text-left">
           <thead className="bg-white/5 text-[10px] uppercase tracking-[0.2em] text-white/40">
             <tr>
-              <th className="px-8 py-5 font-bold">User Details</th>
-              <th className="px-6 py-5 font-bold">Registration Date</th>
-              <th className="px-6 py-5 font-bold">Platform Status</th>
-              <th className="px-8 py-5 text-right font-bold">Actions</th>
+              <th className="px-6 py-4 font-bold">User Details</th>
+              <th className="px-5 py-4 font-bold">Registration Date</th>
+              <th className="px-5 py-4 font-bold">Platform Status</th>
+              <th className="px-6 py-4 text-right font-bold">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5 text-sm">
             {visibleUsers.map((user) => (
               <tr key={user.id} className="group transition-colors duration-200 hover:bg-white/5">
-                <td className="px-8 py-6">
+                <td className="px-6 py-5">
                   <div>
                     <p className="text-base font-bold text-white/90">{user.name}</p>
                     <p className="text-sm text-white/40 font-medium">{user.phone || user.id}</p>
                   </div>
                 </td>
 
-                <td className="px-6 py-6 text-white/60 font-medium">
+                <td className="px-5 py-5 text-white/60 font-medium">
                   {user.joinDate || "N/A"}
                 </td>
 
-                <td className="px-6 py-6">
+                <td className="px-5 py-5">
                   <div className="flex items-center gap-2">
                     <span className={`h-2 w-2 rounded-full ${user.blocked ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" : "bg-[#14B8A6] shadow-[0_0_8px_rgba(20,184,166,0.5)]"}`}></span>
                     <span className={`text-xs font-bold uppercase tracking-wider ${user.blocked ? "text-red-400" : "text-[#14B8A6]"}`}>
@@ -52,7 +52,7 @@ export function CustomersTable({ customers, page, pageSize, onPageChange, onTogg
                   </div>
                 </td>
 
-                <td className="px-8 py-6 text-right">
+                <td className="px-6 py-5 text-right">
                   <div className="flex justify-end gap-3">
                     <button
                       type="button"
@@ -81,10 +81,10 @@ export function CustomersTable({ customers, page, pageSize, onPageChange, onTogg
       </div>
 
       {visibleUsers.length === 0 && (
-        <div className="p-16 text-center text-sm text-white/20">No customers found.</div>
+        <div className="p-8 text-center text-sm text-white/20">No customers found.</div>
       )}
 
-      <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.02] px-8 py-6">
+      <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.02] px-6 py-4">
         <p className="text-xs font-medium text-white/40">
           Showing <span className="text-white/80">{customers.length === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + pageSize, customers.length)}</span> of <span className="text-white/80">{customers.length}</span> customers
         </p>
@@ -94,7 +94,7 @@ export function CustomersTable({ customers, page, pageSize, onPageChange, onTogg
             type="button"
             onClick={() => onPageChange(Math.max(1, safePage - 1))}
             disabled={safePage === 1}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
           >
             <span className="material-symbols-outlined">chevron_left</span>
           </button>
@@ -104,7 +104,7 @@ export function CustomersTable({ customers, page, pageSize, onPageChange, onTogg
               key={pageNumber}
               type="button"
               onClick={() => onPageChange(pageNumber)}
-              className={`h-10 w-10 rounded-xl text-xs font-bold transition-all ${
+              className={`h-9 w-9 rounded-xl text-xs font-bold transition-all ${
                 pageNumber === safePage
                   ? "bg-[#14B8A6] text-white shadow-[0_0_15px_rgba(20,184,166,0.4)]"
                   : "bg-white/5 text-white/60 hover:bg-white/10"
@@ -118,7 +118,7 @@ export function CustomersTable({ customers, page, pageSize, onPageChange, onTogg
             type="button"
             onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
             disabled={safePage === totalPages}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
           >
             <span className="material-symbols-outlined">chevron_right</span>
           </button>

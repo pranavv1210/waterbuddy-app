@@ -42,8 +42,8 @@ export function Header({ onToggleSidebar }: HeaderProps) {
   const profileInitial = (displayName || "A").charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-40 flex min-h-16 w-full items-center justify-between gap-3 border-b border-sky-100 bg-white/95 px-4 shadow-sm backdrop-blur-xl sm:px-6 lg:px-8">
-      <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4 lg:gap-8">
+    <header className="sticky top-0 z-40 flex min-h-14 w-full items-center justify-between gap-2 border-b border-sky-100 bg-white/95 px-4 shadow-sm backdrop-blur-xl sm:px-5 lg:px-6">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 lg:gap-6">
         <button
           type="button"
           onClick={onToggleSidebar}
@@ -52,15 +52,15 @@ export function Header({ onToggleSidebar }: HeaderProps) {
         >
           <span className="material-symbols-outlined">menu</span>
         </button>
-        <div className="hidden shrink-0 text-lg font-bold text-slate-950 md:block lg:text-xl">
+        <div className="hidden shrink-0 text-base font-bold text-slate-950 md:block lg:text-lg">
           {pageTitle}
         </div>
-        <div className="relative hidden w-full max-w-xs sm:block sm:max-w-md">
+        <div className="relative hidden w-full max-w-xs sm:block sm:max-w-sm lg:max-w-md">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
             search
           </span>
           <input
-            className="w-full rounded-full border border-sky-100 bg-sky-50 py-2 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-100"
+            className="w-full rounded-full border border-sky-100 bg-sky-50 py-1.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-100"
             placeholder={searchPlaceholder}
             type="text"
             value={searchQuery}
@@ -69,7 +69,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         <div className="flex items-center gap-3 rounded-full border border-sky-100 bg-sky-50 px-2 py-1">
           <div className="hidden text-right sm:block">
             <p className="text-sm font-bold text-slate-950">{displayName}</p>
@@ -77,7 +77,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
               {roleLabel}
             </p>
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-sky-200 bg-white font-bold text-sky-700">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-sky-200 bg-white font-bold text-sky-700">
             {profileInitial}
           </div>
         </div>

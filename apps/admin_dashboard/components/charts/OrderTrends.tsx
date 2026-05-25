@@ -37,27 +37,27 @@ export function OrderTrends({ orders }: OrderTrendsProps) {
   const maxTrend = Math.max(...trendData, 1);
 
   return (
-    <div className="bg-[#0D1117]/60 backdrop-blur-xl rounded-2xl p-8 shadow-lg border border-white/5">
-      <div className="flex items-center justify-between mb-8">
+    <div className="rounded-2xl border border-white/5 bg-[#0D1117]/60 p-5 shadow-lg backdrop-blur-xl">
+      <div className="mb-4 flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white">Order Trends</h2>
-          <p className="text-sm text-white/60 font-medium">Volume tracking over the last 7 days</p>
+          <h2 className="text-lg font-bold text-white">Order Trends</h2>
+          <p className="text-sm font-medium text-white/60">Volume tracking over the last 7 days</p>
         </div>
-        <select className="bg-white/5 border border-white/10 text-xs font-bold rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-[#14B8A6]/50 outline-none backdrop-blur-sm">
+        <select className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-white outline-none backdrop-blur-sm focus:ring-2 focus:ring-[#14B8A6]/50">
           <option value="7" className="text-black">Last 7 Days</option>
           <option value="30" className="text-black">Last 30 Days</option>
         </select>
       </div>
 
       {/* Bar Chart */}
-      <div className="relative h-[300px] w-full bg-white/5 rounded-xl overflow-hidden group p-8 border border-white/5">
-        <div className="absolute inset-0 flex items-end justify-between px-8 pb-4">
+      <div className="group relative h-[220px] w-full overflow-hidden rounded-xl border border-white/5 bg-white/5 p-4 sm:h-[240px] sm:p-6">
+        <div className="absolute inset-0 flex items-end justify-between px-4 pb-3 sm:px-6">
           {trendData.map((count, idx) => {
             const heightPercent = (count / maxTrend) * 100 || 5;
             const isHighest = count === Math.max(...trendData) && Math.max(...trendData) > 0;
 
             return (
-              <div key={idx} className="flex flex-col items-center gap-2 w-full">
+              <div key={idx} className="flex w-full flex-col items-center gap-1.5">
                 <div
                   className={`w-full rounded-t-lg transition-all duration-500 group-hover:opacity-100 ${
                     isHighest

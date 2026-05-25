@@ -96,8 +96,8 @@ export default function CustomersPage() {
 
   return (
     <AppShell>
-      <div className="space-y-10">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="space-y-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <nav className="mb-2 flex gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#14B8A6]">
               <span>Management</span>
@@ -130,8 +130,8 @@ export default function CustomersPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl bg-[#0D1117]/60 border border-white/5 p-6 backdrop-blur-xl shadow-xl transition-all hover:bg-white/5 group">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="group rounded-2xl border border-white/5 bg-[#0D1117]/60 p-5 shadow-xl backdrop-blur-xl transition-all hover:bg-white/5">
             <span className="mb-4 block text-[10px] font-bold uppercase tracking-widest text-[#14B8A6]">
               Active Users
             </span>
@@ -151,7 +151,7 @@ export default function CustomersPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-[#0D1117]/60 border border-white/5 p-6 backdrop-blur-xl shadow-xl transition-all hover:bg-white/5">
+          <div className="rounded-2xl border border-white/5 bg-[#0D1117]/60 p-5 shadow-xl backdrop-blur-xl transition-all hover:bg-white/5">
             <span className="mb-4 block text-[10px] font-bold uppercase tracking-widest text-[#14B8A6]">
               Acquisition
             </span>
@@ -171,7 +171,7 @@ export default function CustomersPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-[#0D1117]/60 border border-white/5 p-6 backdrop-blur-xl shadow-xl transition-all hover:bg-white/5">
+          <div className="rounded-2xl border border-white/5 bg-[#0D1117]/60 p-5 shadow-xl backdrop-blur-xl transition-all hover:bg-white/5">
             <span className="mb-4 block text-[10px] font-bold uppercase tracking-widest text-red-400">
               Churn Rate
             </span>
@@ -188,7 +188,7 @@ export default function CustomersPage() {
             </p>
           </div>
 
-          <div className="relative overflow-hidden rounded-2xl bg-[#14B8A6] p-6 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]">
+          <div className="relative overflow-hidden rounded-2xl bg-[#14B8A6] p-5 text-white shadow-[0_0_30px_rgba(20,184,166,0.2)]">
             <div className="relative z-10 h-full flex flex-col justify-between">
               <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
                 Lifetime Value

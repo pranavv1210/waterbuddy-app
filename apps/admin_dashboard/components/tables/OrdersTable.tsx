@@ -24,27 +24,27 @@ export function OrdersTable({ orders, page, pageSize, onPageChange }: OrdersTabl
         <table className="min-w-full border-collapse text-left">
           <thead className="bg-white/5 text-[10px] uppercase tracking-[0.2em] text-white/40">
             <tr>
-              <th className="px-6 py-4 font-bold">Order ID</th>
-              <th className="px-6 py-4 font-bold">Customer</th>
-              <th className="px-6 py-4 font-bold">Seller</th>
-              <th className="px-6 py-4 font-bold">Tank Size</th>
-              <th className="px-6 py-4 font-bold">Status</th>
-              <th className="px-6 py-4 font-bold">Payment</th>
-              <th className="px-6 py-4 text-center font-bold">Actions</th>
+              <th className="px-5 py-3.5 font-bold">Order ID</th>
+              <th className="px-5 py-3.5 font-bold">Customer</th>
+              <th className="px-5 py-3.5 font-bold">Seller</th>
+              <th className="px-5 py-3.5 font-bold">Tank Size</th>
+              <th className="px-5 py-3.5 font-bold">Status</th>
+              <th className="px-5 py-3.5 font-bold">Payment</th>
+              <th className="px-5 py-3.5 text-center font-bold">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5 text-sm">
             {visibleOrders.map((order) => (
               <tr key={order.id} className="group transition-colors hover:bg-white/5">
-                <td className="px-6 py-5 font-bold text-[#14B8A6]">#{order.id}</td>
-                <td className="px-6 py-5 font-semibold text-white/90">{order.customer}</td>
-                <td className="px-6 py-5 text-white/60">{order.seller}</td>
-                <td className="px-6 py-5 text-white/60">{order.tankSize}</td>
-                <td className="px-6 py-5">
+                <td className="px-5 py-4 font-bold text-[#14B8A6]">#{order.id}</td>
+                <td className="px-5 py-4 font-semibold text-white/90">{order.customer}</td>
+                <td className="px-5 py-4 text-white/60">{order.seller}</td>
+                <td className="px-5 py-4 text-white/60">{order.tankSize}</td>
+                <td className="px-5 py-4">
                   <StatusBadge value={order.status} />
                 </td>
-                <td className="px-6 py-5 text-white/60 uppercase text-[10px] tracking-wider font-bold">{order.paymentType}</td>
-                <td className="px-6 py-5 text-center">
+                <td className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider text-white/60">{order.paymentType}</td>
+                <td className="px-5 py-4 text-center">
                   <button
                     type="button"
                     onClick={() => router.push(`/orders?order=${encodeURIComponent(order.id)}`)}
@@ -59,10 +59,10 @@ export function OrdersTable({ orders, page, pageSize, onPageChange }: OrdersTabl
         </table>
       </div>
       {visibleOrders.length === 0 ? (
-        <div className="p-10 text-center text-sm text-white/20">No orders found matching the criteria.</div>
+        <div className="p-8 text-center text-sm text-white/20">No orders found matching the criteria.</div>
       ) : null}
 
-      <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.02] px-6 py-4">
+      <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.02] px-5 py-3.5">
         <p className="text-xs font-medium text-white/40">
           Showing <span className="text-white/80">{orders.length === 0 ? 0 : startIndex + 1}</span> to <span className="text-white/80">{Math.min(startIndex + pageSize, orders.length)}</span> of <span className="text-white/80">{orders.length}</span> orders
         </p>

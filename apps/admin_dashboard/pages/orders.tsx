@@ -102,12 +102,12 @@ export default function OrdersPage() {
 
   return (
     <AppShell>
-      <div className="space-y-10">
+      <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col gap-8">
-          <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">
+              <h1 className="mb-1 text-3xl font-extrabold tracking-tight text-white">
                 Orders Management
               </h1>
               <p className="text-white/60 font-medium">
@@ -129,8 +129,8 @@ export default function OrdersPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-6">
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-hide">
               {statusTabs.map((tab) => {
                 const active = tab === activeTab;
                 return (
@@ -150,7 +150,7 @@ export default function OrdersPage() {
               })}
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
               <div className="relative group w-full sm:w-auto">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-lg group-focus-within:text-[#14B8A6] transition-colors">
                   search
@@ -177,7 +177,7 @@ export default function OrdersPage() {
         {error ? <ErrorState message={error} /> : null}
 
         {!loading && !error ? (
-          <div className="space-y-10">
+          <div className="space-y-6">
             <OrdersTable
               orders={filteredOrders}
               page={page}
@@ -186,8 +186,8 @@ export default function OrdersPage() {
             />
 
             {/* Quick Stats Grid */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <div className="group flex h-40 flex-col justify-between rounded-2xl bg-[#14B8A6]/10 border border-[#14B8A6]/20 p-6 transition-all hover:bg-[#14B8A6]/15 shadow-lg">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="group flex h-32 flex-col justify-between rounded-2xl border border-[#14B8A6]/20 bg-[#14B8A6]/10 p-5 shadow-lg transition-all hover:bg-[#14B8A6]/15">
                 <div className="bg-[#14B8A6]/20 w-12 h-12 rounded-xl flex items-center justify-center text-[#14B8A6]">
                   <span
                     className="material-symbols-outlined text-2xl"
@@ -206,7 +206,7 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <div className="group flex h-40 flex-col justify-between rounded-2xl bg-blue-500/10 border border-blue-500/20 p-6 transition-all hover:bg-blue-500/15 shadow-lg">
+              <div className="group flex h-32 flex-col justify-between rounded-2xl border border-blue-500/20 bg-blue-500/10 p-5 shadow-lg transition-all hover:bg-blue-500/15">
                 <div className="bg-blue-500/20 w-12 h-12 rounded-xl flex items-center justify-center text-blue-400">
                   <span
                     className="material-symbols-outlined text-2xl"
@@ -225,7 +225,7 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <div className="group flex h-40 flex-col justify-between rounded-2xl bg-purple-500/10 border border-purple-500/20 p-6 transition-all hover:bg-purple-500/15 shadow-lg">
+              <div className="group flex h-32 flex-col justify-between rounded-2xl border border-purple-500/20 bg-purple-500/10 p-5 shadow-lg transition-all hover:bg-purple-500/15">
                 <div className="bg-purple-500/20 w-12 h-12 rounded-xl flex items-center justify-center text-purple-400">
                   <span
                     className="material-symbols-outlined text-2xl"
@@ -244,7 +244,7 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <div className="group flex h-40 flex-col justify-between rounded-2xl bg-red-500/10 border border-red-500/20 p-6 transition-all hover:bg-red-500/15 shadow-lg">
+              <div className="group flex h-32 flex-col justify-between rounded-2xl border border-red-500/20 bg-red-500/10 p-5 shadow-lg transition-all hover:bg-red-500/15">
                 <div className="bg-red-500/20 w-12 h-12 rounded-xl flex items-center justify-center text-red-400">
                   <span
                     className="material-symbols-outlined text-2xl"

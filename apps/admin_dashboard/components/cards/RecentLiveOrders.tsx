@@ -61,9 +61,9 @@ export function RecentLiveOrders({ orders }: RecentLiveOrdersProps) {
   const recentOrders = orders.slice(0, 5);
 
   return (
-    <div className="bg-[#0D1117]/60 backdrop-blur-xl rounded-2xl p-8 shadow-lg border border-white/5">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white">Recent Live Orders</h2>
+    <div className="rounded-2xl border border-white/5 bg-[#0D1117]/60 p-5 shadow-lg backdrop-blur-xl">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-bold text-white">Recent Live Orders</h2>
         <button
           type="button"
           onClick={() => router.push("/orders")}
@@ -73,16 +73,16 @@ export function RecentLiveOrders({ orders }: RecentLiveOrdersProps) {
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {recentOrders.length > 0 ? (
           recentOrders.map((order) => (
             <div
               key={order.id}
-              className="group flex items-center gap-4 p-3 rounded-xl transition-all duration-200 hover:bg-white/5 border border-transparent hover:border-white/10"
+              className="group flex items-center gap-3 rounded-xl border border-transparent p-2.5 transition-all duration-200 hover:border-white/10 hover:bg-white/5"
             >
               {/* Icon */}
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-[#0F766E]/20 text-[#14B8A6] border border-[#14B8A6]/10`}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#14B8A6]/10 bg-[#0F766E]/20 text-[#14B8A6]`}
               >
                 <span className="material-symbols-outlined text-lg">
                   {getStatusIcon(order.status)}
@@ -91,10 +91,10 @@ export function RecentLiveOrders({ orders }: RecentLiveOrdersProps) {
 
               {/* Order Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-white truncate">
+                <p className="truncate text-sm font-bold text-white">
                   #{order.id || "ORD-000"}
                 </p>
-                <p className="text-[11px] text-white/60 font-medium truncate">
+                <p className="truncate text-[11px] font-medium text-white/60">
                   {order.customer || "Customer"} • {order.items || "Order"}
                 </p>
               </div>
@@ -109,7 +109,7 @@ export function RecentLiveOrders({ orders }: RecentLiveOrdersProps) {
             </div>
           ))
         ) : (
-          <div className="text-center py-8">
+            <div className="py-6 text-center">
             <p className="text-sm text-white/40">No recent orders</p>
           </div>
         )}
