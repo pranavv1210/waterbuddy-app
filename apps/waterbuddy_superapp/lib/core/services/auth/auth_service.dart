@@ -491,8 +491,14 @@ class AuthService {
 
   Future<String> getSellerVerificationStatus(String uid) async {
     final doc = await _firestore.collection('sellers').doc(uid).get();
-    final value = (doc.data()?['verificationStatus'] as String?)?.toLowerCase();
+    final data = doc.data();
+    final value = (data?['verificationStatus'] ?? data?['kycStatus'])
+        ?.toString()
+        .toLowerCase();
     if (value == null || value.isEmpty) return 'pending';
+    if (value == 'submitted' || value == 'review' || value == 'under_review') {
+      return 'pending';
+    }
     if (value == 'verified') return 'approved';
     return value;
   }

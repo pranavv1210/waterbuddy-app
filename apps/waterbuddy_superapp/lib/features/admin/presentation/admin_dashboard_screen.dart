@@ -7,6 +7,19 @@ import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/operations_ui.dart';
 
+String _approvalStatus(Map<String, dynamic> data) {
+  final raw = (data['verificationStatus'] ??
+          data['kycStatus'] ??
+          data['approvalStatus'] ??
+          'pending')
+      .toString()
+      .trim()
+      .toLowerCase();
+  if (raw.isEmpty || raw == 'submitted' || raw == 'review') return 'pending';
+  if (raw == 'verified') return 'approved';
+  return raw;
+}
+
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -268,9 +281,8 @@ class _ApprovalSection extends ConsumerWidget {
     return async.when(
       data: (snapshot) {
         final pending = snapshot.docs.where((doc) {
-          final status =
-              (doc.data()['verificationStatus'] ?? 'pending').toString();
-          return status == 'pending';
+          final status = _approvalStatus(doc.data());
+          return status == 'pending' || status == 'under_review';
         }).toList();
 
         if (pending.isEmpty) {
@@ -339,6 +351,9 @@ class _ApprovalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = doc.data();
+    final contact = _contactFrom(data, doc.id);
+    final meta = _approvalMeta(collection, data);
+
     return OpsCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,24 +375,36 @@ class _ApprovalCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            (data['email'] ?? data['phone'] ?? data['phoneNumber'] ?? doc.id)
-                .toString(),
+            contact,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(color: OpsColors.muted),
           ),
+          if (meta.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              meta,
+              style: const TextStyle(
+                color: OpsColors.ink,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
           Wrap(
             spacing: 10,
+            runSpacing: 10,
             children: [
               FilledButton(
-                onPressed: () => _setStatus(collection, doc.id, 'approved'),
+                onPressed: () => _setStatus(collection, doc, 'approved'),
                 child: const Text('Approve'),
               ),
               OutlinedButton(
-                onPressed: () => _setStatus(collection, doc.id, 'rejected'),
+                onPressed: () => _setStatus(collection, doc, 'rejected'),
                 child: const Text('Reject'),
               ),
               OutlinedButton(
-                onPressed: () => _setStatus(collection, doc.id, 'suspended'),
+                onPressed: () => _setStatus(collection, doc, 'suspended'),
                 child: const Text('Suspend'),
               ),
             ],
@@ -387,11 +414,68 @@ class _ApprovalCard extends StatelessWidget {
     );
   }
 
-  Future<void> _setStatus(String collection, String id, String status) async {
-    await FirebaseFirestore.instance.collection(collection).doc(id).set({
+  static Future<void> _setStatus(
+    String collection,
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+    String status,
+  ) async {
+    final data = doc.data();
+    final uid = (data['uid'] ?? doc.id).toString();
+    final role = collection == 'drivers' ? 'driver' : 'seller';
+    final now = FieldValue.serverTimestamp();
+
+    await FirebaseFirestore.instance.collection(collection).doc(doc.id).set({
       'verificationStatus': status,
-      'updatedAt': FieldValue.serverTimestamp(),
+      'kycStatus': status,
+      'approvedAt': status == 'approved' ? now : null,
+      'rejectedAt': status == 'rejected' ? now : null,
+      'suspendedAt': status == 'suspended' ? now : null,
+      'updatedAt': now,
     }, SetOptions(merge: true));
+
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      'uid': uid,
+      'role': role,
+      'isVerified': status == 'approved',
+      'isBlocked': status == 'suspended',
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+  }
+
+  static String _contactFrom(Map<String, dynamic> data, String fallback) {
+    final email = data['email']?.toString().trim();
+    final phone = (data['phoneNumber'] ?? data['phone'])?.toString().trim();
+    if (email != null &&
+        email.isNotEmpty &&
+        phone != null &&
+        phone.isNotEmpty) {
+      return '$email  |  $phone';
+    }
+    if (email != null && email.isNotEmpty) return email;
+    if (phone != null && phone.isNotEmpty) return phone;
+    return fallback;
+  }
+
+  static String _approvalMeta(String collection, Map<String, dynamic> data) {
+    if (collection == 'sellers') {
+      final business = data['businessName']?.toString().trim();
+      final capacity = data['tankerCapacity']?.toString().trim();
+      final vehicle = data['vehicleNumber']?.toString().trim();
+      return [
+        if (business != null && business.isNotEmpty) business,
+        if (capacity != null && capacity.isNotEmpty) '${capacity}L tanker',
+        if (vehicle != null && vehicle.isNotEmpty) vehicle,
+      ].join('  |  ');
+    }
+
+    final license = (data['driverLicenseNumber'] ?? data['licenseNumber'])
+        ?.toString()
+        .trim();
+    final address = data['address']?.toString().trim();
+    return [
+      if (license != null && license.isNotEmpty) 'DL $license',
+      if (address != null && address.isNotEmpty) address,
+    ].join('  |  ');
   }
 }
 
@@ -509,45 +593,76 @@ class _UserAdminCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = doc.data();
     final blocked = data['isBlocked'] as bool? ?? false;
-    return OpsCard(
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: OpsColors.green.withValues(alpha: 0.1),
-            child: const Icon(Icons.person_rounded, color: OpsColors.green),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  (data['fullName'] ?? data['displayName'] ?? doc.id)
-                      .toString(),
-                  style: const TextStyle(
-                    color: OpsColors.ink,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                Text(
-                  '${data['role'] ?? 'consumer'}  |  ${data['email'] ?? data['phoneNumber'] ?? 'No contact'}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: OpsColors.muted),
-                ),
-              ],
+    final name = (data['fullName'] ?? data['displayName'] ?? doc.id).toString();
+    final role = (data['role'] ?? 'consumer').toString();
+    final contact =
+        (data['email'] ?? data['phoneNumber'] ?? 'No contact').toString();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 420;
+        final identity = Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: OpsColors.green.withValues(alpha: 0.1),
+              child: const Icon(Icons.person_rounded, color: OpsColors.green),
             ),
-          ),
-          OutlinedButton(
-            onPressed: () =>
-                FirebaseFirestore.instance.collection('users').doc(doc.id).set({
-              'isBlocked': !blocked,
-              'updatedAt': FieldValue.serverTimestamp(),
-            }, SetOptions(merge: true)),
-            child: Text(blocked ? 'Activate' : 'Suspend'),
-          ),
-        ],
-      ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: OpsColors.ink,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    '$role  |  $contact',
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: OpsColors.muted),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+
+        final action = OutlinedButton(
+          onPressed: () =>
+              FirebaseFirestore.instance.collection('users').doc(doc.id).set({
+            'isBlocked': !blocked,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true)),
+          child: Text(blocked ? 'Activate' : 'Suspend'),
+        );
+
+        return OpsCard(
+          child: compact
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    identity,
+                    const SizedBox(height: 12),
+                    action,
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(child: identity),
+                    const SizedBox(width: 12),
+                    action,
+                  ],
+                ),
+        );
+      },
     );
   }
 }
