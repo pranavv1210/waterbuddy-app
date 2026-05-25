@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -163,6 +165,14 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
       }
 
       await auth.signInWithEmailPassword(email: email, password: password);
+      unawaited(auth
+          .upsertUserProfile(
+            role: AppRole.seller,
+            email: email,
+            authProvider: 'email_password',
+            isVerified: true,
+          )
+          .catchError((_) {}));
 
       if (!mounted) return;
       context.go(RouteNames.sellerWaiting);

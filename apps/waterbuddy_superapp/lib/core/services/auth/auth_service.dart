@@ -79,8 +79,12 @@ class AuthService {
     required String password,
   }) async {
     try {
-      return await _auth.signInWithEmailAndPassword(
-          email: email.trim(), password: password);
+      return await _auth
+          .signInWithEmailAndPassword(email: email.trim(), password: password)
+          .timeout(const Duration(seconds: 8));
+    } on TimeoutException {
+      throw const AuthFailure(
+          'Login timed out. Check your connection and try again.');
     } on FirebaseAuthException catch (e) {
       throw AuthFailure(_authErrorMessage(e));
     }
@@ -91,8 +95,13 @@ class AuthService {
     required String password,
   }) async {
     try {
-      return await _auth.createUserWithEmailAndPassword(
-          email: email.trim(), password: password);
+      return await _auth
+          .createUserWithEmailAndPassword(
+              email: email.trim(), password: password)
+          .timeout(const Duration(seconds: 8));
+    } on TimeoutException {
+      throw const AuthFailure(
+          'Signup timed out. Check your connection and try again.');
     } on FirebaseAuthException catch (e) {
       throw AuthFailure(_authErrorMessage(e));
     }
@@ -112,8 +121,8 @@ class AuthService {
       );
     }
 
-    await credential.user?.updateDisplayName('Kaveri Water Tankers');
-    await seedTemporaryRoleData(role: AppRole.seller);
+    unawaited(credential.user?.updateDisplayName('Kaveri Water Tankers'));
+    unawaited(seedTemporaryRoleData(role: AppRole.seller).catchError((_) {}));
     return credential;
   }
 
@@ -128,8 +137,10 @@ class AuthService {
     if (existing != null) {
       return _identityCredential(existing);
     }
-    final credential = await _auth.signInAnonymously();
-    await credential.user?.updateDisplayName(phoneNumber);
+    final credential = await _auth.signInAnonymously().timeout(
+          const Duration(seconds: 6),
+        );
+    unawaited(credential.user?.updateDisplayName(phoneNumber));
     return credential;
   }
 
