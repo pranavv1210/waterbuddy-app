@@ -13,10 +13,10 @@ class OrdersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(orderHistoryProvider);
-    final darkBg = const Color(0xFF090D16);
+    const appBg = Color(0xFFFFFBF3);
 
     return Scaffold(
-      backgroundColor: darkBg,
+      backgroundColor: appBg,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
@@ -27,15 +27,13 @@ class OrdersScreen extends ConsumerWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w900,
-            color: Colors.white,
-            letterSpacing: -0.8,
+            color: Color(0xFF0F172A),
           ),
         ),
       ),
       body: historyAsync.when(
-        data: (orders) => orders.isEmpty
-            ? _EmptyState()
-            : _OrderList(orders: orders),
+        data: (orders) =>
+            orders.isEmpty ? _EmptyState() : _OrderList(orders: orders),
         loading: () => const Center(
           child: CircularProgressIndicator(color: Color(0xFF38BDF8)),
         ),
@@ -48,12 +46,11 @@ class OrdersScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               const Text('Failed to load orders',
                   style: TextStyle(
-                      fontWeight: FontWeight.w800, color: Colors.white)),
+                      fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
               const SizedBox(height: 8),
               Text(e.toString(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                  style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
             ],
           ),
         ),
@@ -93,7 +90,7 @@ class _OrderList extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white.withOpacity(0.4),
+                  color: const Color(0xFF64748B),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -117,8 +114,19 @@ class _OrderList extends StatelessWidget {
     if (orderDay == yesterday) return 'Yesterday';
 
     const months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     return '${dt.day} ${months[dt.month]} ${dt.year}';
   }
@@ -147,12 +155,12 @@ class _OrderCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF151C2C).withOpacity(0.6),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.06)),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.12),
+              color: const Color(0xFF0EA5E9).withOpacity(0.07),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -183,8 +191,7 @@ class _OrderCard extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
+                            color: Color(0xFF0F172A),
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -192,7 +199,7 @@ class _OrderCard extends StatelessWidget {
                           timeStr,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.white.withOpacity(0.4),
+                            color: Color(0xFF64748B),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -223,7 +230,7 @@ class _OrderCard extends StatelessWidget {
             // Divider
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Divider(height: 1, color: Colors.white.withOpacity(0.06)),
+              child: const Divider(height: 1, color: Color(0xFFE2E8F0)),
             ),
 
             // Bottom row: location + payment + arrow
@@ -232,7 +239,7 @@ class _OrderCard extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(Icons.location_on_rounded,
-                      size: 14, color: Colors.white.withOpacity(0.4)),
+                      size: 14, color: const Color(0xFF64748B)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
@@ -241,7 +248,7 @@ class _OrderCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.6),
+                        color: const Color(0xFF475569),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -251,14 +258,14 @@ class _OrderCard extends StatelessWidget {
                     order.paymentType,
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withOpacity(0.4),
+                      color: const Color(0xFF64748B),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   if (isActive || order.status == 'DELIVERED') ...[
                     const SizedBox(width: 4),
                     Icon(Icons.chevron_right_rounded,
-                        size: 16, color: Colors.white.withOpacity(0.4)),
+                        size: 16, color: const Color(0xFF64748B)),
                   ],
                 ],
               ),
@@ -343,14 +350,14 @@ class _EmptyState extends StatelessWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
+                color: const Color(0xFFE0F2FE),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                border: Border.all(color: const Color(0xFFBAE6FD)),
               ),
               child: const Icon(
                 Icons.receipt_long_rounded,
                 size: 48,
-                color: Colors.white70,
+                color: Color(0xFF0EA5E9),
               ),
             ),
             const SizedBox(height: 24),
@@ -359,8 +366,7 @@ class _EmptyState extends StatelessWidget {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: -0.5,
+                color: Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 8),
@@ -369,7 +375,7 @@ class _EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.5),
+                color: Color(0xFF64748B),
                 height: 1.5,
               ),
             ),
@@ -386,7 +392,8 @@ class _EmptyState extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: () => context.go(RouteNames.home),
                 icon: const Icon(Icons.water_drop_rounded, size: 18),
-                label: const Text('Book Water Now', style: TextStyle(fontWeight: FontWeight.bold)),
+                label: const Text('Book Water Now',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,

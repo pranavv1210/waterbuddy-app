@@ -16,7 +16,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).value;
     final orders = ref.watch(orderHistoryProvider);
-    final darkBg = const Color(0xFF090D16);
+    const appBg = Color(0xFFFFFBF3);
 
     if (user == null) {
       return const Scaffold(
@@ -29,7 +29,7 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: darkBg,
+      backgroundColor: appBg,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
@@ -40,8 +40,7 @@ class ProfileScreen extends ConsumerWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w900,
-            color: Colors.white,
-            letterSpacing: -0.8,
+            color: OpsColors.ink,
           ),
         ),
       ),
@@ -61,12 +60,13 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   child: CircleAvatar(
                     radius: 30,
-                    backgroundColor: const Color(0xFF1E293B),
+                    backgroundColor: const Color(0xFFE0F2FE),
                     backgroundImage: user.photoURL == null
                         ? null
                         : NetworkImage(user.photoURL!),
                     child: user.photoURL == null
-                        ? const Icon(Icons.person_rounded, size: 28, color: Colors.white70)
+                        ? const Icon(Icons.person_rounded,
+                            size: 28, color: OpsColors.blue)
                         : null,
                   ),
                 ),
@@ -78,7 +78,7 @@ class ProfileScreen extends ConsumerWidget {
                       Text(
                         user.displayName ?? 'WaterBuddy User',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: OpsColors.ink,
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.3,
@@ -90,7 +90,7 @@ class ProfileScreen extends ConsumerWidget {
                             user.phoneNumber ??
                             'Contact not recorded',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: OpsColors.muted,
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
@@ -175,7 +175,7 @@ class _ProfileMetric extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
+            color: OpsColors.ink,
             fontSize: 24,
             fontWeight: FontWeight.w900,
           ),
@@ -184,7 +184,7 @@ class _ProfileMetric extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.5),
+            color: OpsColors.muted,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -210,7 +210,7 @@ class _ProfileAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = destructive ? OpsColors.red : Colors.white;
+    final color = destructive ? OpsColors.red : OpsColors.ink;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: OpsCard(
@@ -236,7 +236,9 @@ class _ProfileAction extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: destructive ? color.withOpacity(0.7) : Colors.white.withOpacity(0.4),
+                      color: destructive
+                          ? color.withOpacity(0.72)
+                          : OpsColors.muted,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),
@@ -244,7 +246,7 @@ class _ProfileAction extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.2)),
+            const Icon(Icons.chevron_right_rounded, color: OpsColors.muted),
           ],
         ),
       ),

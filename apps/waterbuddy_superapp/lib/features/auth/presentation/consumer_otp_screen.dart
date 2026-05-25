@@ -191,6 +191,12 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
                                 email: email,
                               );
                           if (ok && context.mounted) {
+                            if (phoneNumber == '9876543210') {
+                              unawaited(ref
+                                  .read(authServiceProvider)
+                                  .seedTemporaryRoleData(role: AppRole.consumer)
+                                  .catchError((_) {}));
+                            }
                             context.go(RouteNames.consumerHome);
                           }
                         },

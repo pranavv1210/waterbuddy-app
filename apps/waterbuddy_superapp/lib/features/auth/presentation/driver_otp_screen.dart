@@ -229,6 +229,11 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                                   )
                                   .catchError((_) {}),
                             );
+                          } else if (phoneNumber == '9988776655') {
+                            unawaited(ref
+                                .read(authServiceProvider)
+                                .seedTemporaryRoleData(role: AppRole.driver)
+                                .catchError((_) {}));
                           }
                           context.go(RouteNames.driverDashboard);
                         },

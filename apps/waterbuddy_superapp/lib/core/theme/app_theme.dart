@@ -4,30 +4,31 @@ class AppTheme {
   static ThemeData light() {
     const primary = Color(0xFF0EA5E9); // Radiant Sky Blue
     const accent = Color(0xFF14B8A6); // Glowing Teal
-    const darkBg = Color(0xFF090D16); // Deep Obsidian Black
+    const creamBg = Color(0xFFFFFBF3);
+    const ink = Color(0xFF0F172A);
 
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      colorScheme: const ColorScheme.dark(
+      brightness: Brightness.light,
+      colorScheme: const ColorScheme.light(
         primary: primary,
         secondary: accent,
-        surface: Color(0xFF151C2C),
-        background: darkBg,
+        surface: Colors.white,
+        surfaceContainerHighest: creamBg,
+        onSurface: ink,
       ),
-      scaffoldBackgroundColor: darkBg,
+      scaffoldBackgroundColor: creamBg,
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          color: Colors.white,
+          color: ink,
           fontSize: 22,
           fontWeight: FontWeight.w900,
-          letterSpacing: -0.5,
         ),
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: ink),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -48,8 +49,8 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.white,
-          side: BorderSide(color: Colors.white.withOpacity(0.12)),
+          foregroundColor: ink,
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -62,14 +63,14 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white.withOpacity(0.04),
+        fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -80,16 +81,16 @@ class AppTheme {
           vertical: 18,
         ),
         labelStyle: TextStyle(
-          color: Colors.white.withOpacity(0.5),
+          color: ink.withOpacity(0.6),
           fontWeight: FontWeight.w500,
         ),
         hintStyle: TextStyle(
-          color: Colors.white.withOpacity(0.3),
+          color: ink.withOpacity(0.35),
           fontWeight: FontWeight.w500,
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: ink,
         contentTextStyle: const TextStyle(
           color: Colors.white,
           fontSize: 14,
@@ -102,7 +103,7 @@ class AppTheme {
         elevation: 6,
       ),
       dividerTheme: DividerThemeData(
-        color: Colors.white.withOpacity(0.08),
+        color: const Color(0xFFE2E8F0),
         thickness: 1,
       ),
     );

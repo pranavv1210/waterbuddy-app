@@ -17,9 +17,9 @@ class SellerLoginScreen extends ConsumerStatefulWidget {
 
 class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _email = TextEditingController();
-  final _password = TextEditingController();
-  
+  final _email = TextEditingController(text: AuthService.testSellerEmail);
+  final _password = TextEditingController(text: AuthService.testSellerPassword);
+
   bool _loading = false;
   String? _error;
 
@@ -51,17 +51,22 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white, size: 18),
                     onPressed: () => context.pop(),
                   ),
                   const Text(
                     'Welcome Back',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
-              _field(_email, 'Email Address', Icons.email_outlined, keyboardType: TextInputType.emailAddress),
+              _field(_email, 'Email Address', Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress),
               _field(_password, 'Password', Icons.lock_outline, obscure: true),
               const SizedBox(height: 24),
               FilledButton(
@@ -69,15 +74,25 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: const Color(0xFF0891B2),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
                 ),
                 child: _loading
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Log In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    : const Text('Log In',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 16),
-                Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 13), textAlign: TextAlign.center),
+                Text(_error!,
+                    style:
+                        const TextStyle(color: Colors.redAccent, fontSize: 13),
+                    textAlign: TextAlign.center),
               ],
             ],
           ),
@@ -101,7 +116,9 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
         obscureText: obscure,
         keyboardType: keyboardType,
         style: const TextStyle(color: Colors.white),
-        validator: requiredField ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null : null,
+        validator: requiredField
+            ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null
+            : null,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
@@ -127,16 +144,26 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() {
       _loading = true;
       _error = null;
     });
-    
+
     try {
       final auth = ref.read(authServiceProvider);
-      await auth.signInWithEmailPassword(email: _email.text.trim(), password: _password.text.trim());
-      
+      final email = _email.text.trim();
+      final password = _password.text.trim();
+      if (email == AuthService.testSellerEmail &&
+          password == AuthService.testSellerPassword) {
+        await auth.signInOrCreateTestSeller();
+        if (!mounted) return;
+        context.go(RouteNames.sellerDashboard);
+        return;
+      }
+
+      await auth.signInWithEmailPassword(email: email, password: password);
+
       if (!mounted) return;
       context.go(RouteNames.sellerWaiting);
     } on AuthFailure catch (e) {

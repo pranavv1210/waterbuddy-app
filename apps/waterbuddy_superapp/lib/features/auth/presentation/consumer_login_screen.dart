@@ -11,7 +11,8 @@ class ConsumerLoginScreen extends ConsumerStatefulWidget {
   const ConsumerLoginScreen({super.key});
 
   @override
-  ConsumerState<ConsumerLoginScreen> createState() => _ConsumerLoginScreenState();
+  ConsumerState<ConsumerLoginScreen> createState() =>
+      _ConsumerLoginScreenState();
 }
 
 class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
@@ -49,24 +50,34 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
             Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white, size: 18),
                   onPressed: () => context.pop(),
                 ),
                 const Text(
                   'Welcome Back',
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            _buildTextField(controller: _phone, label: 'Mobile Number', icon: Icons.phone_outlined, keyboardType: TextInputType.phone),
+            _buildTextField(
+                controller: _phone,
+                label: 'Mobile Number',
+                icon: Icons.phone_outlined,
+                keyboardType: TextInputType.phone),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: authState.isLoading
                   ? null
                   : () async {
                       if (_phone.text.trim().isEmpty) return;
-                      final ok = await ref.read(authControllerProvider.notifier).sendOtp(
+                      final ok = await ref
+                          .read(authControllerProvider.notifier)
+                          .sendOtp(
                             _phone.text.trim(),
                             role: AppRole.consumer,
                           );
@@ -82,11 +93,18 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: const Color(0xFF0EA5E9),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
               ),
               child: authState.isLoading
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('Log In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2))
+                  : const Text('Log In',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 20),
             Row(
@@ -94,7 +112,9 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
                 Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('OR', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11)),
+                  child: Text('OR',
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.4), fontSize: 11)),
                 ),
                 Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
               ],
@@ -104,19 +124,38 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
               onPressed: authState.isLoading
                   ? null
                   : () async {
-                      await ref.read(authControllerProvider.notifier).signInWithGoogle(role: AppRole.consumer);
+                      final phone = _phone.text.trim();
+                      if (phone.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Mobile number is required.')),
+                        );
+                        return;
+                      }
+                      await ref
+                          .read(authControllerProvider.notifier)
+                          .signInWithGoogle(
+                            role: AppRole.consumer,
+                            phoneNumber: phone,
+                          );
                     },
-              icon: Image.network('https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg', height: 18),
-              label: const Text('Continue with Google', style: TextStyle(color: Colors.white, fontSize: 14)),
+              icon: Image.network(
+                  'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
+                  height: 18),
+              label: const Text('Continue with Google',
+                  style: TextStyle(color: Colors.white, fontSize: 14)),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 side: BorderSide(color: Colors.white.withOpacity(0.15)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
               ),
             ),
             if (authState.errorMessage != null) ...[
               const SizedBox(height: 16),
-              Text(authState.errorMessage!, style: const TextStyle(color: Colors.redAccent, fontSize: 13), textAlign: TextAlign.center),
+              Text(authState.errorMessage!,
+                  style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                  textAlign: TextAlign.center),
             ],
           ],
         ),

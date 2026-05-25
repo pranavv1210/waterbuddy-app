@@ -22,7 +22,7 @@ class MainShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mediaQuery = MediaQuery.of(context);
     final isDesktop = mediaQuery.size.width > 800;
-    final darkBg = const Color(0xFF090D16);
+    const appBg = Color(0xFFFFFBF3);
 
     return PopScope(
       canPop: _currentIndex == 0,
@@ -32,7 +32,7 @@ class MainShell extends ConsumerWidget {
       },
       child: isDesktop
           ? Scaffold(
-              backgroundColor: darkBg,
+              backgroundColor: appBg,
               body: Row(
                 children: [
                   _DesktopSidebar(
@@ -40,7 +40,7 @@ class MainShell extends ConsumerWidget {
                     onTap: (index) => _navigate(context, index),
                     onSignOut: () => _handleSignOut(context, ref),
                   ),
-                  VerticalDivider(width: 1, color: Colors.white.withOpacity(0.06)),
+                  const VerticalDivider(width: 1, color: Color(0xFFE2E8F0)),
                   Expanded(
                     child: child,
                   ),
@@ -48,7 +48,7 @@ class MainShell extends ConsumerWidget {
               ),
             )
           : Scaffold(
-              backgroundColor: darkBg,
+              backgroundColor: appBg,
               body: child,
               bottomNavigationBar: _WaterBuddyNavBar(
                 currentIndex: _currentIndex,
@@ -96,11 +96,9 @@ class _DesktopSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const activeColor = Color(0xFF0EA5E9);
-
     return Container(
       width: 280,
-      color: const Color(0xFF0F172A).withOpacity(0.55),
+      color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +114,8 @@ class _DesktopSidebar extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.water_drop_rounded, color: Colors.white, size: 24),
+                child: const Icon(Icons.water_drop_rounded,
+                    color: Colors.white, size: 24),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -128,7 +127,7 @@ class _DesktopSidebar extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                        color: Color(0xFF0F172A),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -137,7 +136,7 @@ class _DesktopSidebar extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white.withOpacity(0.4),
+                        color: Color(0xFF64748B),
                       ),
                     ),
                   ],
@@ -172,10 +171,11 @@ class _DesktopSidebar extends StatelessWidget {
           const Spacer(),
 
           // Logout Action at bottom
-          Divider(color: Colors.white.withOpacity(0.06)),
+          const Divider(color: Color(0xFFE2E8F0)),
           const SizedBox(height: 10),
           ListTile(
-            leading: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 22),
+            leading: const Icon(Icons.logout_rounded,
+                color: Colors.redAccent, size: 22),
             title: const Text(
               'Sign Out',
               style: TextStyle(
@@ -184,7 +184,8 @@ class _DesktopSidebar extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             onTap: onSignOut,
           ),
         ],
@@ -209,7 +210,7 @@ class _SidebarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const activeColor = Color(0xFF0EA5E9);
-    final unselectedColor = Colors.white.withOpacity(0.4);
+    const unselectedColor = Color(0xFF94A3B8);
 
     return InkWell(
       onTap: onTap,
@@ -218,20 +219,26 @@ class _SidebarItem extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor.withOpacity(0.08) : Colors.transparent,
+          color:
+              isSelected ? activeColor.withOpacity(0.08) : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
-          border: isSelected ? Border.all(color: activeColor.withOpacity(0.2)) : null,
+          border: isSelected
+              ? Border.all(color: activeColor.withOpacity(0.2))
+              : null,
         ),
         child: Row(
           children: [
-            Icon(icon, color: isSelected ? activeColor : unselectedColor, size: 22),
+            Icon(icon,
+                color: isSelected ? activeColor : unselectedColor, size: 22),
             const SizedBox(width: 14),
             Text(
               label,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+                color: isSelected
+                    ? const Color(0xFF0F172A)
+                    : const Color(0xFF64748B),
               ),
             ),
           ],
@@ -253,13 +260,13 @@ class _WaterBuddyNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const primary = Color(0xFF0EA5E9);
-    final unselected = Colors.white.withOpacity(0.35);
-    final bg = const Color(0xFF0F172A).withOpacity(0.85);
+    const unselected = Color(0xFF94A3B8);
+    const bg = Colors.white;
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.transparent,
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06))),
+        border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
       ),
       child: ClipRRect(
         child: BackdropFilter(
@@ -335,7 +342,8 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? primaryColor.withOpacity(0.08) : Colors.transparent,
+          color:
+              isSelected ? primaryColor.withOpacity(0.08) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

@@ -15,7 +15,6 @@ import '../providers/order_creation_provider.dart';
 import '../../../providers/app_providers.dart';
 import '../../../models/order.dart' as app_order;
 import '../../tracking/providers/searching_providers.dart';
-import '../../tracking/models/searching_tankers_state.dart';
 import '../../orders/providers/order_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -31,7 +30,8 @@ class HomeScreen extends ConsumerWidget {
     ref.listen(activeOrderProvider, (previous, next) {
       final activeOrder = next.value;
       if (activeOrder != null) {
-        if (activeOrder.status == 'ASSIGNED' || activeOrder.status == 'ON_THE_WAY') {
+        if (activeOrder.status == 'ASSIGNED' ||
+            activeOrder.status == 'ON_THE_WAY') {
           context.go('${RouteNames.tracking}?orderId=${activeOrder.id}');
         }
       }
@@ -73,15 +73,34 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
   bool _isLoadingLocation = false;
   bool _isMovingMap = false;
   bool _isLocationConfirmed = false;
-  bool _isManualSelection = false; // Added to track if user is explicitly selecting location
+  bool _isManualSelection =
+      false; // Added to track if user is explicitly selecting location
 
   // Default to Bangalore center if location not available
   static const LatLng _defaultLocation = LatLng(12.9716, 77.5946);
 
   final List<Map<String, dynamic>> tankOptionsData = [
-    {'id': 'small', 'size': 'Small Tank', 'litres': 10000, 'icon': Icons.opacity_rounded, 'basePrice': 500},
-    {'id': 'medium', 'size': 'Medium Tank', 'litres': 15000, 'icon': Icons.water_drop_rounded, 'basePrice': 750},
-    {'id': 'large', 'size': 'Large Tank', 'litres': 20000, 'icon': Icons.waves_rounded, 'basePrice': 1000},
+    {
+      'id': 'small',
+      'size': 'Small Tank',
+      'litres': 10000,
+      'icon': Icons.opacity_rounded,
+      'basePrice': 500
+    },
+    {
+      'id': 'medium',
+      'size': 'Medium Tank',
+      'litres': 15000,
+      'icon': Icons.water_drop_rounded,
+      'basePrice': 750
+    },
+    {
+      'id': 'large',
+      'size': 'Large Tank',
+      'litres': 20000,
+      'icon': Icons.waves_rounded,
+      'basePrice': 1000
+    },
   ];
 
   @override
@@ -92,7 +111,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
 
   Future<void> _determinePosition() async {
     setState(() => _isLoadingLocation = true);
-    
+
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) return;
@@ -102,12 +121,12 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) return;
       }
-      
+
       if (permission == LocationPermission.deniedForever) return;
 
       final position = await Geolocator.getCurrentPosition();
       final latLng = LatLng(position.latitude, position.longitude);
-      
+
       if (mounted) {
         setState(() {
           _currentLocation = latLng;
@@ -132,7 +151,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
         setState(() {
-          _currentAddress = "${place.locality ?? ''}, ${place.subAdministrativeArea ?? place.locality ?? ''}";
+          _currentAddress =
+              "${place.locality ?? ''}, ${place.subAdministrativeArea ?? place.locality ?? ''}";
           _currentAddress = _currentAddress!.replaceAll(RegExp(r'^, |, $'), '');
         });
       }
@@ -155,12 +175,13 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final searchingState = ref.watch(searchingControllerProvider);
-    final isSearching = searchingState.orderId != null && (searchingState.orderStatus == 'SEARCHING' || searchingState.isLoading);
-    
-    // Premium Color Palette
-    const primary = Color(0xFF0F172A); // Dark Slate
-    const accent = Color(0xFF38BDF8); // Light Blue
-    const background = Color(0xFFF8FAFC);
+    final isSearching = searchingState.orderId != null &&
+        (searchingState.orderStatus == 'SEARCHING' || searchingState.isLoading);
+
+    // WaterBuddy light palette
+    const primary = Color(0xFF0EA5E9);
+    const accent = Color(0xFF14B8A6);
+    const background = Color(0xFFFFFBF3);
 
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width > 800;
@@ -205,7 +226,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                           children: [
                             const Row(
                               children: [
-                                Icon(Icons.water_drop_rounded, color: Color(0xFF38BDF8), size: 28),
+                                Icon(Icons.water_drop_rounded,
+                                    color: Color(0xFF38BDF8), size: 28),
                                 SizedBox(width: 8),
                                 Text(
                                   'WaterBuddy',
@@ -223,32 +245,43 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                         ),
                       ),
                       const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                      
+
                       // Dynamic Control Content
                       Expanded(
                         child: SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (isSearching)
-                                _SearchingBottomSheet(orderId: searchingState.orderId!)
+                                _SearchingBottomSheet(
+                                    orderId: searchingState.orderId!)
                               else if (!_isLocationConfirmed) ...[
-                                _isMovingMap || (_selectedLocation != null && _currentAddress != null && !_isLocationConfirmed && _isManualSelection)
+                                _isMovingMap ||
+                                        (_selectedLocation != null &&
+                                            _currentAddress != null &&
+                                            !_isLocationConfirmed &&
+                                            _isManualSelection)
                                     ? _buildConfirmLocationView(primary)
-                                    : _buildDiscoveryView(user, primary, accent),
+                                    : _buildDiscoveryView(
+                                        user, primary, accent),
                               ] else ...[
                                 Row(
                                   children: [
                                     GestureDetector(
-                                      onTap: () => setState(() => _isLocationConfirmed = false),
+                                      onTap: () => setState(
+                                          () => _isLocationConfirmed = false),
                                       child: Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: const BoxDecoration(
                                           color: Color(0xFFF1F5F9),
                                           shape: BoxShape.circle,
                                         ),
-                                        child: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A), size: 20),
+                                        child: const Icon(
+                                            Icons.arrow_back_rounded,
+                                            color: Color(0xFF0F172A),
+                                            size: 20),
                                       ),
                                     ),
                                     const SizedBox(width: 12),
@@ -266,7 +299,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                                 const SizedBox(height: 16),
                                 _buildLocationBar(),
                                 const SizedBox(height: 20),
-                                ...tankOptionsData.map((data) => _buildTankListItem(data, primary)),
+                                ...tankOptionsData.map((data) =>
+                                    _buildTankListItem(data, primary)),
                                 const SizedBox(height: 32),
                                 _buildBookButton(primary),
                               ]
@@ -278,7 +312,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   ),
                 ),
               ),
-              
+
               // Right Pane: Live Map
               Expanded(
                 child: Stack(
@@ -290,7 +324,9 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                           initialCenter: _currentLocation ?? _defaultLocation,
                           initialZoom: 15,
                           interactionOptions: InteractionOptions(
-                            flags: _isLocationConfirmed ? InteractiveFlag.none : InteractiveFlag.all,
+                            flags: _isLocationConfirmed
+                                ? InteractiveFlag.none
+                                : InteractiveFlag.all,
                           ),
                           onPositionChanged: _onMapPositionChanged,
                           onMapEvent: (event) async {
@@ -304,7 +340,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                         ),
                         children: [
                           TileLayer(
-                            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            urlTemplate:
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                             userAgentPackageName: 'com.waterbuddy.customer',
                           ),
                           if (_currentLocation != null)
@@ -316,7 +353,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                                   height: 80,
                                   child: _buildUserDot(),
                                 ),
-                                if (_isLocationConfirmed && _selectedLocation != null)
+                                if (_isLocationConfirmed &&
+                                    _selectedLocation != null)
                                   Marker(
                                     point: _selectedLocation!,
                                     width: 80,
@@ -332,7 +370,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                         ],
                       ),
                     ),
-                    
+
                     // Fixed pin in map center
                     if (!_isLocationConfirmed)
                       Center(
@@ -342,7 +380,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: primary,
                                   borderRadius: BorderRadius.circular(12),
@@ -355,7 +394,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                                   ],
                                 ),
                                 child: const Text(
-                                  'Confirm Delivery Location',
+                                  'Confirm Water Delivery Location',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 13,
@@ -374,7 +413,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                           ),
                         ),
                       ),
-                      
+
                     // Geolocate Floating button
                     Positioned(
                       bottom: 24,
@@ -385,10 +424,15 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                         foregroundColor: primary,
                         elevation: 4,
                         mini: true,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        child: _isLoadingLocation 
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.my_location_rounded, size: 20),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        child: _isLoadingLocation
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.my_location_rounded, size: 20),
                       ),
                     ),
                   ],
@@ -405,11 +449,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       canPop: !_isLocationConfirmed && !isSearching,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        
+
         if (isSearching) {
-           await ref.read(searchingControllerProvider.notifier).cancelOrder();
+          await ref.read(searchingControllerProvider.notifier).cancelOrder();
         } else if (_isLocationConfirmed) {
-           setState(() => _isLocationConfirmed = false);
+          setState(() => _isLocationConfirmed = false);
         }
       },
       child: Scaffold(
@@ -425,7 +469,9 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   initialCenter: _currentLocation ?? _defaultLocation,
                   initialZoom: 15,
                   interactionOptions: InteractionOptions(
-                    flags: _isLocationConfirmed ? InteractiveFlag.none : InteractiveFlag.all,
+                    flags: _isLocationConfirmed
+                        ? InteractiveFlag.none
+                        : InteractiveFlag.all,
                   ),
                   onPositionChanged: _onMapPositionChanged,
                   onMapEvent: (event) async {
@@ -439,7 +485,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.waterbuddy.customer',
                   ),
                   if (_currentLocation != null)
@@ -478,7 +525,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
                           color: primary,
                           borderRadius: BorderRadius.circular(12),
@@ -491,7 +539,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                           ],
                         ),
                         child: const Text(
-                          'Confirm Delivery Location',
+                          'Confirm Water Delivery Location',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 13,
@@ -538,14 +586,16 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                                   ),
                                 ],
                               ),
-                              child: const Icon(Icons.menu_rounded, color: Color(0xFF0F172A), size: 24),
+                              child: const Icon(Icons.menu_rounded,
+                                  color: Color(0xFF0F172A), size: 24),
                             ),
                           ),
                         ),
                         const SizedBox(width: 12),
                       ] else ...[
                         GestureDetector(
-                          onTap: () => setState(() => _isLocationConfirmed = false),
+                          onTap: () =>
+                              setState(() => _isLocationConfirmed = false),
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -559,7 +609,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                                 ),
                               ],
                             ),
-                            child: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A), size: 24),
+                            child: const Icon(Icons.arrow_back_rounded,
+                                color: Color(0xFF0F172A), size: 24),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -585,10 +636,14 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 foregroundColor: primary,
                 elevation: 4,
                 mini: true,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: _isLoadingLocation 
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.my_location_rounded, size: 20),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                child: _isLoadingLocation
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.my_location_rounded, size: 20),
               ),
             ),
 
@@ -601,19 +656,19 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
   }
 
   Widget _buildLocationBar() {
-    final locText = _isMovingMap 
-        ? 'Updating location...' 
+    final locText = _isMovingMap
+        ? 'Updating location...'
         : (_currentAddress ?? 'Fetching location...');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF151C2C).withOpacity(0.85),
+        color: Colors.white.withOpacity(0.94),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: const Color(0xFF0EA5E9).withOpacity(0.10),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -621,7 +676,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.location_on_rounded, color: Color(0xFFEF4444), size: 20),
+          const Icon(Icons.location_on_rounded,
+              color: Color(0xFFEF4444), size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -629,9 +685,9 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Delivery Location',
+                  'Water Delivery Location',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
+                    color: const Color(0xFF64748B),
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
@@ -642,7 +698,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFFE0F2FE),
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
@@ -659,12 +715,12 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF151C2C).withOpacity(0.85),
+        color: Colors.white.withOpacity(0.94),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: const Color(0xFF0EA5E9).withOpacity(0.10),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -673,7 +729,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.notifications_none_rounded, color: Colors.white.withOpacity(0.6)),
+            icon: const Icon(Icons.notifications_none_rounded,
+                color: Color(0xFF64748B)),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -697,7 +754,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
               child: ClipOval(
                 child: user?.photoURL != null
                     ? Image.network(user!.photoURL!, fit: BoxFit.cover)
-                    : const Icon(Icons.person_rounded, color: Color(0xFF0EA5E9), size: 20),
+                    : const Icon(Icons.person_rounded,
+                        color: Color(0xFF0EA5E9), size: 20),
               ),
             ),
           ),
@@ -706,9 +764,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     );
   }
 
-  Widget _buildBottomSheet(User? user, Color primary, Color accent, app_order.Order? activeOrder) {
+  Widget _buildBottomSheet(
+      User? user, Color primary, Color accent, app_order.Order? activeOrder) {
     final searchingState = ref.watch(searchingControllerProvider);
-    final isSearching = searchingState.orderId != null && (searchingState.orderStatus == 'SEARCHING' || searchingState.isLoading);
+    final isSearching = searchingState.orderId != null &&
+        (searchingState.orderStatus == 'SEARCHING' || searchingState.isLoading);
 
     if (isSearching) {
       return _SearchingBottomSheet(orderId: searchingState.orderId!);
@@ -722,12 +782,12 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         right: 0,
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF151C2C).withOpacity(0.88),
+            color: Colors.white.withOpacity(0.96),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(color: Colors.white.withOpacity(0.06)),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: const Color(0xFF0EA5E9).withOpacity(0.12),
                 blurRadius: 30,
                 offset: const Offset(0, -10),
               ),
@@ -742,15 +802,19 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: const Color(0xFFCBD5E1),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               // If we have a selected location (from search or map move), show confirm button
               // instead of the full discovery view if we're in "selection mode"
-              _isMovingMap || (_selectedLocation != null && _currentAddress != null && !_isLocationConfirmed && _isManualSelection)
-                ? _buildConfirmLocationView(primary)
-                : _buildDiscoveryView(user, primary, accent),
+              _isMovingMap ||
+                      (_selectedLocation != null &&
+                          _currentAddress != null &&
+                          !_isLocationConfirmed &&
+                          _isManualSelection)
+                  ? _buildConfirmLocationView(primary)
+                  : _buildDiscoveryView(user, primary, accent),
             ],
           ),
         ),
@@ -764,12 +828,12 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF151C2C).withOpacity(0.88),
+            color: Colors.white.withOpacity(0.98),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border.all(color: Colors.white.withOpacity(0.06)),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: const Color(0xFF0EA5E9).withOpacity(0.12),
                 blurRadius: 25,
                 offset: const Offset(0, -5),
               ),
@@ -783,11 +847,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: const Color(0xFFCBD5E1),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              
+
               Expanded(
                 child: ListView(
                   controller: scrollController,
@@ -798,17 +862,19 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: Color(0xFF0F172A),
                         letterSpacing: -0.3,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ...tankOptionsData.map((data) => _buildTankListItem(data, primary)),
-                    const SizedBox(height: 80), // Space for fixed button + nav bar
+                    ...tankOptionsData
+                        .map((data) => _buildTankListItem(data, primary)),
+                    const SizedBox(
+                        height: 80), // Space for fixed button + nav bar
                   ],
                 ),
               ),
-              
+
               // Fixed Book Button at bottom of sheet
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
@@ -823,7 +889,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
 
   Widget _buildTankListItem(Map<String, dynamic> data, Color primary) {
     final isSelected = widget.selectedTankId == data['id'];
-    
+
     return GestureDetector(
       onTap: () => widget.onTankSelected(data['id']),
       child: AnimatedContainer(
@@ -831,31 +897,36 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0EA5E9).withOpacity(0.12) : Colors.white.withOpacity(0.02),
+          color: isSelected ? const Color(0xFFE0F2FE) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF38BDF8) : Colors.white.withOpacity(0.06),
+            color:
+                isSelected ? const Color(0xFF38BDF8) : const Color(0xFFE2E8F0),
             width: 1.8,
           ),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: const Color(0xFF38BDF8).withOpacity(0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ] : [],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF38BDF8).withOpacity(0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF38BDF8) : Colors.white.withOpacity(0.04),
+                color: isSelected
+                    ? const Color(0xFF38BDF8)
+                    : const Color(0xFFF0F9FF),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 data['icon'],
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                color: isSelected ? Colors.white : const Color(0xFF0EA5E9),
                 size: 26,
               ),
             ),
@@ -867,7 +938,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   Text(
                     data['size'],
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFF0F172A),
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                     ),
@@ -876,7 +947,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   Text(
                     '${data['litres'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} Litres • Express',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: const Color(0xFF64748B),
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -890,7 +961,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 Text(
                   '₹${data['basePrice']}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF0F172A),
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
@@ -934,63 +1005,78 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         ],
       ),
       child: ElevatedButton(
-        onPressed: _isBooking ? null : () async {
-          setState(() => _isBooking = true);
-          try {
-            final orderController = ref.read(orderCreationControllerProvider.notifier);
-            final selectedOption = tankOptionsData.firstWhere((t) => t['id'] == widget.selectedTankId);
-            
-            final orderId = await orderController.createOrder(
-              tankSize: (selectedOption['litres'] as int).toDouble(),
-              tankLabel: selectedOption['size'],
-              location: {
-                'latitude': _selectedLocation?.latitude ?? 0.0,
-                'longitude': _selectedLocation?.longitude ?? 0.0,
-                'address': _currentAddress ?? '',
+        onPressed: _isBooking
+            ? null
+            : () async {
+                setState(() => _isBooking = true);
+                try {
+                  final orderController =
+                      ref.read(orderCreationControllerProvider.notifier);
+                  final selectedOption = tankOptionsData
+                      .firstWhere((t) => t['id'] == widget.selectedTankId);
+
+                  final orderId = await orderController.createOrder(
+                    tankSize: (selectedOption['litres'] as int).toDouble(),
+                    tankLabel: selectedOption['size'],
+                    location: {
+                      'latitude': _selectedLocation?.latitude ?? 0.0,
+                      'longitude': _selectedLocation?.longitude ?? 0.0,
+                      'address': _currentAddress ?? '',
+                    },
+                    paymentType: 'COD',
+                  );
+
+                  if (orderId != null && mounted) {
+                    ref
+                        .read(searchingControllerProvider.notifier)
+                        .startWatchingOrder(orderId);
+                  }
+                } finally {
+                  if (mounted) setState(() => _isBooking = false);
+                }
               },
-              paymentType: 'COD',
-            );
-            
-            if (orderId != null && mounted) {
-              ref.read(searchingControllerProvider.notifier).startWatchingOrder(orderId);
-            }
-          } finally {
-            if (mounted) setState(() => _isBooking = false);
-          }
-        },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
           shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
-        child: _isBooking 
-          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-          : const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Book Water Now',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.5),
-                ),
-                SizedBox(width: 12),
-                Icon(Icons.arrow_forward_rounded, size: 22),
-              ],
-            ),
+        child: _isBooking
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2))
+            : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Book Water Now',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5),
+                  ),
+                  SizedBox(width: 12),
+                  Icon(Icons.arrow_forward_rounded, size: 22),
+                ],
+              ),
       ),
     );
   }
 
   Widget _buildDrawer(User? user) {
     return Drawer(
-      backgroundColor: const Color(0xFF090D16),
+      backgroundColor: const Color(0xFFFFFBF3),
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
-              color: const Color(0xFF0F172A).withOpacity(0.4),
-              border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.06))),
+              color: Colors.white,
+              border:
+                  const Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1001,19 +1087,20 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   height: 60,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white,
+                    color: Color(0xFF0F172A),
                   ),
                   child: ClipOval(
                     child: user?.photoURL != null
                         ? Image.network(user!.photoURL!, fit: BoxFit.cover)
-                        : const Icon(Icons.person_rounded, color: Color(0xFF0EA5E9), size: 36),
+                        : const Icon(Icons.person_rounded,
+                            color: Color(0xFF0EA5E9), size: 36),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   user?.displayName ?? 'WaterBuddy User',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF0F172A),
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1022,23 +1109,30 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.home_rounded, color: Colors.white70),
-            title: const Text('Home', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            leading: const Icon(Icons.home_rounded, color: Color(0xFF0EA5E9)),
+            title: const Text('Home',
+                style: TextStyle(
+                    color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
             onTap: () {
               Navigator.pop(context);
             },
           ),
           ListTile(
-            leading: const Icon(Icons.receipt_long_rounded, color: Colors.white70),
-            title: const Text('History', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            leading: const Icon(Icons.receipt_long_rounded,
+                color: Color(0xFF0EA5E9)),
+            title: const Text('History',
+                style: TextStyle(
+                    color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
             onTap: () {
               Navigator.pop(context);
               context.go(RouteNames.orders);
             },
           ),
           ListTile(
-            leading: const Icon(Icons.person_rounded, color: Colors.white70),
-            title: const Text('Profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            leading: const Icon(Icons.person_rounded, color: Color(0xFF0EA5E9)),
+            title: const Text('Profile',
+                style: TextStyle(
+                    color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
             onTap: () {
               Navigator.pop(context);
               context.go(RouteNames.profile);
@@ -1060,7 +1154,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
           // Search Bar (Rapido style)
           GestureDetector(
             onTap: () async {
-              final result = await context.push(RouteNames.locationSelection, extra: _currentAddress);
+              final result = await context.push(RouteNames.locationSelection,
+                  extra: _currentAddress);
               if (result != null && result is Map<String, dynamic>) {
                 if (result.containsKey('location')) {
                   final loc = result['location'] as Map<String, dynamic>;
@@ -1078,18 +1173,19 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.search_rounded, color: Colors.white70, size: 22),
+                  const Icon(Icons.search_rounded,
+                      color: Color(0xFF0EA5E9), size: 22),
                   const SizedBox(width: 12),
                   Text(
-                    'Where to deliver?',
+                    'Where do you need water?',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: const Color(0xFF64748B),
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1100,11 +1196,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
           ),
           const SizedBox(height: 28),
           const Text(
-            'Recent Deliveries',
+            'Recent water deliveries',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: Color(0xFF0F172A),
             ),
           ),
           const SizedBox(height: 12),
@@ -1122,31 +1218,32 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                       ),
                     );
                   }
-                  
+
                   // Limit to 5 recent orders for the home screen
                   final recentOrders = orders.take(5).toList();
-                  
+
                   return Column(
                     children: recentOrders.map((order) {
                       return _RecentDeliveryTile(
                         address: order.deliveryAddress ?? 'Unknown Address',
                         date: order.createdAt?.toDate(),
                         onTap: () {
-                           // Set the location from previous order
-                           if (order.location != null) {
-                             final lat = order.location!['latitude'] as double;
-                             final lng = order.location!['longitude'] as double;
-                             _selectedLocation = LatLng(lat, lng);
-                             _mapController.move(_selectedLocation!, 15);
-                             _currentAddress = order.deliveryAddress;
-                             setState(() => _isLocationConfirmed = true);
-                           }
+                          // Set the location from previous order
+                          if (order.location != null) {
+                            final lat = order.location!['latitude'] as double;
+                            final lng = order.location!['longitude'] as double;
+                            _selectedLocation = LatLng(lat, lng);
+                            _mapController.move(_selectedLocation!, 15);
+                            _currentAddress = order.deliveryAddress;
+                            setState(() => _isLocationConfirmed = true);
+                          }
                         },
                       );
                     }).toList(),
                   );
                 },
-                loading: () => const Center(child: Padding(
+                loading: () => const Center(
+                    child: Padding(
                   padding: EdgeInsets.all(8.0),
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )),
@@ -1214,19 +1311,26 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         children: [
           Row(
             children: [
-              const Icon(Icons.location_on_rounded, color: Color(0xFFEF4444), size: 24),
+              const Icon(Icons.location_on_rounded,
+                  color: Color(0xFFEF4444), size: 24),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Confirm Delivery Location',
-                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12, fontWeight: FontWeight.bold),
+                      'Confirm water delivery location',
+                      style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
                     ),
                     Text(
                       _currentAddress ?? 'Selecting location...',
-                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1248,9 +1352,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: primary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text('Confirm Location', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: const Text('Confirm Location',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 12),
@@ -1260,7 +1366,9 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 _isManualSelection = false;
               });
             },
-            child: Text('Change', style: TextStyle(color: Colors.white.withOpacity(0.6), fontWeight: FontWeight.bold)),
+            child: const Text('Change',
+                style: TextStyle(
+                    color: Color(0xFF0EA5E9), fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -1354,7 +1462,8 @@ class _ServiceCard extends StatelessWidget {
 }
 
 class _RecentDeliveryTile extends StatelessWidget {
-  const _RecentDeliveryTile({required this.address, this.date, required this.onTap});
+  const _RecentDeliveryTile(
+      {required this.address, this.date, required this.onTap});
 
   final String address;
   final DateTime? date;
@@ -1380,10 +1489,11 @@ class _RecentDeliveryTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
+                color: const Color(0xFFF0F9FF),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.history_rounded, color: Colors.white70, size: 20),
+              child: const Icon(Icons.history_rounded,
+                  color: Color(0xFF0EA5E9), size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -1395,7 +1505,7 @@ class _RecentDeliveryTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFF0F172A),
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1403,7 +1513,7 @@ class _RecentDeliveryTile extends StatelessWidget {
                   Text(
                     _formatDate(date),
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.4),
+                      color: Color(0xFF64748B),
                       fontSize: 12,
                     ),
                   ),
@@ -1417,7 +1527,6 @@ class _RecentDeliveryTile extends StatelessWidget {
     );
   }
 }
-
 
 class _TopIconButton extends StatelessWidget {
   const _TopIconButton({
@@ -1484,10 +1593,13 @@ class _UserGreeting extends StatelessWidget {
     }
 
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+      stream:
+          FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
       builder: (context, snapshot) {
         String name = 'there';
-        if (snapshot.hasData && snapshot.data != null && snapshot.data!.exists) {
+        if (snapshot.hasData &&
+            snapshot.data != null &&
+            snapshot.data!.exists) {
           final data = snapshot.data!.data() as Map<String, dynamic>?;
           name = data?['name'] as String? ?? 'there';
         }
@@ -1506,25 +1618,26 @@ class _UserGreeting extends StatelessWidget {
   }
 }
 
-
 class _SearchingBottomSheet extends ConsumerStatefulWidget {
   const _SearchingBottomSheet({required this.orderId});
 
   final String orderId;
 
   @override
-  ConsumerState<_SearchingBottomSheet> createState() => _SearchingBottomSheetState();
+  ConsumerState<_SearchingBottomSheet> createState() =>
+      _SearchingBottomSheetState();
 }
 
 class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final currentOrderId = ref.read(searchingControllerProvider).orderId;
       if (currentOrderId != widget.orderId) {
-        ref.read(searchingControllerProvider.notifier).startWatchingOrder(widget.orderId);
+        ref
+            .read(searchingControllerProvider.notifier)
+            .startWatchingOrder(widget.orderId);
       }
     });
   }
@@ -1567,18 +1680,26 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                 color: Color(0xFFFEF2F2),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.timer_off_rounded, size: 48, color: Color(0xFFEF4444)),
+              child: const Icon(Icons.timer_off_rounded,
+                  size: 48, color: Color(0xFFEF4444)),
             ),
             const SizedBox(height: 24),
             const Text(
               'No tankers available',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF0F172A), letterSpacing: -0.5),
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF0F172A),
+                  letterSpacing: -0.5),
             ),
             const SizedBox(height: 8),
             const Text(
               'All our partners are currently busy in your area. Please try again in a few minutes.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+              style: TextStyle(
+                  fontSize: 15,
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 32),
             SizedBox(
@@ -1586,14 +1707,21 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
               height: 56,
               child: ElevatedButton(
                 onPressed: () async {
-                  await ref.read(searchingControllerProvider.notifier).cancelOrder();
+                  await ref
+                      .read(searchingControllerProvider.notifier)
+                      .cancelOrder();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18)),
                   elevation: 0,
                 ),
-                child: const Text('Try Again', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                child: const Text('Try Again',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800)),
               ),
             ),
           ],
@@ -1657,7 +1785,8 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                     const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF38BDF8)),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 3, color: Color(0xFF38BDF8)),
                     ),
                   ],
                 ),
@@ -1696,7 +1825,8 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.water_drop_rounded, color: Color(0xFF38BDF8), size: 28),
+                        child: const Icon(Icons.water_drop_rounded,
+                            color: Color(0xFF38BDF8), size: 28),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -1722,7 +1852,8 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF0F9FF),
                           borderRadius: BorderRadius.circular(12),
@@ -1747,17 +1878,23 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                   height: 56,
                   child: OutlinedButton(
                     onPressed: () async {
-                      await ref.read(searchingControllerProvider.notifier).cancelOrder();
+                      await ref
+                          .read(searchingControllerProvider.notifier)
+                          .cancelOrder();
                       if (context.mounted) {
                         context.go(RouteNames.home);
                       }
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFFEF4444),
-                      side: const BorderSide(color: Color(0xFFF1F5F9), width: 2),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      side:
+                          const BorderSide(color: Color(0xFFF1F5F9), width: 2),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18)),
                     ),
-                    child: const Text('Cancel Request', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                    child: const Text('Cancel Request',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w800)),
                   ),
                 ),
               ],
@@ -1784,10 +1921,12 @@ class WaterDropSearchAnimation extends StatefulWidget {
   const WaterDropSearchAnimation({super.key});
 
   @override
-  State<WaterDropSearchAnimation> createState() => _WaterDropSearchAnimationState();
+  State<WaterDropSearchAnimation> createState() =>
+      _WaterDropSearchAnimationState();
 }
 
-class _WaterDropSearchAnimationState extends State<WaterDropSearchAnimation> with TickerProviderStateMixin {
+class _WaterDropSearchAnimationState extends State<WaterDropSearchAnimation>
+    with TickerProviderStateMixin {
   late final AnimationController _rippleController;
   late final AnimationController _floatController;
 
@@ -1827,10 +1966,10 @@ class _WaterDropSearchAnimationState extends State<WaterDropSearchAnimation> wit
               builder: (context, child) {
                 double progress = _rippleController.value - delayFraction;
                 if (progress < 0) progress += 1.0;
-                
+
                 final scale = 1.0 + (progress * 2.2);
                 final opacity = (1.0 - progress).clamp(0.0, 1.0);
-                
+
                 return Container(
                   width: 54,
                   height: 54,
@@ -1853,7 +1992,7 @@ class _WaterDropSearchAnimationState extends State<WaterDropSearchAnimation> wit
               },
             );
           }),
-          
+
           // Outer orbiting tiny water droplets representing signal search
           AnimatedBuilder(
             animation: _rippleController,
@@ -1942,6 +2081,3 @@ class _WaterDropSearchAnimationState extends State<WaterDropSearchAnimation> wit
     );
   }
 }
-
-
-

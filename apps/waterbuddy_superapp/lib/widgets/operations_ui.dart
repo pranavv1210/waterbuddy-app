@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 class OpsColors {
-  static const ink = Colors.white;
-  static const muted = Color(0xFF94A3B8); // Slate cool grey
-  static const line = Color(0xFF1E293B); // Deep slate line
-  static const surface = Color(0xFF090D16); // Obsidian deep dark
-  static const cardBg = Color(0xFF151C2C); // Translucent slate card
+  static const ink = Color(0xFF0F172A);
+  static const muted = Color(0xFF64748B);
+  static const line = Color(0xFFE2E8F0);
+  static const surface = Color(0xFFFFFBF3);
+  static const cardBg = Colors.white;
   static const blue = Color(0xFF0EA5E9);
   static const green = Color(0xFF14B8A6);
   static const amber = Color(0xFFF59E0B);
@@ -37,7 +37,7 @@ class OpsScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.sizeOf(context).width >= 900;
-    final headerBg = const Color(0xFF0F172A).withOpacity(0.4);
+    final headerBg = Colors.white.withOpacity(0.94);
 
     if (isWide) {
       return Scaffold(
@@ -73,10 +73,13 @@ class OpsScaffold extends StatelessWidget {
         backgroundColor: headerBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        foregroundColor: OpsColors.ink,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white)),
+            Text(title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w900, color: OpsColors.ink)),
             Text(
               subtitle,
               style: const TextStyle(
@@ -92,10 +95,10 @@ class OpsScaffold extends StatelessWidget {
       body: body,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.06))),
+          border: const Border(top: BorderSide(color: OpsColors.line)),
         ),
         child: NavigationBar(
-          backgroundColor: const Color(0xFF0F172A),
+          backgroundColor: Colors.white,
           surfaceTintColor: Colors.transparent,
           selectedIndex: activeIndex,
           onDestinationSelected: onTabChanged,
@@ -104,7 +107,7 @@ class OpsScaffold extends StatelessWidget {
           destinations: [
             for (final tab in tabs)
               NavigationDestination(
-                icon: Icon(tab.icon, color: Colors.white.withOpacity(0.6)),
+                icon: Icon(tab.icon, color: OpsColors.muted),
                 selectedIcon: Icon(tab.icon, color: accent),
                 label: tab.label,
               ),
@@ -139,12 +142,12 @@ class OpsCard extends StatelessWidget {
     final content = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: OpsColors.cardBg.withOpacity(0.65),
+        color: OpsColors.cardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: OpsColors.line),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: const Color(0xFF0EA5E9).withOpacity(0.07),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -220,14 +223,15 @@ class OpsEmptyState extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: OpsColors.blue.withOpacity(0.2)),
               ),
-              child: const Icon(Icons.water_drop_outlined, color: OpsColors.blue, size: 34),
+              child: const Icon(Icons.water_drop_outlined,
+                  color: OpsColors.blue, size: 34),
             ),
             const SizedBox(height: 18),
             Text(
               title,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.white,
+                color: OpsColors.ink,
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
               ),
@@ -297,8 +301,8 @@ class _OpsTopBar extends StatelessWidget {
       height: 76,
       padding: const EdgeInsets.symmetric(horizontal: 28),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withOpacity(0.4),
-        border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.06))),
+        color: Colors.white.withOpacity(0.94),
+        border: const Border(bottom: BorderSide(color: OpsColors.line)),
       ),
       child: Row(
         children: [
@@ -310,7 +314,7 @@ class _OpsTopBar extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: OpsColors.ink,
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
                   ),
@@ -356,8 +360,8 @@ class _OpsSidebar extends StatelessWidget {
       width: 280,
       padding: const EdgeInsets.fromLTRB(18, 24, 18, 18),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withOpacity(0.55),
-        border: Border(right: BorderSide(color: Colors.white.withOpacity(0.06))),
+        color: Colors.white,
+        border: const Border(right: BorderSide(color: OpsColors.line)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,7 +388,7 @@ class _OpsSidebar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: OpsColors.ink,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -424,7 +428,7 @@ class _OpsSidebar extends StatelessWidget {
                   title: Text(
                     tab.label,
                     style: TextStyle(
-                      color: selected ? Colors.white : OpsColors.muted,
+                      color: selected ? OpsColors.ink : OpsColors.muted,
                       fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
                     ),
                   ),

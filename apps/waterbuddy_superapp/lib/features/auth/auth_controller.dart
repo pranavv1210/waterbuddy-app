@@ -193,7 +193,10 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> signInWithGoogle({required AppRole role}) async {
+  Future<bool> signInWithGoogle({
+    required AppRole role,
+    String? phoneNumber,
+  }) async {
     state = state.copyWith(
       isLoading: true,
       clearError: true,
@@ -201,7 +204,10 @@ class AuthController extends StateNotifier<AuthState> {
     );
 
     try {
-      final userCredential = await _authService.signInWithGoogle(role: role);
+      final userCredential = await _authService.signInWithGoogle(
+        role: role,
+        phoneNumber: phoneNumber,
+      );
       if (userCredential == null) {
         state = state.copyWith(isLoading: false);
         return false;
