@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../models/order.dart' as app_order;
 import '../../../providers/app_providers.dart';
@@ -29,6 +31,7 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final online = ref.watch(sellerOnlineProvider);
+    final user = ref.watch(currentUserProvider);
 
     return OpsScaffold(
       title: 'Tanker Owner',
@@ -43,14 +46,10 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
           onChanged: (value) =>
               ref.read(sellerOnlineProvider.notifier).setOnline(value),
         ),
-        IconButton(
-          tooltip: 'Sign out',
-          onPressed: () async {
-            await ref.read(authServiceProvider).signOut();
-            await ref.read(selectedRoleProvider.notifier).clear();
-            if (context.mounted) context.go(RouteNames.roleSelection);
-          },
-          icon: const Icon(Icons.logout_rounded, color: OpsColors.red),
+        const _SellerNotificationButton(),
+        _SellerProfileMenu(
+          name: user?.displayName ?? 'Tanker Owner',
+          email: user?.email ?? user?.phoneNumber ?? 'WaterBuddy partner',
         ),
       ],
       body: IndexedStack(
@@ -74,9 +73,10 @@ class _OnlineSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 430;
     return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.only(left: 12),
+      margin: EdgeInsets.only(right: compact ? 4 : 8),
+      padding: EdgeInsets.only(left: compact ? 8 : 12),
       decoration: BoxDecoration(
         color: online
             ? OpsColors.green.withValues(alpha: 0.1)
@@ -91,15 +91,242 @@ class _OnlineSwitch extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            online ? 'ONLINE' : 'OFFLINE',
+            compact ? (online ? 'ON' : 'OFF') : (online ? 'ONLINE' : 'OFFLINE'),
             style: TextStyle(
               color: online ? OpsColors.green : OpsColors.muted,
-              fontSize: 11,
+              fontSize: compact ? 10 : 11,
               fontWeight: FontWeight.w900,
             ),
           ),
-          Switch(value: online, onChanged: onChanged),
+          Transform.scale(
+            scale: compact ? 0.78 : 0.92,
+            child: Switch(value: online, onChanged: onChanged),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _SellerNotificationButton extends StatelessWidget {
+  const _SellerNotificationButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.filledTonal(
+      tooltip: 'Notifications',
+      onPressed: () => showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        backgroundColor: Colors.white,
+        builder: (context) => const SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, 4, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Notifications',
+                  style: TextStyle(
+                    color: OpsColors.ink,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                SizedBox(height: 14),
+                OpsCard(
+                  child: Text(
+                    'New order alerts, driver updates, and payout updates will appear here.',
+                    style: TextStyle(
+                      color: OpsColors.muted,
+                      height: 1.35,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      icon: const Icon(Icons.notifications_none_rounded),
+    );
+  }
+}
+
+class _SellerProfileMenu extends ConsumerWidget {
+  const _SellerProfileMenu({required this.name, required this.email});
+
+  final String name;
+  final String email;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<String>(
+      tooltip: 'Profile and settings',
+      offset: const Offset(0, 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      onSelected: (value) async {
+        switch (value) {
+          case 'profile':
+          case 'settings':
+          case 'support':
+            _showProfileSheet(context, value);
+            break;
+          case 'logout':
+            await ref.read(authServiceProvider).signOut();
+            await ref.read(selectedRoleProvider.notifier).clear();
+            if (context.mounted) context.go(RouteNames.roleSelection);
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem<String>(
+          enabled: false,
+          child: SizedBox(
+            width: 230,
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: OpsColors.blue.withValues(alpha: 0.12),
+                  child: Text(
+                    name.trim().isEmpty ? 'T' : name.trim()[0].toUpperCase(),
+                    style: const TextStyle(
+                      color: OpsColors.blue,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: OpsColors.ink,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      Text(
+                        email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: OpsColors.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'profile',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.storefront_rounded),
+            title: Text('Business profile'),
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'settings',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.settings_rounded),
+            title: Text('Settings'),
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'support',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.support_agent_rounded),
+            title: Text('Support'),
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'logout',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.logout_rounded, color: OpsColors.red),
+            title: Text('Logout', style: TextStyle(color: OpsColors.red)),
+          ),
+        ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: CircleAvatar(
+          backgroundColor: OpsColors.blue.withValues(alpha: 0.12),
+          child: Text(
+            name.trim().isEmpty ? 'T' : name.trim()[0].toUpperCase(),
+            style: const TextStyle(
+              color: OpsColors.blue,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showProfileSheet(BuildContext context, String section) {
+    final title = switch (section) {
+      'settings' => 'Settings',
+      'support' => 'Support',
+      _ => 'Business profile',
+    };
+    final message = switch (section) {
+      'settings' =>
+        'Availability, fleet preferences, payout account, and notification settings belong here.',
+      'support' =>
+        'For seller help, contact waterbuddyapp.wb@gmail.com with your registered mobile number.',
+      _ =>
+        'Owner details, business documents, vehicle RC, tanker photos, and approval status belong here.',
+    };
+
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: OpsColors.ink,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 14),
+              OpsCard(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: OpsColors.muted,
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -113,10 +340,18 @@ class _SellerOrdersView extends ConsumerWidget {
     final online = ref.watch(sellerOnlineProvider);
     final active = ref.watch(sellerActiveOrdersProvider);
     final nearby = ref.watch(searchingOrdersProvider);
+    final location = ref.watch(sellerCurrentLocationProvider);
 
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        _SellerMapPanel(
+          online: online,
+          location: location.value,
+          activeOrders: active.value ?? const [],
+          nearbyOrders: nearby.value ?? const [],
+        ),
+        const SizedBox(height: 22),
         const _SectionHeader(
           title: 'Active deliveries',
           subtitle: 'Orders accepted by this seller account.',
@@ -180,6 +415,144 @@ class _SellerOrdersView extends ConsumerWidget {
   }
 }
 
+class _SellerMapPanel extends StatelessWidget {
+  const _SellerMapPanel({
+    required this.online,
+    required this.location,
+    required this.activeOrders,
+    required this.nearbyOrders,
+  });
+
+  final bool online;
+  final GeoPoint? location;
+  final List<app_order.Order> activeOrders;
+  final List<app_order.Order> nearbyOrders;
+
+  @override
+  Widget build(BuildContext context) {
+    final center = location == null
+        ? const LatLng(12.9716, 77.5946)
+        : LatLng(location!.latitude, location!.longitude);
+    final orderMarkers = [
+      ...activeOrders,
+      ...nearbyOrders,
+    ].where((order) => order.latitude != 0 && order.longitude != 0).take(12);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: SizedBox(
+        height: 230,
+        child: Stack(
+          children: [
+            FlutterMap(
+              options: MapOptions(
+                initialCenter: center,
+                initialZoom: 13.5,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+                ),
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.waterbuddy.superapp',
+                ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: center,
+                      width: 44,
+                      height: 44,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: OpsColors.blue,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: OpsColors.blue.withValues(alpha: 0.28),
+                              blurRadius: 18,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.local_shipping_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                    for (final order in orderMarkers)
+                      Marker(
+                        point: LatLng(order.latitude, order.longitude),
+                        width: 34,
+                        height: 34,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: OpsColors.green,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                          ),
+                          child: const Icon(
+                            Icons.water_drop_rounded,
+                            color: Colors.white,
+                            size: 17,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            Positioned(
+              left: 14,
+              right: 14,
+              top: 14,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.94),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: OpsColors.line),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      online
+                          ? Icons.radar_rounded
+                          : Icons.pause_circle_filled_rounded,
+                      color: online ? OpsColors.green : OpsColors.amber,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        online
+                            ? 'Live order zone'
+                            : 'Go online to receive nearby tanker requests',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: OpsColors.ink,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    OpsStatusPill(
+                      label: online ? 'ONLINE' : 'OFFLINE',
+                      color: online ? OpsColors.green : OpsColors.amber,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _OrderWrap extends StatelessWidget {
   const _OrderWrap({required this.orders, required this.builder});
 
@@ -204,6 +577,11 @@ class _OrderWrap extends StatelessWidget {
       },
     );
   }
+}
+
+double _responsiveCardWidth(double maxWidth) {
+  if (maxWidth < 720) return maxWidth;
+  return (maxWidth - 16) / 2;
 }
 
 class _NearbyOrderCard extends ConsumerWidget {
@@ -482,20 +860,25 @@ class _FleetViewState extends ConsumerState<_FleetView> {
                     'Add tanker vehicles to make assignment and capacity tracking operational.',
               )
             else
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children: [
-                  for (final item in vehicles)
-                    SizedBox(
-                      width: 360,
-                      child: OpsCard(
-                        child: _VehicleTile(
-                          data: Map<String, dynamic>.from(item as Map),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = _responsiveCardWidth(constraints.maxWidth);
+                  return Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    children: [
+                      for (final item in vehicles)
+                        SizedBox(
+                          width: width,
+                          child: OpsCard(
+                            child: _VehicleTile(
+                              data: Map<String, dynamic>.from(item as Map),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                ],
+                    ],
+                  );
+                },
               ),
           ],
         );
@@ -549,33 +932,65 @@ class _VehicleTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = (data['status'] ?? 'available').toString();
-    return Row(
-      children: [
-        const Icon(Icons.local_shipping_rounded,
-            color: OpsColors.blue, size: 32),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 340;
+        final details = Row(
+          children: [
+            const Icon(Icons.local_shipping_rounded,
+                color: OpsColors.blue, size: 32),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    (data['vehicleNumber'] ?? 'Vehicle').toString(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: OpsColors.ink,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    '${data['capacity'] ?? '-'} litres',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: OpsColors.muted),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+
+        if (compact) {
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                (data['vehicleNumber'] ?? 'Vehicle').toString(),
-                style: const TextStyle(
-                  color: OpsColors.ink,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                ),
-              ),
-              Text(
-                '${data['capacity'] ?? '-'} litres',
-                style: const TextStyle(color: OpsColors.muted),
+              details,
+              const SizedBox(height: 12),
+              OpsStatusPill(
+                label: status.toUpperCase(),
+                color: orderStatusColor(status),
               ),
             ],
-          ),
-        ),
-        OpsStatusPill(
-            label: status.toUpperCase(), color: orderStatusColor(status)),
-      ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: details),
+            const SizedBox(width: 12),
+            OpsStatusPill(
+              label: status.toUpperCase(),
+              color: orderStatusColor(status),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -649,13 +1064,18 @@ class _DriversViewState extends ConsumerState<_DriversView> {
                     'Add drivers to assign accepted water deliveries to your fleet.',
               );
             }
-            return Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: [
-                for (final doc in list)
-                  SizedBox(width: 360, child: _DriverTile(doc: doc)),
-              ],
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final width = _responsiveCardWidth(constraints.maxWidth);
+                return Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: [
+                    for (final doc in list)
+                      SizedBox(width: width, child: _DriverTile(doc: doc)),
+                  ],
+                );
+              },
             );
           },
           loading: () => const _LoadingLine(),
@@ -716,37 +1136,68 @@ class _DriverTile extends StatelessWidget {
     final data = doc.data();
     final status = (data['verificationStatus'] ?? 'pending').toString();
     return OpsCard(
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: OpsColors.blue.withValues(alpha: 0.12),
-            child: const Icon(Icons.person_rounded, color: OpsColors.blue),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 340;
+          final identity = Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: OpsColors.blue.withValues(alpha: 0.12),
+                child: const Icon(Icons.person_rounded, color: OpsColors.blue),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      (data['driverName'] ?? data['fullName'] ?? doc.id)
+                          .toString(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: OpsColors.ink,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      (data['phone'] ?? data['phoneNumber'] ?? 'No phone')
+                          .toString(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: OpsColors.muted),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+
+          if (compact) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  (data['driverName'] ?? data['fullName'] ?? doc.id).toString(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: OpsColors.ink,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                Text(
-                  (data['phone'] ?? data['phoneNumber'] ?? 'No phone')
-                      .toString(),
-                  style: const TextStyle(color: OpsColors.muted),
+                identity,
+                const SizedBox(height: 12),
+                OpsStatusPill(
+                  label: status.toUpperCase(),
+                  color: orderStatusColor(status),
                 ),
               ],
-            ),
-          ),
-          OpsStatusPill(
-              label: status.toUpperCase(), color: orderStatusColor(status)),
-        ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: identity),
+              const SizedBox(width: 12),
+              OpsStatusPill(
+                label: status.toUpperCase(),
+                color: orderStatusColor(status),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -783,33 +1234,38 @@ class _SellerPayoutsView extends ConsumerWidget {
                   'Only delivered orders and recorded amount fields are shown.',
               icon: Icons.payments_rounded,
             ),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: [
-                SizedBox(
-                  width: 280,
-                  child: OpsCard(
-                    child: _Metric(
-                      label: 'Delivered orders',
-                      value: '${docs.length}',
-                      icon: Icons.check_circle_rounded,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = _responsiveCardWidth(constraints.maxWidth);
+                return Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: [
+                    SizedBox(
+                      width: width,
+                      child: OpsCard(
+                        child: _Metric(
+                          label: 'Delivered orders',
+                          value: '${docs.length}',
+                          icon: Icons.check_circle_rounded,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                SizedBox(
-                  width: 280,
-                  child: OpsCard(
-                    child: _Metric(
-                      label: 'Recorded payout',
-                      value: amounts.isEmpty
-                          ? 'Not recorded'
-                          : 'Rs ${total.toInt()}',
-                      icon: Icons.account_balance_wallet_rounded,
+                    SizedBox(
+                      width: width,
+                      child: OpsCard(
+                        child: _Metric(
+                          label: 'Recorded payout',
+                          value: amounts.isEmpty
+                              ? 'Pending payout setup'
+                              : 'Rs ${total.toInt()}',
+                          icon: Icons.account_balance_wallet_rounded,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 18),
             if (docs.isEmpty)
@@ -893,6 +1349,8 @@ class _Metric extends StatelessWidget {
             children: [
               Text(
                 value,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: OpsColors.ink,
                   fontSize: 22,
@@ -901,6 +1359,8 @@ class _Metric extends StatelessWidget {
               ),
               Text(
                 label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: OpsColors.muted,
                   fontWeight: FontWeight.w600,
@@ -929,37 +1389,68 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        children: [
-          Icon(icon, color: OpsColors.blue),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: OpsColors.ink,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 440;
+        final titleBlock = Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: OpsColors.blue),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: OpsColors.ink,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: OpsColors.muted,
-                    fontWeight: FontWeight.w600,
+                  Text(
+                    subtitle,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: OpsColors.muted,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          if (action != null) action!,
-        ],
-      ),
+          ],
+        );
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: compact
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    titleBlock,
+                    if (action != null) ...[
+                      const SizedBox(height: 12),
+                      action!,
+                    ],
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(child: titleBlock),
+                    if (action != null) ...[
+                      const SizedBox(width: 12),
+                      action!,
+                    ],
+                  ],
+                ),
+        );
+      },
     );
   }
 }
