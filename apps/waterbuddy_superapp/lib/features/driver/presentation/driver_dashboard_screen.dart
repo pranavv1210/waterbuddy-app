@@ -31,6 +31,7 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final online = ref.watch(driverOnlineProvider);
+    final user = ref.watch(currentUserProvider);
 
     return OpsScaffold(
       title: 'Driver',
@@ -45,14 +46,10 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
           onChanged: (value) =>
               ref.read(driverOnlineProvider.notifier).setOnline(value),
         ),
-        IconButton(
-          tooltip: 'Sign out',
-          onPressed: () async {
-            await ref.read(authServiceProvider).signOut();
-            await ref.read(selectedRoleProvider.notifier).clear();
-            if (context.mounted) context.go(RouteNames.roleSelection);
-          },
-          icon: const Icon(Icons.logout_rounded, color: OpsColors.red),
+        const _DriverNotificationButton(),
+        _DriverProfileMenu(
+          name: user?.displayName ?? 'Driver',
+          email: user?.email ?? user?.phoneNumber ?? 'WaterBuddy driver',
         ),
       ],
       body: IndexedStack(
@@ -74,9 +71,10 @@ class _DutySwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 430;
     return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.only(left: 12),
+      margin: EdgeInsets.only(right: compact ? 4 : 8),
+      padding: EdgeInsets.only(left: compact ? 8 : 12),
       decoration: BoxDecoration(
         color: online
             ? OpsColors.green.withValues(alpha: 0.1)
@@ -91,15 +89,244 @@ class _DutySwitch extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            online ? 'ON DUTY' : 'OFF DUTY',
+            compact
+                ? (online ? 'ON' : 'OFF')
+                : (online ? 'ON DUTY' : 'OFF DUTY'),
             style: TextStyle(
               color: online ? OpsColors.green : OpsColors.muted,
-              fontSize: 11,
+              fontSize: compact ? 10 : 11,
               fontWeight: FontWeight.w900,
             ),
           ),
-          Switch(value: online, onChanged: onChanged),
+          Transform.scale(
+            scale: compact ? 0.78 : 0.92,
+            child: Switch(value: online, onChanged: onChanged),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _DriverNotificationButton extends StatelessWidget {
+  const _DriverNotificationButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.filledTonal(
+      tooltip: 'Notifications',
+      onPressed: () => showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        backgroundColor: Colors.white,
+        builder: (context) => const SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, 4, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Notifications',
+                  style: TextStyle(
+                    color: OpsColors.ink,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                SizedBox(height: 14),
+                OpsCard(
+                  child: Text(
+                    'Assigned delivery runs, route updates, and payout alerts will appear here.',
+                    style: TextStyle(
+                      color: OpsColors.muted,
+                      height: 1.35,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      icon: const Icon(Icons.notifications_none_rounded),
+    );
+  }
+}
+
+class _DriverProfileMenu extends ConsumerWidget {
+  const _DriverProfileMenu({required this.name, required this.email});
+
+  final String name;
+  final String email;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<String>(
+      tooltip: 'Driver profile and settings',
+      offset: const Offset(0, 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      onSelected: (value) async {
+        switch (value) {
+          case 'profile':
+          case 'settings':
+          case 'support':
+            _showDriverSheet(context, value);
+            break;
+          case 'logout':
+            await ref.read(authServiceProvider).signOut();
+            await ref.read(selectedRoleProvider.notifier).clear();
+            if (context.mounted) context.go(RouteNames.roleSelection);
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem<String>(
+          enabled: false,
+          child: SizedBox(
+            width: 230,
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: OpsColors.amber.withValues(alpha: 0.14),
+                  child: Text(
+                    name.trim().isEmpty ? 'D' : name.trim()[0].toUpperCase(),
+                    style: const TextStyle(
+                      color: OpsColors.amber,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: OpsColors.ink,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      Text(
+                        email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: OpsColors.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'profile',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.badge_rounded),
+            title: Text('Driver profile'),
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'settings',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.settings_rounded),
+            title: Text('Duty settings'),
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'support',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.support_agent_rounded),
+            title: Text('Support'),
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'logout',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.logout_rounded, color: OpsColors.red),
+            title: Text('Logout', style: TextStyle(color: OpsColors.red)),
+          ),
+        ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: CircleAvatar(
+          backgroundColor: OpsColors.amber.withValues(alpha: 0.14),
+          child: Text(
+            name.trim().isEmpty ? 'D' : name.trim()[0].toUpperCase(),
+            style: const TextStyle(
+              color: OpsColors.amber,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDriverSheet(BuildContext context, String section) {
+    final title = switch (section) {
+      'support' => 'Support',
+      'settings' => 'Duty settings',
+      _ => 'Driver profile',
+    };
+    final message = switch (section) {
+      'support' =>
+        'For driver support, contact waterbuddyapp.wb@gmail.com with your registered mobile number.',
+      'settings' =>
+        'Duty status, navigation preference, emergency contact, and delivery alert settings belong here.',
+      _ =>
+        'License, Aadhaar, profile photo, emergency contact, address, and approval status belong here.',
+    };
+
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: OpsColors.ink,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 14),
+              OpsCard(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: OpsColors.muted,
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -134,24 +361,135 @@ class _DriverRunsView extends ConsumerWidget {
                 order.status != 'DELIVERED' && order.status != 'CANCELLED')
             .toList();
 
-        if (active.isEmpty) {
-          return const OpsEmptyState(
-            icon: Icons.route_outlined,
-            title: 'No assigned delivery',
-            message:
-                'Accepted orders assigned by the tanker owner will appear here in real time.',
-          );
-        }
-
-        return ListView.separated(
+        return ListView(
           padding: const EdgeInsets.all(20),
-          itemCount: active.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
-          itemBuilder: (context, index) => _RunCard(order: active[index]),
+          children: [
+            _DriverMapPanel(activeOrders: active),
+            const SizedBox(height: 18),
+            if (active.isEmpty)
+              const OpsEmptyState(
+                icon: Icons.route_outlined,
+                title: 'Waiting for delivery run',
+                message:
+                    'Assigned water tanker deliveries will appear here in real time.',
+              )
+            else
+              for (final order in active)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _RunCard(order: order),
+                ),
+          ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => Center(child: Text(error.toString())),
+    );
+  }
+}
+
+class _DriverMapPanel extends StatelessWidget {
+  const _DriverMapPanel({required this.activeOrders});
+
+  final List<Order> activeOrders;
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryOrder = activeOrders.isEmpty ? null : activeOrders.first;
+    final center = primaryOrder == null
+        ? const LatLng(12.9716, 77.5946)
+        : LatLng(
+            primaryOrder!.latitude == 0 ? 12.9716 : primaryOrder.latitude,
+            primaryOrder.longitude == 0 ? 77.5946 : primaryOrder.longitude,
+          );
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: SizedBox(
+        height: 250,
+        child: Stack(
+          children: [
+            FlutterMap(
+              options: MapOptions(
+                initialCenter: center,
+                initialZoom: activeOrders.isEmpty ? 12.5 : 14,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.drag | InteractiveFlag.pinchZoom,
+                ),
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.waterbuddy.driver',
+                ),
+                MarkerLayer(
+                  markers: [
+                    for (final order in activeOrders)
+                      if (order.latitude != 0 || order.longitude != 0)
+                        Marker(
+                          point: LatLng(order.latitude, order.longitude),
+                          width: 42,
+                          height: 42,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: OpsColors.amber,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                            ),
+                            child: const Icon(
+                              Icons.water_drop_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                  ],
+                ),
+              ],
+            ),
+            Positioned(
+              left: 14,
+              right: 14,
+              top: 14,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.94),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: OpsColors.line),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.navigation_rounded,
+                        color: OpsColors.amber),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        activeOrders.isEmpty
+                            ? 'On duty - waiting for assigned water delivery'
+                            : '${activeOrders.length} active water delivery run${activeOrders.length == 1 ? '' : 's'}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: OpsColors.ink,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    OpsStatusPill(
+                      label: activeOrders.isEmpty ? 'READY' : 'LIVE',
+                      color: activeOrders.isEmpty
+                          ? OpsColors.amber
+                          : OpsColors.green,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -1,201 +1,277 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+
 import '../../orders/providers/order_providers.dart';
 
 class LocationSelectionScreen extends ConsumerStatefulWidget {
   const LocationSelectionScreen({super.key, this.pickupAddress});
+
   final String? pickupAddress;
 
   @override
-  ConsumerState<LocationSelectionScreen> createState() => _LocationSelectionScreenState();
+  ConsumerState<LocationSelectionScreen> createState() =>
+      _LocationSelectionScreenState();
 }
 
-class _LocationSelectionScreenState extends ConsumerState<LocationSelectionScreen> {
+class _LocationSelectionScreenState
+    extends ConsumerState<LocationSelectionScreen> {
   final TextEditingController _searchController = TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitAddress(String value) async {
+    final address = value.trim();
+    if (address.isEmpty || _submitting) return;
+
+    setState(() => _submitting = true);
+    final result = <String, dynamic>{
+      'address': address,
+      'location': {
+        'latitude': 12.9716,
+        'longitude': 77.5946,
+        'address': address,
+      },
+    };
+
+    try {
+      final matches = await locationFromAddress(address)
+          .timeout(const Duration(seconds: 4));
+      if (matches.isNotEmpty) {
+        result['location'] = {
+          'latitude': matches.first.latitude,
+          'longitude': matches.first.longitude,
+          'address': address,
+        };
+      }
+    } catch (_) {
+      // Keep the typed address and fall back to Bengaluru coordinates.
+    }
+
+    if (mounted) context.pop(result);
+  }
 
   @override
   Widget build(BuildContext context) {
     const primary = Color(0xFF0F172A);
+    const waterBlue = Color(0xFF0EA5E9);
     final history = ref.watch(orderHistoryProvider);
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: primary),
           onPressed: () => context.pop(),
         ),
         title: const Text(
-          'Drop',
-          style: TextStyle(color: primary, fontWeight: FontWeight.bold),
+          'Water Delivery Address',
+          style: TextStyle(color: primary, fontWeight: FontWeight.w900),
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16, top: 12, bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Row(
-              children: [
-                Text('For me', style: TextStyle(color: primary, fontSize: 12)),
-                Icon(Icons.keyboard_arrow_down, color: primary, size: 16),
-              ],
-            ),
-          ),
-        ],
       ),
-      body: Column(
-        children: [
-          // Search Input Section
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue[100]!, width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                   Column(
-                     children: [
-                       Container(
-                         width: 8,
-                         height: 8,
-                         decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-                       ),
-                       Container(width: 1, height: 20, color: Colors.grey[300]),
-                       Container(
-                         width: 8,
-                         height: 8,
-                         decoration: const BoxDecoration(color: Colors.orange, shape: BoxShape.circle),
-                       ),
-                     ],
-                   ),
-                   const SizedBox(width: 16),
-                   Expanded(
-                     child: Column(
-                       crossAxisAlignment: CrossAxisAlignment.start,
-                       children: [
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: waterBlue.withValues(alpha: 0.28)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: waterBlue.withValues(alpha: 0.08),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Column(
+                      children: [
+                        Container(
+                          width: 9,
+                          height: 9,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF10B981),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        Container(
+                            width: 1, height: 26, color: Colors.grey[300]),
+                        Container(
+                          width: 9,
+                          height: 9,
+                          decoration: const BoxDecoration(
+                            color: waterBlue,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            widget.pickupAddress ?? 'Current Location',
-                            style: const TextStyle(fontSize: 14, color: Colors.black54),
+                            widget.pickupAddress ?? 'Your current service area',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black54,
+                              fontWeight: FontWeight.w600,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                         const Divider(height: 20),
-                         TextField(
-                           controller: _searchController,
-                           autofocus: true,
-                           decoration: const InputDecoration(
-                             hintText: 'Drop location',
-                             border: InputBorder.none,
-                             hintStyle: TextStyle(color: Colors.grey),
-                           ),
-                         ),
-                       ],
-                     ),
-                   ),
+                          const Divider(height: 22),
+                          TextField(
+                            controller: _searchController,
+                            autofocus: true,
+                            textInputAction: TextInputAction.search,
+                            onSubmitted: _submitAddress,
+                            decoration: InputDecoration(
+                              hintText: 'Enter water delivery address',
+                              border: InputBorder.none,
+                              hintStyle: const TextStyle(color: Colors.grey),
+                              suffixIcon: _submitting
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(14),
+                                      child: SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    )
+                                  : IconButton(
+                                      icon: const Icon(Icons.search_rounded),
+                                      onPressed: () => _submitAddress(
+                                        _searchController.text,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _QuickOption(
+                      icon: Icons.map_rounded,
+                      label: 'Choose on map',
+                      onTap: () => context.pop({'selectOnMap': true}),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _QuickOption(
+                      icon: Icons.home_work_rounded,
+                      label: 'Saved addresses',
+                      onTap: () {},
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-
-          // Quick Options
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                _QuickOption(
-                  icon: Icons.location_on_outlined,
-                  label: 'Select on map',
-                  onTap: () {
-                    // Navigate back with map select signal or similar
-                    context.pop({'selectOnMap': true});
-                  },
-                ),
-                const SizedBox(width: 12),
-                _QuickOption(
-                  icon: Icons.add,
-                  label: 'Add stops',
-                  onTap: () {},
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-          const Divider(thickness: 1, height: 1),
-
-          // Recent Searches List
-          Expanded(
-            child: history.when(
-              data: (orders) {
-                if (orders.isEmpty) {
-                  return const Center(child: Text('No recent searches'));
-                }
-                
-                final uniqueLocations = <String, Map<String, dynamic>>{};
-                for (var order in orders) {
-                   if (order.deliveryAddress != null && order.location != null) {
+            const SizedBox(height: 16),
+            const Divider(thickness: 1, height: 1),
+            Expanded(
+              child: history.when(
+                data: (orders) {
+                  final uniqueLocations = <String, Map<String, dynamic>>{};
+                  for (final order in orders) {
+                    if (order.deliveryAddress != null) {
                       uniqueLocations[order.deliveryAddress!] = {
                         'address': order.deliveryAddress,
                         'location': order.location,
                       };
-                   }
-                }
-                
-                final locations = uniqueLocations.values.toList();
+                    }
+                  }
 
-                return ListView.separated(
-                  itemCount: locations.length,
-                  separatorBuilder: (_, __) => const Divider(indent: 70, height: 1),
-                  itemBuilder: (context, index) {
-                    final loc = locations[index];
-                    return ListTile(
-                      leading: const Icon(Icons.history, color: Colors.grey),
-                      title: Text(
-                        loc['address'],
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  final locations = uniqueLocations.values.toList();
+                  if (locations.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No recent delivery addresses',
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      subtitle: const Text('Bangalore, Karnataka, India', style: TextStyle(fontSize: 12)),
-                      trailing: const Icon(Icons.favorite_border, size: 20, color: Colors.grey),
-                      onTap: () {
-                        context.pop({'location': loc['location'], 'address': loc['address']});
-                      },
                     );
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, s) => Center(child: Text('Error: $e')),
+                  }
+
+                  return ListView.separated(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    itemCount: locations.length,
+                    separatorBuilder: (_, __) =>
+                        const Divider(indent: 70, height: 1),
+                    itemBuilder: (context, index) {
+                      final loc = locations[index];
+                      return ListTile(
+                        leading: const Icon(Icons.water_drop_rounded,
+                            color: waterBlue),
+                        title: Text(
+                          loc['address'].toString(),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: const Text(
+                          'Previous water delivery address',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded,
+                            color: Colors.grey),
+                        onTap: () => context.pop({
+                          'location': loc['location'],
+                          'address': loc['address'],
+                        }),
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('Error: $e')),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
 class _QuickOption extends StatelessWidget {
-  const _QuickOption({required this.icon, required this.label, required this.onTap});
+  const _QuickOption({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
   final IconData icon;
   final String label;
   final VoidCallback onTap;
@@ -203,18 +279,32 @@ class _QuickOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
+      borderRadius: BorderRadius.circular(24),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(color: Colors.grey[300]!),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18, color: Colors.black87),
+            Icon(icon, size: 19, color: const Color(0xFF0F172A)),
             const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+            ),
           ],
         ),
       ),

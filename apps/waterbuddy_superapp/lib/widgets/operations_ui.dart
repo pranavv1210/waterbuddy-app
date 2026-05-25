@@ -56,7 +56,11 @@ class OpsScaffold extends StatelessWidget {
               child: Column(
                 children: [
                   _OpsTopBar(
-                      title: title, subtitle: subtitle, actions: actions),
+                    title: title,
+                    subtitle: subtitle,
+                    actions: actions,
+                    accent: accent,
+                  ),
                   Expanded(child: body),
                 ],
               ),
@@ -74,18 +78,35 @@ class OpsScaffold extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         foregroundColor: OpsColors.ink,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: Row(
           children: [
-            Text(title,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w900, color: OpsColors.ink)),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                color: OpsColors.muted,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+            _OpsLogo(accent: accent),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'WATERBUDDY',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      color: OpsColors.ink,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    '$title - $subtitle',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: OpsColors.muted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -289,11 +310,13 @@ class _OpsTopBar extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.actions,
+    required this.accent,
   });
 
   final String title;
   final String subtitle;
   final List<Widget> actions;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -307,24 +330,36 @@ class _OpsTopBar extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: OpsColors.ink,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: OpsColors.muted,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                _OpsLogo(accent: accent),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'WATERBUDDY',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: OpsColors.ink,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      Text(
+                        '$title - $subtitle',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: OpsColors.muted,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -438,6 +473,33 @@ class _OpsSidebar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _OpsLogo extends StatelessWidget {
+  const _OpsLogo({required this.accent});
+
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        color: accent.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: accent.withOpacity(0.22)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Image.asset(
+          'assets/images/logo.png',
+          errorBuilder: (_, __, ___) =>
+              Icon(Icons.water_drop_rounded, color: accent, size: 20),
+        ),
       ),
     );
   }
