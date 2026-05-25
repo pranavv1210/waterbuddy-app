@@ -192,6 +192,7 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                                 role: AppRole.driver,
                                 fullName: fullName,
                                 email: email,
+                                phoneNumber: phoneNumber,
                               );
                           if (!ok || !context.mounted) return;
 

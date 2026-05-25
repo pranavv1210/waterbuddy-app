@@ -30,6 +30,7 @@ class AuthService {
   static const String testDriverPhone = '9988776655';
   static const String testSellerEmail = 'seller@waterbuddy.test';
   static const String testSellerPassword = 'Waterbuddy@123';
+  static const String _testOtpPassword = 'WaterbuddyOtp@123';
 
   Stream<User?> authStateChanges() => _auth.authStateChanges();
 
@@ -133,15 +134,23 @@ class AuthService {
     if (otpCode.trim() != devOtpCode) {
       throw const AuthFailure('Invalid OTP. Please enter the 6-digit code.');
     }
-    final existing = _auth.currentUser;
-    if (existing != null) {
-      return _identityCredential(existing);
+
+    final email = _developmentOtpEmail(phoneNumber);
+    try {
+      final credential = await signInWithEmailPassword(
+        email: email,
+        password: _testOtpPassword,
+      );
+      unawaited(credential.user?.updateDisplayName(phoneNumber));
+      return credential;
+    } on AuthFailure {
+      final credential = await signUpWithEmailPassword(
+        email: email,
+        password: _testOtpPassword,
+      );
+      unawaited(credential.user?.updateDisplayName(phoneNumber));
+      return credential;
     }
-    final credential = await _auth.signInAnonymously().timeout(
-          const Duration(seconds: 6),
-        );
-    unawaited(credential.user?.updateDisplayName(phoneNumber));
-    return credential;
   }
 
   Future<String> sendOtp({
@@ -523,8 +532,10 @@ class AuthService {
     await _auth.signOut();
   }
 
-  UserCredential _identityCredential(User user) {
-    return _LocalUserCredential(user);
+  String _developmentOtpEmail(String phoneNumber) {
+    final digits = phoneNumber.replaceAll(RegExp(r'\D'), '');
+    final suffix = digits.isEmpty ? '0000000000' : digits;
+    return 'otp_$suffix@waterbuddy.test';
   }
 
   String _authErrorMessage(FirebaseAuthException exception) {
@@ -543,16 +554,4 @@ class AuthService {
         return exception.message ?? 'Authentication failed. Please try again.';
     }
   }
-}
-
-class _LocalUserCredential implements UserCredential {
-  _LocalUserCredential(this._user);
-  final User _user;
-
-  @override
-  AdditionalUserInfo? get additionalUserInfo => null;
-  @override
-  AuthCredential? get credential => null;
-  @override
-  User get user => _user;
 }

@@ -119,16 +119,22 @@ class AuthController extends StateNotifier<AuthState> {
     required AppRole role,
     String? fullName,
     String? email,
+    String? phoneNumber,
   }) async {
-    final verificationId = state.verificationId;
-    final phone = state.phoneNumber;
+    var verificationId = state.verificationId;
+    var phone = state.phoneNumber;
 
     if (verificationId == null || phone == null) {
-      state = state.copyWith(
-        errorMessage: 'OTP session expired. Please request OTP again.',
-        clearSuccess: true,
-      );
-      return false;
+      final fallbackPhone = _normalizePhoneNumber(phoneNumber ?? '');
+      if (fallbackPhone == null) {
+        state = state.copyWith(
+          errorMessage: 'OTP session expired. Please request OTP again.',
+          clearSuccess: true,
+        );
+        return false;
+      }
+      phone = fallbackPhone;
+      verificationId = 'mock_verification_id_$fallbackPhone';
     }
 
     final code = smsCode.trim();

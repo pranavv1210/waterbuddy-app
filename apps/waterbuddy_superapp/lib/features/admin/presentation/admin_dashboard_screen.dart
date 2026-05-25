@@ -82,14 +82,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           activeIndex: _tab,
           onTabChanged: (index) => setState(() => _tab = index),
           actions: [
-            IconButton(
-              tooltip: 'Sign out',
-              onPressed: () async {
-                await ref.read(authServiceProvider).signOut();
-                await ref.read(selectedRoleProvider.notifier).clear();
-                if (context.mounted) context.go(RouteNames.roleSelection);
-              },
-              icon: const Icon(Icons.logout_rounded, color: OpsColors.red),
+            _AdminProfileMenu(
+              name: user.displayName ?? 'Admin',
+              email: user.email ?? 'WaterBuddy admin',
             ),
           ],
           body: IndexedStack(
@@ -104,6 +99,195 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _AdminProfileMenu extends ConsumerWidget {
+  const _AdminProfileMenu({required this.name, required this.email});
+
+  final String name;
+  final String email;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<String>(
+      tooltip: 'Admin profile and settings',
+      offset: const Offset(0, 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      onSelected: (value) async {
+        switch (value) {
+          case 'profile':
+          case 'security':
+          case 'settings':
+          case 'support':
+            _showAdminSheet(context, value);
+            break;
+          case 'logout':
+            await ref.read(authServiceProvider).signOut();
+            await ref.read(selectedRoleProvider.notifier).clear();
+            if (context.mounted) context.go(RouteNames.roleSelection);
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem<String>(
+          enabled: false,
+          child: SizedBox(
+            width: 240,
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: OpsColors.green.withValues(alpha: 0.12),
+                  child: Text(
+                    name.trim().isEmpty ? 'A' : name.trim()[0].toUpperCase(),
+                    style: const TextStyle(
+                      color: OpsColors.green,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: OpsColors.ink,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      Text(
+                        email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: OpsColors.muted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'profile',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.admin_panel_settings_rounded),
+            title: Text('Admin profile'),
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'security',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.shield_rounded),
+            title: Text('Security access'),
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'settings',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.settings_rounded),
+            title: Text('Console settings'),
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'support',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.support_agent_rounded),
+            title: Text('Support'),
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'logout',
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.logout_rounded, color: OpsColors.red),
+            title: Text('Logout', style: TextStyle(color: OpsColors.red)),
+          ),
+        ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: CircleAvatar(
+          backgroundColor: OpsColors.green.withValues(alpha: 0.12),
+          child: Text(
+            name.trim().isEmpty ? 'A' : name.trim()[0].toUpperCase(),
+            style: const TextStyle(
+              color: OpsColors.green,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAdminSheet(BuildContext context, String section) {
+    final title = switch (section) {
+      'security' => 'Security access',
+      'settings' => 'Console settings',
+      'support' => 'Support',
+      _ => 'Admin profile',
+    };
+    final message = switch (section) {
+      'security' =>
+        'Admin access is controlled by the allowlist and admins collection.',
+      'settings' =>
+        'Operational settings for approvals, payments, users, and alerts belong here.',
+      'support' =>
+        'For operational issues, use waterbuddyapp.wb@gmail.com with the affected user or order ID.',
+      _ =>
+        'This admin profile controls seller approvals, driver approvals, user suspension, order monitoring, and payments.',
+    };
+
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: OpsColors.ink,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 14),
+              OpsCard(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: OpsColors.muted,
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -125,23 +309,48 @@ class _AdminOverview extends ConsumerWidget {
           title: 'Live operations',
           subtitle: 'Counts come directly from Firestore collections.',
         ),
-        Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: [
-            _CountMetric(
-                title: 'Users', icon: Icons.people_alt_rounded, async: users),
-            _CountMetric(
-                title: 'Sellers',
-                icon: Icons.storefront_rounded,
-                async: sellers),
-            _CountMetric(
-                title: 'Drivers',
-                icon: Icons.local_shipping_rounded,
-                async: drivers),
-            _CountMetric(
-                title: 'Orders', icon: Icons.water_drop_rounded, async: orders),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = _adminCardWidth(constraints.maxWidth);
+            return Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: [
+                SizedBox(
+                  width: width,
+                  child: _CountMetric(
+                    title: 'Users',
+                    icon: Icons.people_alt_rounded,
+                    async: users,
+                  ),
+                ),
+                SizedBox(
+                  width: width,
+                  child: _CountMetric(
+                    title: 'Sellers',
+                    icon: Icons.storefront_rounded,
+                    async: sellers,
+                  ),
+                ),
+                SizedBox(
+                  width: width,
+                  child: _CountMetric(
+                    title: 'Drivers',
+                    icon: Icons.local_shipping_rounded,
+                    async: drivers,
+                  ),
+                ),
+                SizedBox(
+                  width: width,
+                  child: _CountMetric(
+                    title: 'Orders',
+                    icon: Icons.water_drop_rounded,
+                    async: orders,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 24),
         orders.when(
@@ -182,6 +391,11 @@ class _AdminOverview extends ConsumerWidget {
   }
 }
 
+double _adminCardWidth(double maxWidth) {
+  if (maxWidth < 720) return maxWidth;
+  return (maxWidth - 16) / 2;
+}
+
 class _CountMetric extends StatelessWidget {
   const _CountMetric({
     required this.title,
@@ -196,14 +410,13 @@ class _CountMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = async.value?.docs.length;
-    return SizedBox(
-      width: 220,
-      child: OpsCard(
-        child: Row(
-          children: [
-            Icon(icon, color: OpsColors.green),
-            const SizedBox(width: 12),
-            Column(
+    return OpsCard(
+      child: Row(
+        children: [
+          Icon(icon, color: OpsColors.green),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -216,6 +429,8 @@ class _CountMetric extends StatelessWidget {
                 ),
                 Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: OpsColors.muted,
                     fontWeight: FontWeight.w700,
@@ -223,8 +438,8 @@ class _CountMetric extends StatelessWidget {
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -690,24 +905,34 @@ class _PaymentsView extends ConsumerWidget {
               title: 'Payments',
               subtitle: 'Payment status from order records.',
             ),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: [
-                SizedBox(
-                  width: 240,
-                  child: OpsCard(
-                    child: _PaymentMetric(label: 'Paid orders', value: '$paid'),
-                  ),
-                ),
-                SizedBox(
-                  width: 240,
-                  child: OpsCard(
-                    child: _PaymentMetric(
-                        label: 'Pending orders', value: '$pending'),
-                  ),
-                ),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = _adminCardWidth(constraints.maxWidth);
+                return Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: [
+                    SizedBox(
+                      width: width,
+                      child: OpsCard(
+                        child: _PaymentMetric(
+                          label: 'Paid orders',
+                          value: '$paid',
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: width,
+                      child: OpsCard(
+                        child: _PaymentMetric(
+                          label: 'Pending orders',
+                          value: '$pending',
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         );
@@ -731,6 +956,8 @@ class _PaymentMetric extends StatelessWidget {
       children: [
         Text(
           value,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             color: OpsColors.ink,
             fontSize: 26,
@@ -739,6 +966,8 @@ class _PaymentMetric extends StatelessWidget {
         ),
         Text(
           label,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             color: OpsColors.muted,
             fontWeight: FontWeight.w700,
@@ -764,6 +993,8 @@ class _AdminHeader extends StatelessWidget {
         children: [
           Text(
             title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: OpsColors.ink,
               fontSize: 22,
@@ -772,9 +1003,12 @@ class _AdminHeader extends StatelessWidget {
           ),
           Text(
             subtitle,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: OpsColors.muted,
               fontWeight: FontWeight.w600,
+              height: 1.25,
             ),
           ),
         ],

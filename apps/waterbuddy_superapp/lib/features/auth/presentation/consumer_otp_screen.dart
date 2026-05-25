@@ -189,6 +189,7 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
                                 role: AppRole.consumer,
                                 fullName: fullName,
                                 email: email,
+                                phoneNumber: phoneNumber,
                               );
                           if (ok && context.mounted) {
                             if (phoneNumber == '9876543210') {
