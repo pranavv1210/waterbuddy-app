@@ -57,11 +57,83 @@ class _LocationSelectionScreenState
     if (mounted) context.pop(result);
   }
 
+  void _openSavedAddresses(List<Map<String, dynamic>> locations) {
+    if (locations.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No saved delivery addresses yet')),
+      );
+      return;
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      builder: (context) => SafeArea(
+        child: ListView.separated(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+          itemCount: locations.length + 1,
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Text(
+                  'Saved delivery addresses',
+                  style: TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              );
+            }
+            final loc = locations[index - 1];
+            return ListTile(
+              leading: const Icon(Icons.water_drop_rounded,
+                  color: Color(0xFF0EA5E9)),
+              title: Text(
+                loc['address'].toString(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: const Text('Use this water delivery address'),
+              onTap: () {
+                Navigator.pop(context);
+                context.pop({
+                  'location': loc['location'],
+                  'address': loc['address'],
+                });
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const primary = Color(0xFF0F172A);
     const waterBlue = Color(0xFF0EA5E9);
     final history = ref.watch(orderHistoryProvider);
+    final savedLocations = history.maybeWhen(
+      data: (orders) {
+        final uniqueLocations = <String, Map<String, dynamic>>{};
+        for (final order in orders) {
+          if (order.deliveryAddress != null) {
+            uniqueLocations[order.deliveryAddress!] = {
+              'address': order.deliveryAddress,
+              'location': order.location,
+            };
+          }
+        }
+        return uniqueLocations.values.toList();
+      },
+      orElse: () => <Map<String, dynamic>>[],
+    );
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -189,7 +261,7 @@ class _LocationSelectionScreenState
                     child: _QuickOption(
                       icon: Icons.home_work_rounded,
                       label: 'Saved addresses',
-                      onTap: () {},
+                      onTap: () => _openSavedAddresses(savedLocations),
                     ),
                   ),
                 ],

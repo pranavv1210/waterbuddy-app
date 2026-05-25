@@ -26,12 +26,12 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
     OpsTab(label: 'Fleet', icon: Icons.local_shipping_rounded),
     OpsTab(label: 'Drivers', icon: Icons.groups_rounded),
     OpsTab(label: 'Payouts', icon: Icons.payments_rounded),
+    OpsTab(label: 'Profile', icon: Icons.storefront_rounded),
   ];
 
   @override
   Widget build(BuildContext context) {
     final online = ref.watch(sellerOnlineProvider);
-    final user = ref.watch(currentUserProvider);
 
     return OpsScaffold(
       title: 'Tanker Owner',
@@ -47,10 +47,6 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
               ref.read(sellerOnlineProvider.notifier).setOnline(value),
         ),
         const _SellerNotificationButton(),
-        _SellerProfileMenu(
-          name: user?.displayName ?? 'Tanker Owner',
-          email: user?.email ?? user?.phoneNumber ?? 'WaterBuddy partner',
-        ),
       ],
       body: IndexedStack(
         index: _tab,
@@ -59,6 +55,7 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
           _FleetView(),
           _DriversView(),
           _SellerPayoutsView(),
+          _SellerProfileView(),
         ],
       ),
     );
@@ -151,183 +148,6 @@ class _SellerNotificationButton extends StatelessWidget {
         ),
       ),
       icon: const Icon(Icons.notifications_none_rounded),
-    );
-  }
-}
-
-class _SellerProfileMenu extends ConsumerWidget {
-  const _SellerProfileMenu({required this.name, required this.email});
-
-  final String name;
-  final String email;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return PopupMenuButton<String>(
-      tooltip: 'Profile and settings',
-      offset: const Offset(0, 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      onSelected: (value) async {
-        switch (value) {
-          case 'profile':
-          case 'settings':
-          case 'support':
-            _showProfileSheet(context, value);
-            break;
-          case 'logout':
-            await ref.read(authServiceProvider).signOut();
-            await ref.read(selectedRoleProvider.notifier).clear();
-            if (context.mounted) context.go(RouteNames.roleSelection);
-            break;
-        }
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem<String>(
-          enabled: false,
-          child: SizedBox(
-            width: 230,
-            child: Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: OpsColors.blue.withValues(alpha: 0.12),
-                  child: Text(
-                    name.trim().isEmpty ? 'T' : name.trim()[0].toUpperCase(),
-                    style: const TextStyle(
-                      color: OpsColors.blue,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: OpsColors.ink,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      Text(
-                        email,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: OpsColors.muted,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const PopupMenuDivider(),
-        const PopupMenuItem(
-          value: 'profile',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.storefront_rounded),
-            title: Text('Business profile'),
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'settings',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.settings_rounded),
-            title: Text('Settings'),
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'support',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.support_agent_rounded),
-            title: Text('Support'),
-          ),
-        ),
-        const PopupMenuDivider(),
-        const PopupMenuItem(
-          value: 'logout',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.logout_rounded, color: OpsColors.red),
-            title: Text('Logout', style: TextStyle(color: OpsColors.red)),
-          ),
-        ),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: CircleAvatar(
-          backgroundColor: OpsColors.blue.withValues(alpha: 0.12),
-          child: Text(
-            name.trim().isEmpty ? 'T' : name.trim()[0].toUpperCase(),
-            style: const TextStyle(
-              color: OpsColors.blue,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showProfileSheet(BuildContext context, String section) {
-    final title = switch (section) {
-      'settings' => 'Settings',
-      'support' => 'Support',
-      _ => 'Business profile',
-    };
-    final message = switch (section) {
-      'settings' =>
-        'Availability, fleet preferences, payout account, and notification settings belong here.',
-      'support' =>
-        'For seller help, contact waterbuddyapp.wb@gmail.com with your registered mobile number.',
-      _ =>
-        'Owner details, business documents, vehicle RC, tanker photos, and approval status belong here.',
-    };
-
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: Colors.white,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: OpsColors.ink,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 14),
-              OpsCard(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    color: OpsColors.muted,
-                    height: 1.35,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -802,11 +622,13 @@ class _FleetView extends ConsumerStatefulWidget {
 class _FleetViewState extends ConsumerState<_FleetView> {
   final _vehicle = TextEditingController();
   final _capacity = TextEditingController();
+  final _rcNumber = TextEditingController();
 
   @override
   void dispose() {
     _vehicle.dispose();
     _capacity.dispose();
+    _rcNumber.dispose();
     super.dispose();
   }
 
@@ -818,6 +640,7 @@ class _FleetViewState extends ConsumerState<_FleetView> {
           'vehicleNumber': _vehicle.text.trim().toUpperCase(),
           'capacity':
               int.tryParse(_capacity.text.trim()) ?? _capacity.text.trim(),
+          'rcNumber': _rcNumber.text.trim().toUpperCase(),
           'status': 'available',
           'createdAt': Timestamp.now(),
         }
@@ -826,6 +649,7 @@ class _FleetViewState extends ConsumerState<_FleetView> {
     }, SetOptions(merge: true));
     _vehicle.clear();
     _capacity.clear();
+    _rcNumber.clear();
   }
 
   @override
@@ -887,38 +711,83 @@ class _FleetViewState extends ConsumerState<_FleetView> {
   }
 
   void _showVehicleDialog(BuildContext context, String uid) {
-    showDialog(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add tanker'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _vehicle,
-              textCapitalization: TextCapitalization.characters,
-              decoration: _fieldDecoration('Vehicle number'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _capacity,
-              keyboardType: TextInputType.number,
-              decoration: _fieldDecoration('Capacity in litres'),
-            ),
-          ],
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+          top: 4,
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () async {
-              await _addVehicle(uid);
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Save'),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Add tanker',
+                style: TextStyle(
+                  color: OpsColors.ink,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Add a tanker that can be assigned to owner-driver or fleet driver deliveries.',
+                style: TextStyle(
+                  color: OpsColors.muted,
+                  height: 1.35,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 18),
+              TextField(
+                controller: _vehicle,
+                textCapitalization: TextCapitalization.characters,
+                decoration: _fieldDecoration('Vehicle number'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _capacity,
+                keyboardType: TextInputType.number,
+                decoration: _fieldDecoration('Capacity in litres'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _rcNumber,
+                textCapitalization: TextCapitalization.characters,
+                decoration: _fieldDecoration('RC number'),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () async {
+                        await _addVehicle(uid);
+                        if (context.mounted) Navigator.pop(context);
+                      },
+                      child: const Text('Save tanker'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1006,12 +875,18 @@ class _DriversViewState extends ConsumerState<_DriversView> {
   final _name = TextEditingController();
   final _phone = TextEditingController();
   final _email = TextEditingController();
+  final _license = TextEditingController();
+  final _emergency = TextEditingController();
+  final _address = TextEditingController();
 
   @override
   void dispose() {
     _name.dispose();
     _phone.dispose();
     _email.dispose();
+    _license.dispose();
+    _emergency.dispose();
+    _address.dispose();
     super.dispose();
   }
 
@@ -1021,6 +896,9 @@ class _DriversViewState extends ConsumerState<_DriversView> {
       'driverName': _name.text.trim(),
       'phone': _phone.text.trim(),
       'email': _email.text.trim(),
+      'driverLicenseNumber': _license.text.trim(),
+      'emergencyContact': _emergency.text.trim(),
+      'address': _address.text.trim(),
       'sellerId': sellerId,
       'verificationStatus': 'pending',
       'isOnline': false,
@@ -1030,6 +908,9 @@ class _DriversViewState extends ConsumerState<_DriversView> {
     _name.clear();
     _phone.clear();
     _email.clear();
+    _license.clear();
+    _emergency.clear();
+    _address.clear();
   }
 
   @override
@@ -1086,41 +967,104 @@ class _DriversViewState extends ConsumerState<_DriversView> {
   }
 
   void _showDriverDialog(BuildContext context, String uid) {
-    showDialog(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add driver'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-                controller: _name, decoration: _fieldDecoration('Full name')),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _phone,
-              keyboardType: TextInputType.phone,
-              decoration: _fieldDecoration('Mobile number'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _email,
-              keyboardType: TextInputType.emailAddress,
-              decoration: _fieldDecoration('Email optional'),
-            ),
-          ],
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+          top: 4,
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () async {
-              await _addDriver(uid);
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Save'),
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Add driver',
+                  style: TextStyle(
+                    color: OpsColors.ink,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Add a driver who can be assigned to accepted water delivery runs.',
+                  style: TextStyle(
+                    color: OpsColors.muted,
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                TextField(
+                  controller: _name,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: _fieldDecoration('Full name'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _phone,
+                  keyboardType: TextInputType.phone,
+                  decoration: _fieldDecoration('Mobile number'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _license,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: _fieldDecoration('License number'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _emergency,
+                  keyboardType: TextInputType.phone,
+                  decoration: _fieldDecoration('Emergency contact'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _address,
+                  minLines: 2,
+                  maxLines: 3,
+                  decoration: _fieldDecoration('Address'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _email,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: _fieldDecoration('Email optional'),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () async {
+                          await _addDriver(uid);
+                          if (context.mounted) Navigator.pop(context);
+                        },
+                        child: const Text('Save driver'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1293,6 +1237,159 @@ class _SellerPayoutsView extends ConsumerWidget {
     return data['amount'] as num? ??
         data['totalAmount'] as num? ??
         data['price'] as num?;
+  }
+}
+
+class _SellerProfileView extends ConsumerWidget {
+  const _SellerProfileView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
+    if (user == null) return const SizedBox.shrink();
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('sellers')
+          .doc(user.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data() ?? {};
+        final name =
+            (data['businessName'] ?? data['ownerName'] ?? 'Tanker owner')
+                .toString();
+        final contact =
+            (data['phoneNumber'] ?? data['email'] ?? 'Not recorded').toString();
+        final status = (data['verificationStatus'] ?? 'approved').toString();
+
+        return ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            OpsCard(
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: OpsColors.blue.withValues(alpha: 0.12),
+                    child: const Icon(Icons.storefront_rounded,
+                        color: OpsColors.blue),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: OpsColors.ink,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        Text(
+                          contact,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: OpsColors.muted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  OpsStatusPill(
+                    label: status.toUpperCase(),
+                    color: orderStatusColor(status),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            OpsCard(
+              child: Column(
+                children: [
+                  _SellerSettingsRow(
+                    icon: Icons.description_rounded,
+                    title: 'Business documents',
+                    subtitle:
+                        'RC, Aadhaar, tanker photos, and approval details.',
+                  ),
+                  const Divider(height: 24),
+                  _SellerSettingsRow(
+                    icon: Icons.account_balance_rounded,
+                    title: 'Payout account',
+                    subtitle:
+                        'Bank and settlement details for delivered orders.',
+                  ),
+                  const Divider(height: 24),
+                  _SellerSettingsRow(
+                    icon: Icons.support_agent_rounded,
+                    title: 'Support',
+                    subtitle: 'waterbuddyapp.wb@gmail.com',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  await ref.read(authServiceProvider).signOut();
+                  await ref.read(selectedRoleProvider.notifier).clear();
+                  if (context.mounted) context.go(RouteNames.roleSelection);
+                },
+                icon: const Icon(Icons.logout_rounded, color: OpsColors.red),
+                label: const Text('Logout'),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SellerSettingsRow extends StatelessWidget {
+  const _SellerSettingsRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: OpsColors.blue),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: OpsColors.ink,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: OpsColors.muted),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 

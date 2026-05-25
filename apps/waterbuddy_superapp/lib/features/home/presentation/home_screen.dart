@@ -661,7 +661,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         : (_currentAddress ?? 'Fetching location...');
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      constraints: const BoxConstraints(minHeight: 72),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.94),
         borderRadius: BorderRadius.circular(16),
@@ -688,19 +689,19 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   'Water Delivery Location',
                   style: TextStyle(
                     color: const Color(0xFF64748B),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
+                const SizedBox(height: 3),
                 Text(
                   locText,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Color(0xFFE0F2FE),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF0F172A),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ],
@@ -1109,33 +1110,54 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.home_rounded, color: Color(0xFF0EA5E9)),
-            title: const Text('Home',
+            leading:
+                const Icon(Icons.home_work_rounded, color: Color(0xFF0EA5E9)),
+            title: const Text('Saved addresses',
                 style: TextStyle(
                     color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
             onTap: () {
               Navigator.pop(context);
+              context.push(RouteNames.locationSelection,
+                  extra: _currentAddress);
             },
           ),
           ListTile(
-            leading: const Icon(Icons.receipt_long_rounded,
+            leading:
+                const Icon(Icons.credit_card_rounded, color: Color(0xFF0EA5E9)),
+            title: const Text('Payment methods',
+                style: TextStyle(
+                    color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
+            onTap: () {
+              Navigator.pop(context);
+              context.go(RouteNames.payments);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.support_agent_rounded,
                 color: Color(0xFF0EA5E9)),
-            title: const Text('History',
+            title: const Text('Support',
                 style: TextStyle(
                     color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
             onTap: () {
               Navigator.pop(context);
-              context.go(RouteNames.orders);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Support: waterbuddyapp.wb@gmail.com')),
+              );
             },
           ),
           ListTile(
-            leading: const Icon(Icons.person_rounded, color: Color(0xFF0EA5E9)),
-            title: const Text('Profile',
+            leading:
+                const Icon(Icons.settings_rounded, color: Color(0xFF0EA5E9)),
+            title: const Text('App settings',
                 style: TextStyle(
                     color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
             onTap: () {
               Navigator.pop(context);
-              context.go(RouteNames.profile);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Settings will be available soon')),
+              );
             },
           ),
         ],

@@ -70,6 +70,19 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
               _field(_email, 'Email Address', Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress),
               _field(_password, 'Password', Icons.lock_outline, obscure: true),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _loading ? null : _forgotPassword,
+                  child: const Text(
+                    'Forgot password?',
+                    style: TextStyle(
+                      color: Color(0xFF67E8F9),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: _loading ? null : _submit,
@@ -180,6 +193,32 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
       setState(() => _error = e.message);
     } catch (_) {
       setState(() => _error = 'Unable to complete action.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    final email = _email.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() => _error = 'Enter your registered email first.');
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authServiceProvider).sendPasswordResetEmail(email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Password reset link sent to $email')),
+      );
+    } on AuthFailure catch (e) {
+      setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = 'Unable to send reset link right now.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

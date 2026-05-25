@@ -37,6 +37,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     OpsTab(label: 'Orders', icon: Icons.radar_rounded),
     OpsTab(label: 'Users', icon: Icons.people_alt_rounded),
     OpsTab(label: 'Payments', icon: Icons.payments_rounded),
+    OpsTab(label: 'Profile', icon: Icons.admin_panel_settings_rounded),
   ];
 
   @override
@@ -81,12 +82,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           tabs: _tabs,
           activeIndex: _tab,
           onTabChanged: (index) => setState(() => _tab = index),
-          actions: [
-            _AdminProfileMenu(
-              name: user.displayName ?? 'Admin',
-              email: user.email ?? 'WaterBuddy admin',
-            ),
-          ],
+          actions: const [],
           body: IndexedStack(
             index: _tab,
             children: const [
@@ -95,199 +91,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               _AdminOrdersView(),
               _UsersView(),
               _PaymentsView(),
+              _AdminProfileView(),
             ],
           ),
         );
       },
-    );
-  }
-}
-
-class _AdminProfileMenu extends ConsumerWidget {
-  const _AdminProfileMenu({required this.name, required this.email});
-
-  final String name;
-  final String email;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return PopupMenuButton<String>(
-      tooltip: 'Admin profile and settings',
-      offset: const Offset(0, 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      onSelected: (value) async {
-        switch (value) {
-          case 'profile':
-          case 'security':
-          case 'settings':
-          case 'support':
-            _showAdminSheet(context, value);
-            break;
-          case 'logout':
-            await ref.read(authServiceProvider).signOut();
-            await ref.read(selectedRoleProvider.notifier).clear();
-            if (context.mounted) context.go(RouteNames.roleSelection);
-            break;
-        }
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem<String>(
-          enabled: false,
-          child: SizedBox(
-            width: 240,
-            child: Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: OpsColors.green.withValues(alpha: 0.12),
-                  child: Text(
-                    name.trim().isEmpty ? 'A' : name.trim()[0].toUpperCase(),
-                    style: const TextStyle(
-                      color: OpsColors.green,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: OpsColors.ink,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      Text(
-                        email,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: OpsColors.muted,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const PopupMenuDivider(),
-        const PopupMenuItem(
-          value: 'profile',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.admin_panel_settings_rounded),
-            title: Text('Admin profile'),
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'security',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.shield_rounded),
-            title: Text('Security access'),
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'settings',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.settings_rounded),
-            title: Text('Console settings'),
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'support',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.support_agent_rounded),
-            title: Text('Support'),
-          ),
-        ),
-        const PopupMenuDivider(),
-        const PopupMenuItem(
-          value: 'logout',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.logout_rounded, color: OpsColors.red),
-            title: Text('Logout', style: TextStyle(color: OpsColors.red)),
-          ),
-        ),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: CircleAvatar(
-          backgroundColor: OpsColors.green.withValues(alpha: 0.12),
-          child: Text(
-            name.trim().isEmpty ? 'A' : name.trim()[0].toUpperCase(),
-            style: const TextStyle(
-              color: OpsColors.green,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showAdminSheet(BuildContext context, String section) {
-    final title = switch (section) {
-      'security' => 'Security access',
-      'settings' => 'Console settings',
-      'support' => 'Support',
-      _ => 'Admin profile',
-    };
-    final message = switch (section) {
-      'security' =>
-        'Admin access is controlled by the allowlist and admins collection.',
-      'settings' =>
-        'Operational settings for approvals, payments, users, and alerts belong here.',
-      'support' =>
-        'For operational issues, use waterbuddyapp.wb@gmail.com with the affected user or order ID.',
-      _ =>
-        'This admin profile controls seller approvals, driver approvals, user suspension, order monitoring, and payments.',
-    };
-
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: Colors.white,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: OpsColors.ink,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 14),
-              OpsCard(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    color: OpsColors.muted,
-                    height: 1.35,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -939,6 +747,140 @@ class _PaymentsView extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => Center(child: Text(error.toString())),
+    );
+  }
+}
+
+class _AdminProfileView extends ConsumerWidget {
+  const _AdminProfileView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authStateProvider).value;
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        OpsCard(
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: OpsColors.green.withValues(alpha: 0.12),
+                child: const Icon(
+                  Icons.admin_panel_settings_rounded,
+                  color: OpsColors.green,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user?.displayName ?? 'Admin',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: OpsColors.ink,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      user?.email ?? 'WaterBuddy admin',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: OpsColors.muted),
+                    ),
+                  ],
+                ),
+              ),
+              const OpsStatusPill(label: 'ADMIN', color: OpsColors.green),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        const OpsCard(
+          child: Column(
+            children: [
+              _SettingsRow(
+                icon: Icons.shield_rounded,
+                title: 'Security access',
+                subtitle: 'Allowlist and admins collection control access.',
+              ),
+              Divider(height: 24),
+              _SettingsRow(
+                icon: Icons.settings_rounded,
+                title: 'Console settings',
+                subtitle:
+                    'Approvals, users, payments, and operations settings.',
+              ),
+              Divider(height: 24),
+              _SettingsRow(
+                icon: Icons.support_agent_rounded,
+                title: 'Support',
+                subtitle: 'waterbuddyapp.wb@gmail.com',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              await ref.read(authServiceProvider).signOut();
+              await ref.read(selectedRoleProvider.notifier).clear();
+              if (context.mounted) context.go(RouteNames.roleSelection);
+            },
+            icon: const Icon(Icons.logout_rounded, color: OpsColors.red),
+            label: const Text('Logout'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SettingsRow extends StatelessWidget {
+  const _SettingsRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: OpsColors.blue),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: OpsColors.ink,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: OpsColors.muted),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

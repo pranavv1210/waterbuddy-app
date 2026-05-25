@@ -31,7 +31,6 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final online = ref.watch(driverOnlineProvider);
-    final user = ref.watch(currentUserProvider);
 
     return OpsScaffold(
       title: 'Driver',
@@ -47,10 +46,6 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
               ref.read(driverOnlineProvider.notifier).setOnline(value),
         ),
         const _DriverNotificationButton(),
-        _DriverProfileMenu(
-          name: user?.displayName ?? 'Driver',
-          email: user?.email ?? user?.phoneNumber ?? 'WaterBuddy driver',
-        ),
       ],
       body: IndexedStack(
         index: _tab,
@@ -151,183 +146,6 @@ class _DriverNotificationButton extends StatelessWidget {
         ),
       ),
       icon: const Icon(Icons.notifications_none_rounded),
-    );
-  }
-}
-
-class _DriverProfileMenu extends ConsumerWidget {
-  const _DriverProfileMenu({required this.name, required this.email});
-
-  final String name;
-  final String email;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return PopupMenuButton<String>(
-      tooltip: 'Driver profile and settings',
-      offset: const Offset(0, 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      onSelected: (value) async {
-        switch (value) {
-          case 'profile':
-          case 'settings':
-          case 'support':
-            _showDriverSheet(context, value);
-            break;
-          case 'logout':
-            await ref.read(authServiceProvider).signOut();
-            await ref.read(selectedRoleProvider.notifier).clear();
-            if (context.mounted) context.go(RouteNames.roleSelection);
-            break;
-        }
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem<String>(
-          enabled: false,
-          child: SizedBox(
-            width: 230,
-            child: Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: OpsColors.amber.withValues(alpha: 0.14),
-                  child: Text(
-                    name.trim().isEmpty ? 'D' : name.trim()[0].toUpperCase(),
-                    style: const TextStyle(
-                      color: OpsColors.amber,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: OpsColors.ink,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      Text(
-                        email,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: OpsColors.muted,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const PopupMenuDivider(),
-        const PopupMenuItem(
-          value: 'profile',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.badge_rounded),
-            title: Text('Driver profile'),
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'settings',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.settings_rounded),
-            title: Text('Duty settings'),
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'support',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.support_agent_rounded),
-            title: Text('Support'),
-          ),
-        ),
-        const PopupMenuDivider(),
-        const PopupMenuItem(
-          value: 'logout',
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.logout_rounded, color: OpsColors.red),
-            title: Text('Logout', style: TextStyle(color: OpsColors.red)),
-          ),
-        ),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: CircleAvatar(
-          backgroundColor: OpsColors.amber.withValues(alpha: 0.14),
-          child: Text(
-            name.trim().isEmpty ? 'D' : name.trim()[0].toUpperCase(),
-            style: const TextStyle(
-              color: OpsColors.amber,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showDriverSheet(BuildContext context, String section) {
-    final title = switch (section) {
-      'support' => 'Support',
-      'settings' => 'Duty settings',
-      _ => 'Driver profile',
-    };
-    final message = switch (section) {
-      'support' =>
-        'For driver support, contact waterbuddyapp.wb@gmail.com with your registered mobile number.',
-      'settings' =>
-        'Duty status, navigation preference, emergency contact, and delivery alert settings belong here.',
-      _ =>
-        'License, Aadhaar, profile photo, emergency contact, address, and approval status belong here.',
-    };
-
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: Colors.white,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: OpsColors.ink,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 14),
-              OpsCard(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    color: OpsColors.muted,
-                    height: 1.35,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -773,9 +591,88 @@ class _DriverProfileView extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+            const OpsCard(
+              child: Column(
+                children: [
+                  _DriverSettingsRow(
+                    icon: Icons.settings_rounded,
+                    title: 'Duty settings',
+                    subtitle: 'Navigation, delivery alerts, and availability.',
+                  ),
+                  Divider(height: 24),
+                  _DriverSettingsRow(
+                    icon: Icons.health_and_safety_rounded,
+                    title: 'Emergency details',
+                    subtitle: 'Emergency contact and verified address.',
+                  ),
+                  Divider(height: 24),
+                  _DriverSettingsRow(
+                    icon: Icons.support_agent_rounded,
+                    title: 'Support',
+                    subtitle: 'waterbuddyapp.wb@gmail.com',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  await ref.read(authServiceProvider).signOut();
+                  await ref.read(selectedRoleProvider.notifier).clear();
+                  if (context.mounted) context.go(RouteNames.roleSelection);
+                },
+                icon: const Icon(Icons.logout_rounded, color: OpsColors.red),
+                label: const Text('Logout'),
+              ),
+            ),
           ],
         );
       },
+    );
+  }
+}
+
+class _DriverSettingsRow extends StatelessWidget {
+  const _DriverSettingsRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: OpsColors.amber),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: OpsColors.ink,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: OpsColors.muted),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
