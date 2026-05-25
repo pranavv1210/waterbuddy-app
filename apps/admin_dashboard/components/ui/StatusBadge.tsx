@@ -7,19 +7,29 @@ export function StatusBadge({ value }: StatusBadgeProps) {
 
   const styles =
     normalized === "searching"
-      ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+      ? "bg-sky-50 text-sky-700 border-sky-200"
       : normalized === "assigned"
-      ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
-      : normalized === "on the way"
-      ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-      : normalized === "delivered" || normalized === "resolved" || normalized === "online" || normalized === "completed" || normalized === "approved" || normalized === "active"
-      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-      : normalized === "cancelled" || normalized === "rejected" || normalized === "blocked" || normalized === "critical"
-      ? "bg-red-500/10 text-red-400 border-red-500/20"
-      : "bg-white/5 text-white/40 border-white/10";
+        ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+        : normalized === "on the way"
+          ? "bg-amber-50 text-amber-700 border-amber-200"
+          : normalized === "delivered" ||
+              normalized === "resolved" ||
+              normalized === "online" ||
+              normalized === "completed" ||
+              normalized === "approved" ||
+              normalized === "active"
+            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+            : normalized === "cancelled" ||
+                normalized === "rejected" ||
+                normalized === "blocked" ||
+                normalized === "critical"
+              ? "bg-red-50 text-red-700 border-red-200"
+              : "bg-slate-50 text-slate-600 border-slate-200";
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${styles}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${styles}`}
+    >
       <span className="h-1 w-1 rounded-full bg-current"></span>
       {value}
     </span>

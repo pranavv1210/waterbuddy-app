@@ -28,9 +28,14 @@ function getInitials(name: string): string {
     .join("");
 }
 
-function filterSellers(sellers: SellerRecord[], activeFilter: "all" | "pending" | "inactive") {
+function filterSellers(
+  sellers: SellerRecord[],
+  activeFilter: "all" | "pending" | "inactive",
+) {
   if (activeFilter === "pending") {
-    return sellers.filter((seller) => normalizeKycStatus(seller.kycStatus).includes("pending"));
+    return sellers.filter((seller) =>
+      normalizeKycStatus(seller.kycStatus).includes("pending"),
+    );
   }
   if (activeFilter === "inactive") {
     return sellers.filter((seller) => !seller.enabled);
@@ -54,12 +59,21 @@ export function SellersTable({
   const totalPages = Math.max(1, Math.ceil(filteredSellers.length / pageSize));
   const safePage = Math.min(page, totalPages);
   const startIndex = (safePage - 1) * pageSize;
-  const visibleSellers = filteredSellers.slice(startIndex, startIndex + pageSize);
-  const pageNumbers = Array.from({ length: Math.min(3, totalPages) }, (_, index) => index + 1);
+  const visibleSellers = filteredSellers.slice(
+    startIndex,
+    startIndex + pageSize,
+  );
+  const pageNumbers = Array.from(
+    { length: Math.min(3, totalPages) },
+    (_, index) => index + 1,
+  );
 
-  const [selectedSellerForDocs, setSelectedSellerForDocs] = useState<SellerRecord | null>(null);
+  const [selectedSellerForDocs, setSelectedSellerForDocs] =
+    useState<SellerRecord | null>(null);
 
-  const pendingCount = sellers.filter((seller) => normalizeKycStatus(seller.kycStatus).includes("pending")).length;
+  const pendingCount = sellers.filter((seller) =>
+    normalizeKycStatus(seller.kycStatus).includes("pending"),
+  ).length;
   const inactiveCount = sellers.filter((seller) => !seller.enabled).length;
 
   return (
@@ -100,14 +114,6 @@ export function SellersTable({
             Inactive ({inactiveCount})
           </button>
         </div>
-
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 text-xs font-bold text-white/80 transition-all hover:bg-white/10"
-        >
-          <span className="material-symbols-outlined text-lg">filter_list</span>
-          Advanced Filters
-        </button>
       </div>
 
       <div className="overflow-x-auto">
@@ -127,15 +133,22 @@ export function SellersTable({
               const isPending = normalizedKyc.includes("pending");
 
               return (
-                <tr key={seller.id} className="group transition-colors duration-200 hover:bg-white/5">
+                <tr
+                  key={seller.id}
+                  className="group transition-colors duration-200 hover:bg-white/5"
+                >
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
                       <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-[#0F766E]/20 font-bold text-[#14B8A6] border border-[#14B8A6]/10 shadow-[0_0_15px_rgba(20,184,166,0.1)]">
                         {getInitials(seller.name)}
                       </div>
                       <div>
-                        <p className="text-base font-bold text-white/90">{seller.name}</p>
-                        <p className="text-sm text-white/40 font-medium">{seller.phone !== "-" ? seller.phone : seller.id}</p>
+                        <p className="text-base font-bold text-white/90">
+                          {seller.name}
+                        </p>
+                        <p className="text-sm text-white/40 font-medium">
+                          {seller.phone !== "-" ? seller.phone : seller.id}
+                        </p>
                       </div>
                     </div>
                   </td>
@@ -159,7 +172,9 @@ export function SellersTable({
                           }`}
                         ></span>
                       </button>
-                      <span className={`text-xs font-bold uppercase tracking-wider ${seller.enabled ? "text-[#14B8A6]" : "text-white/40"}`}>
+                      <span
+                        className={`text-xs font-bold uppercase tracking-wider ${seller.enabled ? "text-[#14B8A6]" : "text-white/40"}`}
+                      >
                         {seller.enabled ? "Online" : "Offline"}
                       </span>
                     </div>
@@ -168,13 +183,24 @@ export function SellersTable({
                   <td className="px-6 py-6 text-center">
                     {typeof seller.rating === "number" ? (
                       <div className="flex items-center justify-center gap-1 text-amber-400">
-                        <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                        <span className="text-sm font-black text-white">{seller.rating.toFixed(1)}</span>
+                        <span
+                          className="material-symbols-outlined text-lg"
+                          style={{ fontVariationSettings: "'FILL' 1" }}
+                        >
+                          star
+                        </span>
+                        <span className="text-sm font-black text-white">
+                          {seller.rating.toFixed(1)}
+                        </span>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-1 text-white/20">
-                        <span className="material-symbols-outlined text-lg">star</span>
-                        <span className="text-sm font-bold uppercase tracking-tighter">N/A</span>
+                        <span className="material-symbols-outlined text-lg">
+                          star
+                        </span>
+                        <span className="text-sm font-bold uppercase tracking-tighter">
+                          N/A
+                        </span>
                       </div>
                     )}
                   </td>
@@ -208,7 +234,11 @@ export function SellersTable({
                       ) : (
                         <button
                           type="button"
-                          onClick={() => router.push(`/sellers?seller=${encodeURIComponent(seller.name)}`)}
+                          onClick={() =>
+                            router.push(
+                              `/sellers?seller=${encodeURIComponent(seller.name)}`,
+                            )
+                          }
                           className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-white/60 transition-all hover:bg-white/10 hover:text-white"
                         >
                           View Details
@@ -224,12 +254,20 @@ export function SellersTable({
       </div>
 
       {visibleSellers.length === 0 && (
-        <div className="p-16 text-center text-sm text-white/20">No sellers found matching the selected filter.</div>
+        <div className="p-16 text-center text-sm text-white/20">
+          No sellers found matching the selected filter.
+        </div>
       )}
 
       <div className="flex items-center justify-between bg-white/[0.02] border-t border-white/5 px-8 py-6">
         <p className="text-xs font-medium text-white/40">
-          Showing <span className="text-white/80">{filteredSellers.length === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + pageSize, filteredSellers.length)}</span> of <span className="text-white/80">{filteredSellers.length}</span> sellers
+          Showing{" "}
+          <span className="text-white/80">
+            {filteredSellers.length === 0 ? 0 : startIndex + 1}-
+            {Math.min(startIndex + pageSize, filteredSellers.length)}
+          </span>{" "}
+          of <span className="text-white/80">{filteredSellers.length}</span>{" "}
+          sellers
         </p>
 
         <div className="flex gap-2">
@@ -272,7 +310,9 @@ export function SellersTable({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-[#0D1117] border border-white/10 p-8 shadow-2xl">
             <div className="mb-6 flex items-center justify-between">
-              <h3 className="text-2xl font-bold text-white">KYC Documents: {selectedSellerForDocs.name}</h3>
+              <h3 className="text-2xl font-bold text-white">
+                KYC Documents: {selectedSellerForDocs.name}
+              </h3>
               <button
                 type="button"
                 onClick={() => setSelectedSellerForDocs(null)}
@@ -281,52 +321,83 @@ export function SellersTable({
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
-            
-            {!(selectedSellerForDocs.documents || selectedSellerForDocs.aadhaarUploadUrl || selectedSellerForDocs.licenseUploadUrl || selectedSellerForDocs.vehicleRcUploadUrl) ? (
-              <div className="p-8 text-center text-white/40">No documents uploaded by this seller.</div>
+
+            {!(
+              selectedSellerForDocs.documents ||
+              selectedSellerForDocs.aadhaarUploadUrl ||
+              selectedSellerForDocs.licenseUploadUrl ||
+              selectedSellerForDocs.vehicleRcUploadUrl
+            ) ? (
+              <div className="p-8 text-center text-white/40">
+                No documents uploaded by this seller.
+              </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <p className="text-sm font-bold uppercase tracking-wider text-white/40">Aadhaar Card</p>
-                  {(selectedSellerForDocs.documents?.aadhaarUrl || selectedSellerForDocs.aadhaarUploadUrl) ? (
+                  <p className="text-sm font-bold uppercase tracking-wider text-white/40">
+                    Aadhaar Card
+                  </p>
+                  {selectedSellerForDocs.documents?.aadhaarUrl ||
+                  selectedSellerForDocs.aadhaarUploadUrl ? (
                     <img
-                      src={selectedSellerForDocs.documents?.aadhaarUrl || selectedSellerForDocs.aadhaarUploadUrl}
+                      src={
+                        selectedSellerForDocs.documents?.aadhaarUrl ||
+                        selectedSellerForDocs.aadhaarUploadUrl
+                      }
                       alt="Aadhaar"
                       className="w-full rounded-xl border border-white/10 object-cover"
                     />
                   ) : (
-                    <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 text-white/40">Missing</div>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <p className="text-sm font-bold uppercase tracking-wider text-white/40">Driving License</p>
-                  {(selectedSellerForDocs.documents?.dlUrl || selectedSellerForDocs.licenseUploadUrl) ? (
-                    <img
-                      src={selectedSellerForDocs.documents?.dlUrl || selectedSellerForDocs.licenseUploadUrl}
-                      alt="Driving License"
-                      className="w-full rounded-xl border border-white/10 object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 text-white/40">Missing</div>
+                    <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 text-white/40">
+                      Missing
+                    </div>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-sm font-bold uppercase tracking-wider text-white/40">RC Book</p>
-                  {(selectedSellerForDocs.documents?.rcUrl || selectedSellerForDocs.vehicleRcUploadUrl) ? (
+                  <p className="text-sm font-bold uppercase tracking-wider text-white/40">
+                    Driving License
+                  </p>
+                  {selectedSellerForDocs.documents?.dlUrl ||
+                  selectedSellerForDocs.licenseUploadUrl ? (
                     <img
-                      src={selectedSellerForDocs.documents?.rcUrl || selectedSellerForDocs.vehicleRcUploadUrl}
+                      src={
+                        selectedSellerForDocs.documents?.dlUrl ||
+                        selectedSellerForDocs.licenseUploadUrl
+                      }
+                      alt="Driving License"
+                      className="w-full rounded-xl border border-white/10 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 text-white/40">
+                      Missing
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-bold uppercase tracking-wider text-white/40">
+                    RC Book
+                  </p>
+                  {selectedSellerForDocs.documents?.rcUrl ||
+                  selectedSellerForDocs.vehicleRcUploadUrl ? (
+                    <img
+                      src={
+                        selectedSellerForDocs.documents?.rcUrl ||
+                        selectedSellerForDocs.vehicleRcUploadUrl
+                      }
                       alt="RC Book"
                       className="w-full rounded-xl border border-white/10 object-cover"
                     />
                   ) : (
-                    <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 text-white/40">Missing</div>
+                    <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 text-white/40">
+                      Missing
+                    </div>
                   )}
                 </div>
               </div>
             )}
-            
+
             <div className="mt-8 flex justify-end gap-4 border-t border-white/10 pt-6">
               <button
                 type="button"

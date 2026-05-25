@@ -40,24 +40,35 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         type="button"
         aria-hidden={!isOpen}
         onClick={onClose}
-        className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity lg:hidden ${
-          isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        className={`fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm transition-opacity lg:hidden ${
+          isOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
         }`}
       />
 
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-full w-64 flex-col bg-[#0D1117]/80 backdrop-blur-2xl border-r border-white/5 text-white transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r border-sky-100 bg-white text-slate-950 shadow-xl transition-transform duration-300 lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Branding */}
         <div className="px-6 py-8 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0F766E]/20 text-[#14B8A6] border border-[#14B8A6]/20">
-            <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>water_drop</span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-sky-200 bg-sky-50 text-sky-600">
+            <span
+              className="material-symbols-outlined text-2xl"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              water_drop
+            </span>
           </div>
           <div>
-            <div className="text-xl font-bold tracking-tight text-white">WaterBuddy</div>
-            <div className="text-[10px] font-medium uppercase tracking-wider text-[#14B8A6]">Admin Console</div>
+            <div className="text-xl font-bold tracking-tight text-slate-950">
+              WaterBuddy
+            </div>
+            <div className="text-[10px] font-medium uppercase tracking-wider text-sky-600">
+              Admin Console
+            </div>
           </div>
         </div>
 
@@ -66,9 +77,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <button
             type="button"
             onClick={() => void navigateWithClose("/orders")}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0F766E] py-3 font-bold text-white shadow-[0_0_15px_rgba(15,118,110,0.4)] transition-all hover:bg-[#14B8A6] hover:shadow-[0_0_25px_rgba(20,184,166,0.5)]"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-600 py-3 font-bold text-white shadow-sm transition-all hover:bg-sky-700"
           >
-            <span className="material-symbols-outlined text-lg">add_circle</span>
+            <span className="material-symbols-outlined text-lg">
+              add_circle
+            </span>
             <span>New Dispatch</span>
           </button>
         </div>
@@ -84,37 +97,52 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 onClick={() => void navigateWithClose(item.href)}
                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all duration-200 ${
                   isActive
-                    ? "bg-[#14B8A6]/10 text-[#14B8A6] border border-[#14B8A6]/20 shadow-[0_0_10px_rgba(20,184,166,0.1)]"
-                    : "text-white/60 hover:bg-white/5 hover:text-white border border-transparent"
+                    ? "border border-sky-200 bg-sky-50 text-sky-700"
+                    : "border border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-950"
                 }`}
               >
-                <span className="material-symbols-outlined text-xl" style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>{item.icon}</span>
-                <span className={`text-xs uppercase tracking-wider ${isActive ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
+                <span
+                  className="material-symbols-outlined text-xl"
+                  style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}
+                >
+                  {item.icon}
+                </span>
+                <span
+                  className={`text-xs uppercase tracking-wider ${isActive ? "font-bold" : "font-medium"}`}
+                >
+                  {item.label}
+                </span>
               </button>
             );
           })}
         </nav>
 
         {/* Secondary Navigation */}
-        <div className="border-t border-white/5 px-3 pb-6 pt-4 space-y-1">
+        <div className="space-y-1 border-t border-sky-100 px-3 pb-6 pt-4">
           {secondaryNav.map((item) => (
             <button
               key={item.href}
               type="button"
               onClick={() => void navigateWithClose(item.href)}
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-white/60 transition-colors duration-200 hover:bg-white/5 hover:text-white"
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-slate-600 transition-colors duration-200 hover:bg-slate-50 hover:text-slate-950"
             >
-              <span className="material-symbols-outlined text-xl">{item.icon}</span>
-              <span className="text-xs font-medium uppercase tracking-wider">{item.label}</span>
+              <span className="material-symbols-outlined text-xl">
+                {item.icon}
+              </span>
+              <span className="text-xs font-medium uppercase tracking-wider">
+                {item.label}
+              </span>
             </button>
           ))}
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-white/60 transition-colors duration-200 hover:bg-red-500/10 hover:text-red-400"
+            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-slate-600 transition-colors duration-200 hover:bg-red-50 hover:text-red-600"
           >
             <span className="material-symbols-outlined text-xl">logout</span>
-            <span className="text-xs font-medium uppercase tracking-wider">Logout</span>
+            <span className="text-xs font-medium uppercase tracking-wider">
+              Logout
+            </span>
           </button>
         </div>
       </aside>

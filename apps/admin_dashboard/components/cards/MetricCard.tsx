@@ -16,13 +16,15 @@ export function MetricCard({
   isLive = false,
 }: MetricCardProps) {
   return (
-    <div className="bg-[#0D1117]/60 backdrop-blur-xl rounded-2xl border border-white/5 shadow-lg p-6 flex items-start justify-between hover:bg-white/5 transition-colors">
+    <div className="flex items-start justify-between rounded-2xl border border-sky-100 bg-white p-6 shadow-sm transition-colors hover:border-sky-200">
       <div className="flex-1">
         {/* Label */}
-        <p className="text-xs font-bold text-[#14B8A6] uppercase tracking-widest mb-1">{title}</p>
+        <p className="mb-1 text-xs font-bold uppercase tracking-widest text-sky-600">
+          {title}
+        </p>
 
         {/* Value */}
-        <h3 className="text-3xl font-extrabold text-white mb-2">{value}</h3>
+        <h3 className="mb-2 text-3xl font-extrabold text-slate-950">{value}</h3>
 
         {/* Subtitle or Trend */}
         {isLive ? (
@@ -34,21 +36,28 @@ export function MetricCard({
             <span>Live now</span>
           </div>
         ) : trend ? (
-          <div className={`flex items-center gap-1 text-xs font-bold ${trend.direction === "up" ? "text-green-400" : "text-red-400"} bg-${trend.direction === "up" ? "green" : "red"}-500/10 px-2 py-0.5 rounded-full w-fit`}>
+          <div
+            className={`flex items-center gap-1 text-xs font-bold ${trend.direction === "up" ? "text-green-400" : "text-red-400"} bg-${trend.direction === "up" ? "green" : "red"}-500/10 px-2 py-0.5 rounded-full w-fit`}
+          >
             <span className="material-symbols-outlined text-xs">
               {trend.direction === "up" ? "trending_up" : "trending_down"}
             </span>
             <span>{trend.value}</span>
           </div>
         ) : subtitle ? (
-          <p className="text-xs text-white/60 font-medium">{subtitle}</p>
+          <p className="text-xs font-medium text-slate-500">{subtitle}</p>
         ) : null}
       </div>
 
       {/* Icon */}
       {icon && (
-        <div className="bg-[#0F766E]/20 w-12 h-12 rounded-xl flex items-center justify-center text-[#14B8A6] shrink-0 border border-[#14B8A6]/10">
-          <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-sky-100 bg-sky-50 text-sky-600">
+          <span
+            className="material-symbols-outlined text-2xl"
+            style={{ fontVariationSettings: "'FILL' 1" }}
+          >
+            {icon}
+          </span>
         </div>
       )}
     </div>

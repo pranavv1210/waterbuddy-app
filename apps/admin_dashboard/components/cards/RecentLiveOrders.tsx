@@ -1,5 +1,6 @@
 import { OrderRecord } from "../../services/types";
 import { StatusBadge } from "../ui/StatusBadge";
+import { useRouter } from "next/router";
 
 interface RecentLiveOrdersProps {
   orders: OrderRecord[];
@@ -8,7 +9,8 @@ interface RecentLiveOrdersProps {
 function getTimeAgo(timestamp: number | string | undefined): string {
   if (!timestamp) return "Just now";
 
-  const ms = typeof timestamp === "string" ? new Date(timestamp).getTime() : timestamp;
+  const ms =
+    typeof timestamp === "string" ? new Date(timestamp).getTime() : timestamp;
   const now = new Date().getTime();
   const diffMs = now - ms;
   const diffMins = Math.floor(diffMs / 60000);
@@ -55,13 +57,20 @@ function getIconColor(status: string): string {
 }
 
 export function RecentLiveOrders({ orders }: RecentLiveOrdersProps) {
+  const router = useRouter();
   const recentOrders = orders.slice(0, 5);
 
   return (
     <div className="bg-[#0D1117]/60 backdrop-blur-xl rounded-2xl p-8 shadow-lg border border-white/5">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-white">Recent Live Orders</h2>
-        <button className="text-[#14B8A6] text-xs font-bold hover:underline transition-all">View All</button>
+        <button
+          type="button"
+          onClick={() => router.push("/orders")}
+          className="text-xs font-bold text-sky-600 transition-all hover:underline"
+        >
+          View All
+        </button>
       </div>
 
       <div className="space-y-4">
@@ -72,13 +81,19 @@ export function RecentLiveOrders({ orders }: RecentLiveOrdersProps) {
               className="group flex items-center gap-4 p-3 rounded-xl transition-all duration-200 hover:bg-white/5 border border-transparent hover:border-white/10"
             >
               {/* Icon */}
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-[#0F766E]/20 text-[#14B8A6] border border-[#14B8A6]/10`}>
-                <span className="material-symbols-outlined text-lg">{getStatusIcon(order.status)}</span>
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-[#0F766E]/20 text-[#14B8A6] border border-[#14B8A6]/10`}
+              >
+                <span className="material-symbols-outlined text-lg">
+                  {getStatusIcon(order.status)}
+                </span>
               </div>
 
               {/* Order Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-white truncate">#{order.id || "ORD-000"}</p>
+                <p className="text-sm font-bold text-white truncate">
+                  #{order.id || "ORD-000"}
+                </p>
                 <p className="text-[11px] text-white/60 font-medium truncate">
                   {order.customer || "Customer"} • {order.items || "Order"}
                 </p>
@@ -87,7 +102,9 @@ export function RecentLiveOrders({ orders }: RecentLiveOrdersProps) {
               {/* Status and Time */}
               <div className="text-right flex flex-col gap-1">
                 <StatusBadge value={order.status} />
-                <p className="text-[10px] text-white/60">{getTimeAgo(order.createdAt)}</p>
+                <p className="text-[10px] text-white/60">
+                  {getTimeAgo(order.createdAt)}
+                </p>
               </div>
             </div>
           ))

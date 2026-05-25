@@ -25,10 +25,14 @@ function filteredComplaints(
   filterMode: "all" | "active" | "priority",
 ): ComplaintRecord[] {
   if (filterMode === "active") {
-    return complaints.filter((item) => item.status.toLowerCase() !== "resolved");
+    return complaints.filter(
+      (item) => item.status.toLowerCase() !== "resolved",
+    );
   }
   if (filterMode === "priority") {
-    return [...complaints].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority));
+    return [...complaints].sort(
+      (a, b) => priorityRank(a.priority) - priorityRank(b.priority),
+    );
   }
   return complaints;
 }
@@ -57,7 +61,10 @@ export function ComplaintsTable({
   const safePage = Math.min(page, totalPages);
   const startIndex = (safePage - 1) * pageSize;
   const visible = filtered.slice(startIndex, startIndex + pageSize);
-  const pageNumbers = Array.from({ length: Math.min(3, totalPages) }, (_, i) => i + 1);
+  const pageNumbers = Array.from(
+    { length: Math.min(3, totalPages) },
+    (_, i) => i + 1,
+  );
 
   return (
     <div className="overflow-hidden rounded-3xl border border-white/5 bg-[#0D1117]/60 shadow-xl backdrop-blur-xl">
@@ -97,10 +104,6 @@ export function ComplaintsTable({
             By Priority
           </button>
         </div>
-        <button className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 text-xs font-bold text-white/80 transition-all hover:bg-white/10">
-          <span className="material-symbols-outlined text-lg">filter_list</span>
-          Advanced Filters
-        </button>
       </div>
 
       <div className="overflow-x-auto">
@@ -117,19 +120,28 @@ export function ComplaintsTable({
           </thead>
           <tbody className="divide-y divide-white/5 text-sm">
             {visible.map((complaint) => (
-              <tr key={complaint.id} className="group transition-colors duration-200 hover:bg-white/5">
+              <tr
+                key={complaint.id}
+                className="group transition-colors duration-200 hover:bg-white/5"
+              >
                 <td className="px-8 py-6">
-                  <span className="font-bold text-[#14B8A6]">#{complaint.id}</span>
+                  <span className="font-bold text-[#14B8A6]">
+                    #{complaint.id}
+                  </span>
                 </td>
                 <td className="px-6 py-6">
-                  <span className="font-bold text-white/40">#{complaint.orderId}</span>
+                  <span className="font-bold text-white/40">
+                    #{complaint.orderId}
+                  </span>
                 </td>
                 <td className="px-6 py-6">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0F766E]/20 text-xs font-bold text-[#14B8A6] border border-[#14B8A6]/10">
                       {initials(complaint.customer)}
                     </div>
-                    <span className="font-bold text-white/90">{complaint.customer}</span>
+                    <span className="font-bold text-white/90">
+                      {complaint.customer}
+                    </span>
                   </div>
                 </td>
                 <td className="px-6 py-6">
@@ -151,7 +163,11 @@ export function ComplaintsTable({
                     </button>
                     <button
                       type="button"
-                      onClick={() => router.push(`/complaints?ticket=${encodeURIComponent(complaint.id)}`)}
+                      onClick={() =>
+                        router.push(
+                          `/complaints?ticket=${encodeURIComponent(complaint.id)}`,
+                        )
+                      }
                       className="rounded-xl bg-[#14B8A6] px-4 py-2 text-xs font-bold text-white transition-all hover:bg-[#14B8A6]/80 shadow-[0_0_15px_rgba(20,184,166,0.3)]"
                     >
                       Details
@@ -165,12 +181,19 @@ export function ComplaintsTable({
       </div>
 
       {visible.length === 0 && (
-        <div className="p-16 text-center text-sm text-white/20">No complaints found.</div>
+        <div className="p-16 text-center text-sm text-white/20">
+          No complaints found.
+        </div>
       )}
 
       <div className="flex items-center justify-between bg-white/[0.02] border-t border-white/5 px-8 py-6">
         <p className="text-xs font-medium text-white/40">
-          Showing <span className="text-white/80">{filtered.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + pageSize, filtered.length)}</span> of <span className="text-white/80">{filtered.length}</span> entries
+          Showing{" "}
+          <span className="text-white/80">
+            {filtered.length === 0 ? 0 : startIndex + 1} to{" "}
+            {Math.min(startIndex + pageSize, filtered.length)}
+          </span>{" "}
+          of <span className="text-white/80">{filtered.length}</span> entries
         </p>
         <div className="flex items-center gap-2">
           <button
@@ -179,7 +202,9 @@ export function ComplaintsTable({
             disabled={safePage === 1}
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
           >
-            <span className="material-symbols-outlined text-sm">chevron_left</span>
+            <span className="material-symbols-outlined text-sm">
+              chevron_left
+            </span>
           </button>
           {pageNumbers.map((pageNumber) => (
             <button
@@ -201,7 +226,9 @@ export function ComplaintsTable({
             disabled={safePage === totalPages}
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-20"
           >
-            <span className="material-symbols-outlined text-sm">chevron_right</span>
+            <span className="material-symbols-outlined text-sm">
+              chevron_right
+            </span>
           </button>
         </div>
       </div>
