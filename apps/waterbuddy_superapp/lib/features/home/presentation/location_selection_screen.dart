@@ -157,7 +157,8 @@ class _LocationSelectionScreenState
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(18),
@@ -172,73 +173,48 @@ class _LocationSelectionScreenState
                 ),
                 child: Row(
                   children: [
-                    Column(
-                      children: [
-                        Container(
-                          width: 9,
-                          height: 9,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF10B981),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        Container(
-                            width: 1, height: 26, color: Colors.grey[300]),
-                        Container(
-                          width: 9,
-                          height: 9,
-                          decoration: const BoxDecoration(
-                            color: waterBlue,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: waterBlue.withValues(alpha: 0.10),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.water_drop_rounded,
+                        color: waterBlue,
+                        size: 23,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.pickupAddress ?? 'Your current service area',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black54,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const Divider(height: 22),
-                          TextField(
-                            controller: _searchController,
-                            autofocus: true,
-                            textInputAction: TextInputAction.search,
-                            onSubmitted: _submitAddress,
-                            decoration: InputDecoration(
-                              hintText: 'Enter water delivery address',
-                              border: InputBorder.none,
-                              hintStyle: const TextStyle(color: Colors.grey),
-                              suffixIcon: _submitting
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(14),
-                                      child: SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    )
-                                  : IconButton(
-                                      icon: const Icon(Icons.search_rounded),
-                                      onPressed: () => _submitAddress(
-                                        _searchController.text,
-                                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        autofocus: true,
+                        textInputAction: TextInputAction.search,
+                        onSubmitted: _submitAddress,
+                        decoration: InputDecoration(
+                          hintText: 'Enter your water delivery address',
+                          border: InputBorder.none,
+                          hintStyle: const TextStyle(color: Colors.grey),
+                          suffixIcon: _submitting
+                              ? const Padding(
+                                  padding: EdgeInsets.all(14),
+                                  child: SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
                                     ),
-                            ),
-                          ),
-                        ],
+                                  ),
+                                )
+                              : IconButton(
+                                  icon: const Icon(Icons.search_rounded),
+                                  onPressed: () => _submitAddress(
+                                    _searchController.text,
+                                  ),
+                                ),
+                        ),
                       ),
                     ),
                   ],

@@ -574,7 +574,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                           builder: (context) => GestureDetector(
                             onTap: () => Scaffold.of(context).openDrawer(),
                             child: Container(
-                              padding: const EdgeInsets.all(12),
+                              width: 58,
+                              height: 58,
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 shape: BoxShape.circle,
@@ -597,7 +598,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                           onTap: () =>
                               setState(() => _isLocationConfirmed = false),
                           child: Container(
-                            padding: const EdgeInsets.all(12),
+                            width: 58,
+                            height: 58,
                             decoration: BoxDecoration(
                               color: Colors.white,
                               shape: BoxShape.circle,
@@ -661,11 +663,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         : (_currentAddress ?? 'Fetching location...');
 
     return Container(
-      constraints: const BoxConstraints(minHeight: 72),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      height: 58,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.94),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
@@ -678,29 +680,29 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       child: Row(
         children: [
           const Icon(Icons.location_on_rounded,
-              color: Color(0xFFEF4444), size: 20),
-          const SizedBox(width: 12),
+              color: Color(0xFFEF4444), size: 19),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   'Water Delivery Location',
                   style: TextStyle(
                     color: const Color(0xFF64748B),
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   locText,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Color(0xFF0F172A),
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -714,10 +716,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
 
   Widget _buildActionsBar(User? user) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      height: 58,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.94),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
@@ -741,13 +744,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
               );
             },
           ),
-          const SizedBox(width: 4),
           GestureDetector(
             onTap: () => context.go(RouteNames.profile),
             child: Container(
               width: 36,
               height: 36,
-              margin: const EdgeInsets.only(right: 4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: const Color(0xFF0EA5E9).withOpacity(0.18),
