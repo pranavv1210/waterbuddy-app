@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/auth/session_actions.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/operations_ui.dart';
@@ -66,8 +67,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   'This account is not authorized for the WaterBuddy admin console.',
               action: FilledButton(
                 onPressed: () async {
-                  await ref.read(authServiceProvider).signOut();
-                  if (context.mounted) context.go(RouteNames.roleSelection);
+                  await signOutToRoleSelection(context: context, ref: ref);
                 },
                 child: const Text('Sign out'),
               ),
@@ -801,23 +801,24 @@ class _AdminProfileView extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        const OpsCard(
+        OpsCard(
           child: Column(
             children: [
-              _SettingsRow(
+              const _SettingsRow(
                 icon: Icons.shield_rounded,
                 title: 'Security access',
                 subtitle: 'Allowlist and admins collection control access.',
               ),
-              Divider(height: 24),
+              const Divider(height: 24),
               _SettingsRow(
                 icon: Icons.settings_rounded,
                 title: 'Console settings',
                 subtitle:
                     'Approvals, users, payments, and operations settings.',
+                onTap: () => context.push(RouteNames.appSettings),
               ),
-              Divider(height: 24),
-              _SettingsRow(
+              const Divider(height: 24),
+              const _SettingsRow(
                 icon: Icons.support_agent_rounded,
                 title: 'Support',
                 subtitle: 'waterbuddyapp.wb@gmail.com',
@@ -830,9 +831,7 @@ class _AdminProfileView extends ConsumerWidget {
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed: () async {
-              await ref.read(authServiceProvider).signOut();
-              await ref.read(selectedRoleProvider.notifier).clear();
-              if (context.mounted) context.go(RouteNames.roleSelection);
+              await signOutToRoleSelection(context: context, ref: ref);
             },
             icon: const Icon(Icons.logout_rounded, color: OpsColors.red),
             label: const Text('Logout'),
@@ -848,15 +847,17 @@ class _SettingsRow extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final row = Row(
       children: [
         Icon(icon, color: OpsColors.blue),
         const SizedBox(width: 12),
@@ -880,7 +881,16 @@ class _SettingsRow extends StatelessWidget {
             ],
           ),
         ),
+        if (onTap != null)
+          const Icon(Icons.chevron_right_rounded, color: OpsColors.muted),
       ],
+    );
+
+    if (onTap == null) return row;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: row,
     );
   }
 }

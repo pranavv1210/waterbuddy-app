@@ -38,6 +38,7 @@ import '../features/profile/presentation/profile_screen.dart';
 import '../features/seller/presentation/seller_blocked_screen.dart';
 import '../features/seller/presentation/seller_dashboard_screen.dart';
 import '../features/seller/presentation/seller_waiting_screen.dart';
+import '../features/settings/presentation/app_settings_screen.dart';
 import '../features/splash/presentation/splash_screen.dart';
 import '../features/tracking/presentation/order_complete_screen.dart';
 import '../features/tracking/presentation/searching_tankers_screen.dart';
@@ -509,6 +510,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: RouteNames.payments,
           builder: (_, __) => const PaymentsScreen()),
+      GoRoute(
+          path: RouteNames.appSettings,
+          builder: (_, __) => const AppSettingsScreen()),
       GoRoute(
         path: RouteNames.locationSelection,
         builder: (_, state) =>

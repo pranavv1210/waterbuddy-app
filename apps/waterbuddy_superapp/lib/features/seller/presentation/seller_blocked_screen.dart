@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../providers/app_providers.dart';
+import '../../../core/auth/session_actions.dart';
 
 class SellerBlockedScreen extends ConsumerWidget {
   const SellerBlockedScreen({super.key});
@@ -18,7 +18,8 @@ class SellerBlockedScreen extends ConsumerWidget {
               const Text('Seller account is blocked. Contact support.'),
               const SizedBox(height: 12),
               FilledButton(
-                onPressed: () async => ref.read(authServiceProvider).signOut(),
+                onPressed: () async =>
+                    signOutToRoleSelection(context: context, ref: ref),
                 child: const Text('Sign out'),
               ),
             ],

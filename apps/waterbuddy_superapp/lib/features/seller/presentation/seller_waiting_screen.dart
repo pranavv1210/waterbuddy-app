@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/auth/session_actions.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/operations_ui.dart';
@@ -89,10 +90,8 @@ class SellerWaitingScreen extends ConsumerWidget {
                     IconButton(
                       tooltip: 'Sign out',
                       onPressed: () async {
-                        await ref.read(authServiceProvider).signOut();
-                        await ref.read(selectedRoleProvider.notifier).clear();
-                        if (context.mounted)
-                          context.go(RouteNames.roleSelection);
+                        await signOutToRoleSelection(
+                            context: context, ref: ref);
                       },
                       icon: const Icon(Icons.logout_rounded,
                           color: OpsColors.red),

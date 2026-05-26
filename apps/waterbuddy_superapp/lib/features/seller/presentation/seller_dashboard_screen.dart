@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../core/auth/session_actions.dart';
 import '../../../models/order.dart' as app_order;
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
@@ -1324,6 +1325,13 @@ class _SellerProfileView extends ConsumerWidget {
                   ),
                   const Divider(height: 24),
                   _SellerSettingsRow(
+                    icon: Icons.settings_rounded,
+                    title: 'App settings',
+                    subtitle: 'Notifications, location, and app preferences.',
+                    onTap: () => context.push(RouteNames.appSettings),
+                  ),
+                  const Divider(height: 24),
+                  _SellerSettingsRow(
                     icon: Icons.support_agent_rounded,
                     title: 'Support',
                     subtitle: 'waterbuddyapp.wb@gmail.com',
@@ -1336,9 +1344,7 @@ class _SellerProfileView extends ConsumerWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () async {
-                  await ref.read(authServiceProvider).signOut();
-                  await ref.read(selectedRoleProvider.notifier).clear();
-                  if (context.mounted) context.go(RouteNames.roleSelection);
+                  await signOutToRoleSelection(context: context, ref: ref);
                 },
                 icon: const Icon(Icons.logout_rounded, color: OpsColors.red),
                 label: const Text('Logout'),
@@ -1356,15 +1362,17 @@ class _SellerSettingsRow extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final row = Row(
       children: [
         Icon(icon, color: OpsColors.blue),
         const SizedBox(width: 12),
@@ -1388,7 +1396,16 @@ class _SellerSettingsRow extends StatelessWidget {
             ],
           ),
         ),
+        if (onTap != null)
+          const Icon(Icons.chevron_right_rounded, color: OpsColors.muted),
       ],
+    );
+
+    if (onTap == null) return row;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: row,
     );
   }
 }

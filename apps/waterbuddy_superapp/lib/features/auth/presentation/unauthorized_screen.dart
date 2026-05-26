@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../providers/app_providers.dart';
+import '../../../core/auth/session_actions.dart';
 
 class UnauthorizedScreen extends ConsumerWidget {
   const UnauthorizedScreen({super.key});
@@ -13,11 +13,12 @@ class UnauthorizedScreen extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Unauthorized access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const Text('Unauthorized access',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
             FilledButton(
               onPressed: () async {
-                await ref.read(authServiceProvider).signOut();
+                await signOutToRoleSelection(context: context, ref: ref);
               },
               child: const Text('Sign out'),
             ),

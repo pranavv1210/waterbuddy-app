@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/auth/session_actions.dart';
 import '../../../models/order.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
@@ -592,25 +593,33 @@ class _DriverProfileView extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const OpsCard(
+            OpsCard(
               child: Column(
                 children: [
                   _DriverSettingsRow(
                     icon: Icons.settings_rounded,
                     title: 'Duty settings',
                     subtitle: 'Navigation, delivery alerts, and availability.',
+                    onTap: () => context.push(RouteNames.appSettings),
                   ),
-                  Divider(height: 24),
-                  _DriverSettingsRow(
+                  const Divider(height: 24),
+                  const _DriverSettingsRow(
                     icon: Icons.health_and_safety_rounded,
                     title: 'Emergency details',
                     subtitle: 'Emergency contact and verified address.',
                   ),
-                  Divider(height: 24),
+                  const Divider(height: 24),
                   _DriverSettingsRow(
                     icon: Icons.support_agent_rounded,
                     title: 'Support',
                     subtitle: 'waterbuddyapp.wb@gmail.com',
+                    onTap: () {
+                      launchUrl(Uri(
+                        scheme: 'mailto',
+                        path: 'waterbuddyapp.wb@gmail.com',
+                        query: 'subject=WaterBuddy driver support',
+                      ));
+                    },
                   ),
                 ],
               ),
@@ -620,9 +629,7 @@ class _DriverProfileView extends ConsumerWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () async {
-                  await ref.read(authServiceProvider).signOut();
-                  await ref.read(selectedRoleProvider.notifier).clear();
-                  if (context.mounted) context.go(RouteNames.roleSelection);
+                  await signOutToRoleSelection(context: context, ref: ref);
                 },
                 icon: const Icon(Icons.logout_rounded, color: OpsColors.red),
                 label: const Text('Logout'),
@@ -640,15 +647,17 @@ class _DriverSettingsRow extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final row = Row(
       children: [
         Icon(icon, color: OpsColors.amber),
         const SizedBox(width: 12),
@@ -672,7 +681,16 @@ class _DriverSettingsRow extends StatelessWidget {
             ],
           ),
         ),
+        if (onTap != null)
+          const Icon(Icons.chevron_right_rounded, color: OpsColors.muted),
       ],
+    );
+
+    if (onTap == null) return row;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: row,
     );
   }
 }

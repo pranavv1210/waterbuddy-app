@@ -1155,10 +1155,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                     color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
             onTap: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Settings will be available soon')),
-              );
+              context.push(RouteNames.appSettings);
             },
           ),
         ],

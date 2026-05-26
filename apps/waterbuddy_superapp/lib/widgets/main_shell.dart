@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/auth/session_actions.dart';
 import '../routes/route_names.dart';
-import '../providers/app_providers.dart';
 
 class MainShell extends ConsumerWidget {
   const MainShell({super.key, required this.child, required this.location});
@@ -73,13 +73,7 @@ class MainShell extends ConsumerWidget {
   }
 
   Future<void> _handleSignOut(BuildContext context, WidgetRef ref) async {
-    final auth = ref.read(authServiceProvider);
-    final roleNotifier = ref.read(selectedRoleProvider.notifier);
-    await auth.signOut();
-    await roleNotifier.clear();
-    if (context.mounted) {
-      context.go(RouteNames.roleSelection);
-    }
+    await signOutToRoleSelection(context: context, ref: ref);
   }
 }
 

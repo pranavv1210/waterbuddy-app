@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/auth/session_actions.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
@@ -148,9 +149,7 @@ class ProfileScreen extends ConsumerWidget {
             subtitle: 'Sign out of this device',
             destructive: true,
             onTap: () async {
-              await ref.read(authServiceProvider).signOut();
-              await ref.read(selectedRoleProvider.notifier).clear();
-              if (context.mounted) context.go(RouteNames.roleSelection);
+              await signOutToRoleSelection(context: context, ref: ref);
             },
           ),
         ],

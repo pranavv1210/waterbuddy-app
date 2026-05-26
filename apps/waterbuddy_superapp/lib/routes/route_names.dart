@@ -17,7 +17,7 @@ class RouteNames {
   static const authDriverOtp = '/auth/driver/otp';
 
   static const authAdmin = '/auth/admin';
-  
+
   static const auth = authConsumer;
   static const otp = authConsumerOtp;
 
@@ -34,6 +34,7 @@ class RouteNames {
   static const orderDetails = '/consumer/order-details';
   static const payments = '/consumer/payments';
   static const locationSelection = '/consumer/location-selection';
+  static const appSettings = '/settings';
 
   static const sellerDashboard = '/seller/dashboard';
   static const sellerWaiting = '/seller/waiting';
