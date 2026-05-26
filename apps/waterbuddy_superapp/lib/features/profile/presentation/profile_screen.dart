@@ -35,6 +35,10 @@ class ProfileScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: OpsColors.ink),
+          onPressed: () => context.go(RouteNames.home),
+        ),
         title: const Text(
           'Profile',
           style: TextStyle(
@@ -124,7 +128,7 @@ class ProfileScreen extends ConsumerWidget {
             icon: Icons.payment_rounded,
             title: 'Payments',
             subtitle: 'Open payment records for your orders',
-            onTap: () => context.go(RouteNames.payments),
+            onTap: () => context.push(RouteNames.payments),
           ),
           _ProfileAction(
             icon: Icons.support_agent_rounded,

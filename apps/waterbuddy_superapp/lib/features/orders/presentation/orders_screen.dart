@@ -22,6 +22,10 @@ class OrdersScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+          onPressed: () => context.go(RouteNames.home),
+        ),
         title: const Text(
           'Order History',
           style: TextStyle(

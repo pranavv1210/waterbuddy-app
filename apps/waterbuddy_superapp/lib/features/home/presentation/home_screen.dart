@@ -1130,7 +1130,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                     color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
             onTap: () {
               Navigator.pop(context);
-              context.go(RouteNames.payments);
+              context.push(RouteNames.payments);
             },
           ),
           ListTile(
