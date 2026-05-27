@@ -17,6 +17,7 @@ class RouteNames {
   static const authDriverOtp = '/auth/driver/otp';
 
   static const authAdmin = '/auth/admin';
+  static const passwordReset = '/auth/password-reset';
 
   static const auth = authConsumer;
   static const otp = authConsumerOtp;

@@ -23,6 +23,7 @@ import '../features/auth/presentation/driver_onboarding_screen.dart';
 import '../features/auth/presentation/driver_login_screen.dart';
 import '../features/auth/presentation/driver_signup_screen.dart';
 import '../features/auth/presentation/driver_otp_screen.dart';
+import '../features/auth/presentation/password_reset_screen.dart';
 import '../features/auth/presentation/seller_onboarding_screen.dart';
 import '../features/auth/presentation/seller_login_screen.dart';
 import '../features/auth/presentation/seller_signup_screen.dart';
@@ -297,7 +298,8 @@ final activeOrderProvider = StreamProvider<app_order.Order?>((ref) {
       .watchCustomerOrders(user.uid)
       .map((orders) {
     for (final order in orders) {
-      if (order.status == 'ASSIGNED' ||
+      if (order.status == 'ACCEPTED' ||
+          order.status == 'ASSIGNED' ||
           order.status == 'DRIVER_ASSIGNED' ||
           order.status == 'ON_THE_WAY' ||
           order.status == 'ARRIVED') {
@@ -317,6 +319,7 @@ final sellerActiveOrdersProvider = StreamProvider<List<app_order.Order>>((ref) {
       .map((orders) {
     return orders
         .where((o) =>
+            o.status == 'ACCEPTED' ||
             o.status == 'ASSIGNED' ||
             o.status == 'DRIVER_ASSIGNED' ||
             o.status == 'ON_THE_WAY' ||
@@ -376,6 +379,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         RouteNames.authDriverSignup,
         RouteNames.authDriverOtp,
         RouteNames.authAdmin,
+        RouteNames.passwordReset,
       };
 
       if (!signedIn &&
@@ -477,6 +481,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: RouteNames.authAdmin,
           builder: (_, __) => const AdminAuthScreen()),
+      GoRoute(
+          path: RouteNames.passwordReset,
+          builder: (_, __) => const PasswordResetScreen()),
       GoRoute(
           path: RouteNames.sellerDashboard,
           builder: (_, __) => const SellerDashboardScreen()),

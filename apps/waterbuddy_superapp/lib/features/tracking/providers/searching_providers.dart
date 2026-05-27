@@ -40,8 +40,7 @@ class SearchingState {
 }
 
 class SearchingController extends StateNotifier<SearchingState> {
-  SearchingController(this._orderService)
-      : super(const SearchingState());
+  SearchingController(this._orderService) : super(const SearchingState());
 
   final OrderService _orderService;
   Timer? _timeoutTimer;
@@ -72,7 +71,7 @@ class SearchingController extends StateNotifier<SearchingState> {
       (order) {
         if (order != null) {
           debugPrint('Order status updated: ${order.status}');
-          
+
           // Cancel timer if order is no longer searching
           if (order.status != 'SEARCHING') {
             _timeoutTimer?.cancel();
@@ -98,9 +97,12 @@ class SearchingController extends StateNotifier<SearchingState> {
   Future<void> _handleTimeout(String orderId) async {
     try {
       // Cancel the order in Firestore
-      await _orderService.updateOrderStatus(orderId, 'CANCELLED');
+      await _orderService.cancelOrder(
+        orderId: orderId,
+        reason: 'No tanker accepted within the search window',
+      );
       debugPrint('Order cancelled due to timeout: $orderId');
-      
+
       state = state.copyWith(
         orderStatus: 'CANCELLED',
         isLoading: false,
@@ -116,18 +118,18 @@ class SearchingController extends StateNotifier<SearchingState> {
     }
   }
 
-  Future<void> cancelOrder() async {
+  Future<void> cancelOrder({String reason = 'Cancelled by customer'}) async {
     final orderId = state.orderId;
     if (orderId == null) return;
-    
+
     try {
       state = state.copyWith(isLoading: true, clearError: true);
-      await _orderService.updateOrderStatus(orderId, 'CANCELLED');
+      await _orderService.cancelOrder(orderId: orderId, reason: reason);
       debugPrint('Order cancelled by user: $orderId');
-      
+
       _timeoutTimer?.cancel();
       _orderSubscription?.cancel();
-      
+
       state = state.copyWith(
         orderStatus: 'CANCELLED',
         isLoading: false,
@@ -154,7 +156,8 @@ class SearchingController extends StateNotifier<SearchingState> {
 }
 
 final searchingControllerProvider =
-    StateNotifierProvider.autoDispose<SearchingController, SearchingState>((ref) {
+    StateNotifierProvider.autoDispose<SearchingController, SearchingState>(
+        (ref) {
   final orderService = ref.watch(orderServiceProvider);
   return SearchingController(orderService);
 });

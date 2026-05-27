@@ -7,7 +7,8 @@ class OrderService {
   final FirebaseFirestore _firestore;
 
   static const Map<String, Set<String>> _validTransitions = {
-    'SEARCHING': {'ASSIGNED', 'CANCELLED'},
+    'SEARCHING': {'ACCEPTED', 'ASSIGNED', 'CANCELLED'},
+    'ACCEPTED': {'DRIVER_ASSIGNED', 'ON_THE_WAY', 'CANCELLED'},
     'ASSIGNED': {'DRIVER_ASSIGNED', 'ON_THE_WAY', 'CANCELLED'},
     'DRIVER_ASSIGNED': {'ON_THE_WAY', 'CANCELLED'},
     'ON_THE_WAY': {'ARRIVED', 'DELIVERED', 'CANCELLED'},
@@ -53,7 +54,8 @@ class OrderService {
 
   Stream<app_order.Order?> watchOrder(String orderId) {
     return _firestore.collection('orders').doc(orderId).snapshots().map(
-        (snapshot) => snapshot.exists ? app_order.Order.fromDocument(snapshot) : null);
+        (snapshot) =>
+            snapshot.exists ? app_order.Order.fromDocument(snapshot) : null);
   }
 
   Stream<List<app_order.Order>> watchCustomerOrders(String customerId) {
@@ -61,7 +63,8 @@ class OrderService {
         .collection('orders')
         .where('customerId', isEqualTo: customerId)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(app_order.Order.fromDocument).toList());
+        .map((snapshot) =>
+            snapshot.docs.map(app_order.Order.fromDocument).toList());
   }
 
   Stream<List<app_order.Order>> watchSearchingOrders() {
@@ -69,7 +72,8 @@ class OrderService {
         .collection('orders')
         .where('status', isEqualTo: 'SEARCHING')
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(app_order.Order.fromDocument).toList());
+        .map((snapshot) =>
+            snapshot.docs.map(app_order.Order.fromDocument).toList());
   }
 
   Stream<List<app_order.Order>> watchSellerOrders(String sellerId) {
@@ -77,7 +81,8 @@ class OrderService {
         .collection('orders')
         .where('sellerId', isEqualTo: sellerId)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(app_order.Order.fromDocument).toList());
+        .map((snapshot) =>
+            snapshot.docs.map(app_order.Order.fromDocument).toList());
   }
 
   Stream<List<app_order.Order>> watchDriverOrders(String driverId) {
@@ -85,7 +90,8 @@ class OrderService {
         .collection('orders')
         .where('driverId', isEqualTo: driverId)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(app_order.Order.fromDocument).toList());
+        .map((snapshot) =>
+            snapshot.docs.map(app_order.Order.fromDocument).toList());
   }
 
   Future<void> acceptOrder(String orderId, String sellerId) async {
@@ -98,7 +104,7 @@ class OrderService {
         throw Exception('Order is no longer available for acceptance');
       }
       transaction.update(orderRef, {
-        'status': 'ASSIGNED',
+        'status': 'ACCEPTED',
         'sellerId': sellerId,
         'assignedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -120,7 +126,9 @@ class OrderService {
         throw Exception('Seller is not assigned to this order');
       }
       final status = data['status'] as String? ?? 'SEARCHING';
-      if (status != 'ASSIGNED' && status != 'DRIVER_ASSIGNED') {
+      if (status != 'ACCEPTED' &&
+          status != 'ASSIGNED' &&
+          status != 'DRIVER_ASSIGNED') {
         throw Exception('Order is not in assignable state');
       }
       transaction.update(orderRef, {
@@ -140,7 +148,8 @@ class OrderService {
       final data = snapshot.data() as Map<String, dynamic>;
       final currentStatus = data['status'] as String? ?? 'SEARCHING';
       if (!_isValidTransition(currentStatus, newStatus)) {
-        throw Exception('Invalid state transition: $currentStatus -> $newStatus');
+        throw Exception(
+            'Invalid state transition: $currentStatus -> $newStatus');
       }
       final patch = <String, dynamic>{
         'status': newStatus,
@@ -153,6 +162,29 @@ class OrderService {
         patch['deliveredAt'] = FieldValue.serverTimestamp();
       }
       transaction.update(orderRef, patch);
+    });
+  }
+
+  Future<void> cancelOrder({
+    required String orderId,
+    required String reason,
+  }) async {
+    await _firestore.runTransaction((transaction) async {
+      final orderRef = _firestore.collection('orders').doc(orderId);
+      final snapshot = await transaction.get(orderRef);
+      if (!snapshot.exists) throw Exception('Order does not exist');
+      final data = snapshot.data() as Map<String, dynamic>;
+      final currentStatus = data['status'] as String? ?? 'SEARCHING';
+      if (!_isValidTransition(currentStatus, 'CANCELLED')) {
+        throw Exception('This order can no longer be cancelled.');
+      }
+      transaction.update(orderRef, {
+        'status': 'CANCELLED',
+        'cancellationReason': reason,
+        'cancelledBy': 'customer',
+        'cancelledAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     });
   }
 

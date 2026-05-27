@@ -773,7 +773,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         (searchingState.orderStatus == 'SEARCHING' || searchingState.isLoading);
 
     if (isSearching) {
-      return _SearchingBottomSheet(orderId: searchingState.orderId!);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.go('${RouteNames.searching}?orderId=${searchingState.orderId}');
+      });
+      return const SizedBox.shrink();
     }
 
     if (!_isLocationConfirmed) {
@@ -1032,6 +1036,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                     ref
                         .read(searchingControllerProvider.notifier)
                         .startWatchingOrder(orderId);
+                    context.go('${RouteNames.searching}?orderId=$orderId');
                   }
                 } finally {
                   if (mounted) setState(() => _isBooking = false);
@@ -1044,26 +1049,20 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
-        child: _isBooking
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                    color: Colors.white, strokeWidth: 2))
-            : const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Book Water Now',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5),
-                  ),
-                  SizedBox(width: 12),
-                  Icon(Icons.arrow_forward_rounded, size: 22),
-                ],
-              ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _isBooking ? 'Starting Request' : 'Book Water Now',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5),
+            ),
+            SizedBox(width: 12),
+            Icon(Icons.arrow_forward_rounded, size: 22),
+          ],
+        ),
       ),
     );
   }

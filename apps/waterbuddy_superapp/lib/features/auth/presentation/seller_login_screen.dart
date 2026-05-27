@@ -199,28 +199,6 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
   }
 
   Future<void> _forgotPassword() async {
-    final email = _email.text.trim();
-    if (email.isEmpty || !email.contains('@')) {
-      setState(() => _error = 'Enter your registered email first.');
-      return;
-    }
-
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      await ref.read(authServiceProvider).sendPasswordResetEmail(email);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password reset link sent to $email')),
-      );
-    } on AuthFailure catch (e) {
-      setState(() => _error = e.message);
-    } catch (_) {
-      setState(() => _error = 'Unable to send reset link right now.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    context.push('${RouteNames.passwordReset}?role=seller');
   }
 }

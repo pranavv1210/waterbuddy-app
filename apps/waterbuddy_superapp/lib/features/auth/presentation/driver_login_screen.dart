@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/app_role.dart';
-import '../../../core/services/auth/auth_service.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/waterbuddy_auth_layout.dart';
@@ -64,7 +63,11 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: authState.isLoading ? null : _forgotPassword,
+                onPressed: authState.isLoading
+                    ? null
+                    : () => context.push(
+                          '${RouteNames.passwordReset}?role=driver',
+                        ),
                 child: const Text(
                   'Forgot password?',
                   style: TextStyle(
@@ -115,66 +118,6 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _forgotPassword() async {
-    final email = await _showResetEmailDialog();
-    if (email == null || email.isEmpty) return;
-
-    try {
-      await ref.read(authServiceProvider).sendPasswordResetEmail(email);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password reset link sent to $email')),
-      );
-    } on AuthFailure catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to send reset link right now.')),
-      );
-    }
-  }
-
-  Future<String?> _showResetEmailDialog() async {
-    final emailController = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Reset password'),
-          content: TextField(
-            controller: emailController,
-            keyboardType: TextInputType.emailAddress,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Registered email',
-              prefixIcon: Icon(Icons.email_outlined),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final email = emailController.text.trim();
-                if (!email.contains('@')) return;
-                Navigator.pop(dialogContext, email);
-              },
-              child: const Text('Send reset link'),
-            ),
-          ],
-        );
-      },
-    );
-    emailController.dispose();
-    return result;
   }
 
   Widget _field(

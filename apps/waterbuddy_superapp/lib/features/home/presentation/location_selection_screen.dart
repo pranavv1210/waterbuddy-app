@@ -1,9 +1,31 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
 
 import '../../orders/providers/order_providers.dart';
+
+class _AddressSuggestion {
+  const _AddressSuggestion({
+    required this.placeName,
+    required this.secondaryAddress,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  final String placeName;
+  final String secondaryAddress;
+  final double latitude;
+  final double longitude;
+
+  String get fullAddress =>
+      secondaryAddress.isEmpty ? placeName : '$placeName, $secondaryAddress';
+}
 
 class LocationSelectionScreen extends ConsumerStatefulWidget {
   const LocationSelectionScreen({super.key, this.pickupAddress});
@@ -19,11 +41,81 @@ class _LocationSelectionScreenState
     extends ConsumerState<LocationSelectionScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _submitting = false;
+  bool _loadingSuggestions = false;
+  Timer? _debounce;
+  List<_AddressSuggestion> _suggestions = const [];
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onQueryChanged(String value) {
+    _debounce?.cancel();
+    final query = value.trim();
+    if (query.length < 2) {
+      setState(() {
+        _suggestions = const [];
+        _loadingSuggestions = false;
+      });
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 280), () {
+      _fetchSuggestions(query);
+    });
+  }
+
+  Future<void> _fetchSuggestions(String query) async {
+    setState(() => _loadingSuggestions = true);
+    try {
+      final uri = Uri.https('nominatim.openstreetmap.org', '/search', {
+        'q': '$query, Bengaluru, Karnataka, India',
+        'format': 'jsonv2',
+        'addressdetails': '1',
+        'limit': '6',
+        'countrycodes': 'in',
+      });
+      final response = await http.get(uri, headers: {
+        'User-Agent': 'WaterBuddyApp/1.0 address search',
+      }).timeout(const Duration(seconds: 4));
+      if (response.statusCode != 200) return;
+      final items = (jsonDecode(response.body) as List<dynamic>)
+          .whereType<Map<String, dynamic>>()
+          .map((item) {
+            final display = (item['display_name'] ?? '').toString();
+            final address = item['address'] as Map<String, dynamic>? ?? {};
+            final name =
+                (item['name'] ?? address['amenity'] ?? address['road'] ?? query)
+                    .toString();
+            final lat = double.tryParse((item['lat'] ?? '').toString());
+            final lng = double.tryParse((item['lon'] ?? '').toString());
+            if (lat == null || lng == null) return null;
+            final parts = display
+                .split(',')
+                .map((part) => part.trim())
+                .where((part) => part.isNotEmpty && part != name)
+                .take(3)
+                .join(', ');
+            return _AddressSuggestion(
+              placeName: name,
+              secondaryAddress: parts,
+              latitude: lat,
+              longitude: lng,
+            );
+          })
+          .whereType<_AddressSuggestion>()
+          .toList();
+
+      if (!mounted || _searchController.text.trim() != query) return;
+      setState(() => _suggestions = items);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _suggestions = const []);
+    } finally {
+      if (mounted) setState(() => _loadingSuggestions = false);
+    }
   }
 
   Future<void> _submitAddress(String value) async {
@@ -55,6 +147,65 @@ class _LocationSelectionScreenState
     }
 
     if (mounted) context.pop(result);
+  }
+
+  void _selectSuggestion(_AddressSuggestion suggestion) {
+    context.pop({
+      'address': suggestion.fullAddress,
+      'location': {
+        'latitude': suggestion.latitude,
+        'longitude': suggestion.longitude,
+        'address': suggestion.fullAddress,
+      },
+    });
+  }
+
+  Future<void> _useCurrentLocation() async {
+    setState(() => _submitting = true);
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location permission is required.')),
+        );
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      ).timeout(const Duration(seconds: 8));
+      var address = 'Current water delivery location';
+      try {
+        final placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        ).timeout(const Duration(seconds: 4));
+        if (placemarks.isNotEmpty) {
+          final p = placemarks.first;
+          address = [
+            p.name,
+            p.street,
+            p.subLocality,
+            p.locality,
+          ].where((part) => part != null && part!.trim().isNotEmpty).join(', ');
+        }
+      } catch (_) {}
+      if (!mounted) return;
+      context.pop({
+        'address': address,
+        'location': {
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+          'address': address,
+        },
+      });
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   void _openSavedAddresses(List<Map<String, dynamic>> locations) {
@@ -192,6 +343,7 @@ class _LocationSelectionScreenState
                         controller: _searchController,
                         autofocus: true,
                         textInputAction: TextInputAction.search,
+                        onChanged: _onQueryChanged,
                         onSubmitted: _submitAddress,
                         decoration: InputDecoration(
                           hintText: 'Enter your water delivery address',
@@ -246,69 +398,200 @@ class _LocationSelectionScreenState
             const SizedBox(height: 16),
             const Divider(thickness: 1, height: 1),
             Expanded(
-              child: history.when(
-                data: (orders) {
-                  final uniqueLocations = <String, Map<String, dynamic>>{};
-                  for (final order in orders) {
-                    if (order.deliveryAddress != null) {
-                      uniqueLocations[order.deliveryAddress!] = {
-                        'address': order.deliveryAddress,
-                        'location': order.location,
-                      };
-                    }
-                  }
-
-                  final locations = uniqueLocations.values.toList();
-                  if (locations.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'No recent delivery addresses',
-                        style: TextStyle(
-                          color: Colors.black54,
-                          fontWeight: FontWeight.w600,
-                        ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                child: _searchController.text.trim().length >= 2
+                    ? _SuggestionList(
+                        suggestions: _suggestions,
+                        loading: _loadingSuggestions,
+                        onSelect: _selectSuggestion,
+                      )
+                    : _RecentAddressList(
+                        history: history,
+                        onUseCurrentLocation: _useCurrentLocation,
                       ),
-                    );
-                  }
-
-                  return ListView.separated(
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    itemCount: locations.length,
-                    separatorBuilder: (_, __) =>
-                        const Divider(indent: 70, height: 1),
-                    itemBuilder: (context, index) {
-                      final loc = locations[index];
-                      return ListTile(
-                        leading: const Icon(Icons.water_drop_rounded,
-                            color: waterBlue),
-                        title: Text(
-                          loc['address'].toString(),
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: const Text(
-                          'Previous water delivery address',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded,
-                            color: Colors.grey),
-                        onTap: () => context.pop({
-                          'location': loc['location'],
-                          'address': loc['address'],
-                        }),
-                      );
-                    },
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SuggestionList extends StatelessWidget {
+  const _SuggestionList({
+    required this.suggestions,
+    required this.loading,
+    required this.onSelect,
+  });
+
+  final List<_AddressSuggestion> suggestions;
+  final bool loading;
+  final ValueChanged<_AddressSuggestion> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading && suggestions.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (suggestions.isEmpty) {
+      return const Center(
+        child: Text(
+          'Keep typing to search delivery addresses',
+          style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w600),
+        ),
+      );
+    }
+    return ListView.separated(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      itemCount: suggestions.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        final suggestion = suggestions[index];
+        return InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => onSelect(suggestion),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0EA5E9).withValues(alpha: 0.06),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE0F2FE),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.location_on_rounded,
+                      color: Color(0xFF0EA5E9)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        suggestion.placeName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        suggestion.secondaryAddress,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RecentAddressList extends StatelessWidget {
+  const _RecentAddressList({
+    required this.history,
+    required this.onUseCurrentLocation,
+  });
+
+  final AsyncValue<dynamic> history;
+  final VoidCallback onUseCurrentLocation;
+
+  @override
+  Widget build(BuildContext context) {
+    return history.when(
+      data: (orders) {
+        final uniqueLocations = <String, Map<String, dynamic>>{};
+        for (final order in orders) {
+          if (order.deliveryAddress != null) {
+            uniqueLocations[order.deliveryAddress!] = {
+              'address': order.deliveryAddress,
+              'location': order.location,
+            };
+          }
+        }
+        final locations = uniqueLocations.values.toList();
+        return ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          children: [
+            ListTile(
+              leading: const Icon(Icons.my_location_rounded,
+                  color: Color(0xFF0EA5E9)),
+              title: const Text('Use current location',
+                  style: TextStyle(fontWeight: FontWeight.w900)),
+              subtitle: const Text('Detect this phone location for delivery'),
+              onTap: onUseCurrentLocation,
+            ),
+            const Divider(height: 1),
+            if (locations.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 120),
+                child: Center(
+                  child: Text(
+                    'No recent delivery addresses',
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              )
+            else
+              ...locations.map(
+                (loc) => ListTile(
+                  leading: const Icon(Icons.water_drop_rounded,
+                      color: Color(0xFF0EA5E9)),
+                  title: Text(
+                    loc['address'].toString(),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: const Text('Previous water delivery address',
+                      style: TextStyle(fontSize: 12)),
+                  trailing: const Icon(Icons.chevron_right_rounded,
+                      color: Colors.grey),
+                  onTap: () => context.pop({
+                    'location': loc['location'],
+                    'address': loc['address'],
+                  }),
+                ),
+              ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Error: $e')),
     );
   }
 }

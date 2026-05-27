@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../models/order.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
+import 'cancellation_sheet.dart';
 import '../../tracking/providers/tracking_providers.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -48,7 +49,8 @@ class OrderDetailsScreen extends ConsumerWidget {
     return orderAsync.when(
       loading: () => const Scaffold(
         backgroundColor: Color(0xFFF8FAFC),
-        body: Center(child: CircularProgressIndicator(color: Color(0xFF38BDF8))),
+        body:
+            Center(child: CircularProgressIndicator(color: Color(0xFF38BDF8))),
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(title: const Text('Order Details')),
@@ -102,100 +104,100 @@ class _OrderDetailsBody extends ConsumerWidget {
           slivers: [
             _buildSliverAppBar(context, order),
             SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const SizedBox(height: 20),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  const SizedBox(height: 20),
 
-                // ── Order Info ───────────────────────────────────────────────
-                _SectionCard(
-                  title: 'Order Info',
-                  icon: Icons.water_drop_rounded,
-                  iconColor: _accent,
-                  children: [
-                    _InfoRow(
-                      label: 'Tank Size',
-                      value: '${order.tankSize.toInt()} Litres',
-                    ),
-                    _InfoRow(
-                      label: 'Payment Method',
-                      value: order.paymentType,
-                    ),
-                    _InfoRow(
-                      label: 'Payment Status',
-                      value: order.paymentStatus,
-                    ),
-                    _InfoRow(
-                      label: 'Order ID',
-                      value: '#${order.id.substring(0, 8).toUpperCase()}',
-                      trailing: IconButton(
-                        visualDensity: VisualDensity.compact,
-                        icon: const Icon(Icons.copy_rounded,
-                            size: 16, color: Color(0xFF94A3B8)),
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: order.id));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Order ID copied'),
-                              duration: Duration(seconds: 1),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // ── Delivery Details ─────────────────────────────────────────
-                _SectionCard(
-                  title: 'Delivery Details',
-                  icon: Icons.location_on_rounded,
-                  iconColor: const Color(0xFFEF4444),
-                  children: [
-                    _InfoRow(
-                      label: 'Address',
-                      value: order.location['address'] as String? ??
-                          'Unknown location',
-                    ),
-                    if (order.createdAt != null)
+                  // ── Order Info ───────────────────────────────────────────────
+                  _SectionCard(
+                    title: 'Order Info',
+                    icon: Icons.water_drop_rounded,
+                    iconColor: _accent,
+                    children: [
                       _InfoRow(
-                        label: 'Ordered At',
-                        value: _formatDateTime(order.createdAt!.toDate()),
+                        label: 'Tank Size',
+                        value: '${order.tankSize.toInt()} Litres',
                       ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // ── Driver Info ──────────────────────────────────────────────
-                if (order.sellerId != null)
-                  sellerAsync!.when(
-                    data: (seller) => seller != null
-                        ? _DriverCard(seller: seller)
-                        : const SizedBox.shrink(),
-                    loading: () => const _LoadingCard(),
-                    error: (_, __) => const SizedBox.shrink(),
+                      _InfoRow(
+                        label: 'Payment Method',
+                        value: order.paymentType,
+                      ),
+                      _InfoRow(
+                        label: 'Payment Status',
+                        value: order.paymentStatus,
+                      ),
+                      _InfoRow(
+                        label: 'Order ID',
+                        value: '#${order.id.substring(0, 8).toUpperCase()}',
+                        trailing: IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(Icons.copy_rounded,
+                              size: 16, color: Color(0xFF94A3B8)),
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: order.id));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Order ID copied'),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
 
-                if (order.sellerId != null) const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // ── Timeline ─────────────────────────────────────────────────
-                _TimelineCard(status: order.status),
+                  // ── Delivery Details ─────────────────────────────────────────
+                  _SectionCard(
+                    title: 'Delivery Details',
+                    icon: Icons.location_on_rounded,
+                    iconColor: const Color(0xFFEF4444),
+                    children: [
+                      _InfoRow(
+                        label: 'Address',
+                        value: order.location['address'] as String? ??
+                            'Unknown location',
+                      ),
+                      if (order.createdAt != null)
+                        _InfoRow(
+                          label: 'Ordered At',
+                          value: _formatDateTime(order.createdAt!.toDate()),
+                        ),
+                    ],
+                  ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // ── CTA Buttons ──────────────────────────────────────────────
-                _CtaButtons(order: order),
-              ]),
+                  // ── Driver Info ──────────────────────────────────────────────
+                  if (order.sellerId != null)
+                    sellerAsync!.when(
+                      data: (seller) => seller != null
+                          ? _DriverCard(seller: seller)
+                          : const SizedBox.shrink(),
+                      loading: () => const _LoadingCard(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    ),
+
+                  if (order.sellerId != null) const SizedBox(height: 16),
+
+                  // ── Timeline ─────────────────────────────────────────────────
+                  _TimelineCard(status: order.status),
+
+                  const SizedBox(height: 16),
+
+                  // ── CTA Buttons ──────────────────────────────────────────────
+                  _CtaButtons(order: order),
+                ]),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildSliverAppBar(BuildContext context, Order order) {
     final statusColor = _statusColor(order.status);
@@ -206,7 +208,8 @@ class _OrderDetailsBody extends ConsumerWidget {
       backgroundColor: _primary,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-        onPressed: () => context.canPop() ? context.pop() : context.go(RouteNames.orders),
+        onPressed: () =>
+            context.canPop() ? context.pop() : context.go(RouteNames.orders),
       ),
       title: const Text(
         'Order Details',
@@ -255,8 +258,8 @@ class _OrderDetailsBody extends ConsumerWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(20),
@@ -293,8 +296,19 @@ class _OrderDetailsBody extends ConsumerWidget {
   String _formatDateTime(DateTime dt) {
     final local = dt.toLocal();
     const months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
     final min = local.minute.toString().padLeft(2, '0');
@@ -304,34 +318,67 @@ class _OrderDetailsBody extends ConsumerWidget {
 
   static Color _statusColor(String status) {
     switch (status) {
-      case 'SEARCHING':    return const Color(0xFF38BDF8);
-      case 'ASSIGNED':     return const Color(0xFF8B5CF6);
-      case 'ON_THE_WAY':   return const Color(0xFFF59E0B);
-      case 'DELIVERED':    return const Color(0xFF10B981);
-      case 'CANCELLED':    return const Color(0xFFEF4444);
-      default:             return const Color(0xFF94A3B8);
+      case 'SEARCHING':
+        return const Color(0xFF38BDF8);
+      case 'ACCEPTED':
+      case 'ASSIGNED':
+        return const Color(0xFF8B5CF6);
+      case 'DRIVER_ASSIGNED':
+        return const Color(0xFF6366F1);
+      case 'ON_THE_WAY':
+        return const Color(0xFFF59E0B);
+      case 'ARRIVED':
+        return const Color(0xFF14B8A6);
+      case 'DELIVERED':
+        return const Color(0xFF10B981);
+      case 'CANCELLED':
+        return const Color(0xFFEF4444);
+      default:
+        return const Color(0xFF94A3B8);
     }
   }
 
   static IconData _statusIcon(String status) {
     switch (status) {
-      case 'SEARCHING':    return Icons.search_rounded;
-      case 'ASSIGNED':     return Icons.person_pin_circle_rounded;
-      case 'ON_THE_WAY':   return Icons.local_shipping_rounded;
-      case 'DELIVERED':    return Icons.check_circle_rounded;
-      case 'CANCELLED':    return Icons.cancel_rounded;
-      default:             return Icons.water_drop_rounded;
+      case 'SEARCHING':
+        return Icons.search_rounded;
+      case 'ACCEPTED':
+      case 'ASSIGNED':
+        return Icons.handshake_rounded;
+      case 'DRIVER_ASSIGNED':
+        return Icons.person_pin_circle_rounded;
+      case 'ON_THE_WAY':
+        return Icons.local_shipping_rounded;
+      case 'ARRIVED':
+        return Icons.location_on_rounded;
+      case 'DELIVERED':
+        return Icons.check_circle_rounded;
+      case 'CANCELLED':
+        return Icons.cancel_rounded;
+      default:
+        return Icons.water_drop_rounded;
     }
   }
 
   static String _statusLabel(String status) {
     switch (status) {
-      case 'SEARCHING':    return 'Searching';
-      case 'ASSIGNED':     return 'Assigned';
-      case 'ON_THE_WAY':   return 'On the Way';
-      case 'DELIVERED':    return 'Delivered';
-      case 'CANCELLED':    return 'Cancelled';
-      default:             return status;
+      case 'SEARCHING':
+        return 'Searching';
+      case 'ACCEPTED':
+      case 'ASSIGNED':
+        return 'Accepted';
+      case 'DRIVER_ASSIGNED':
+        return 'Driver Assigned';
+      case 'ON_THE_WAY':
+        return 'On the Way';
+      case 'ARRIVED':
+        return 'Arrived';
+      case 'DELIVERED':
+        return 'Delivered';
+      case 'CANCELLED':
+        return 'Cancelled';
+      default:
+        return status;
     }
   }
 }
@@ -461,18 +508,44 @@ class _TimelineCard extends StatelessWidget {
   final String status;
 
   static const _steps = [
-    (icon: Icons.search_rounded,          label: 'Order Placed',   status: 'SEARCHING'),
-    (icon: Icons.person_pin_circle_rounded, label: 'Driver Assigned', status: 'ASSIGNED'),
-    (icon: Icons.local_shipping_rounded,  label: 'On the Way',     status: 'ON_THE_WAY'),
-    (icon: Icons.check_circle_rounded,    label: 'Delivered',      status: 'DELIVERED'),
+    (icon: Icons.search_rounded, label: 'Order placed', status: 'SEARCHING'),
+    (
+      icon: Icons.handshake_rounded,
+      label: 'Tanker accepted',
+      status: 'ACCEPTED'
+    ),
+    (
+      icon: Icons.person_pin_circle_rounded,
+      label: 'Driver assigned',
+      status: 'DRIVER_ASSIGNED'
+    ),
+    (
+      icon: Icons.local_shipping_rounded,
+      label: 'On the way',
+      status: 'ON_THE_WAY'
+    ),
+    (icon: Icons.location_on_rounded, label: 'Arrived', status: 'ARRIVED'),
+    (icon: Icons.check_circle_rounded, label: 'Delivered', status: 'DELIVERED'),
   ];
 
-  static const _order = ['SEARCHING', 'ASSIGNED', 'ON_THE_WAY', 'DELIVERED'];
+  static const _order = [
+    'SEARCHING',
+    'ACCEPTED',
+    'DRIVER_ASSIGNED',
+    'ON_THE_WAY',
+    'ARRIVED',
+    'DELIVERED',
+  ];
+
+  String _normalizedStatus(String value) {
+    if (value == 'ASSIGNED') return 'ACCEPTED';
+    return value;
+  }
 
   @override
   Widget build(BuildContext context) {
     final isCancelled = status == 'CANCELLED';
-    final currentIndex = _order.indexOf(status);
+    final currentIndex = _order.indexOf(_normalizedStatus(status));
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -482,12 +555,9 @@ class _TimelineCard extends StatelessWidget {
         children: [
           _SectionHeader(
             title: isCancelled ? 'Order Cancelled' : 'Order Timeline',
-            icon: isCancelled
-                ? Icons.cancel_rounded
-                : Icons.timeline_rounded,
-            iconColor: isCancelled
-                ? const Color(0xFFEF4444)
-                : const Color(0xFF38BDF8),
+            icon: isCancelled ? Icons.cancel_rounded : Icons.timeline_rounded,
+            iconColor:
+                isCancelled ? const Color(0xFFEF4444) : const Color(0xFF38BDF8),
           ),
           const SizedBox(height: 20),
           if (isCancelled)
@@ -536,11 +606,11 @@ class _TimelineStep extends StatelessWidget {
     const activeColor = Color(0xFF38BDF8);
     const pendingColor = Color(0xFFE2E8F0);
 
-    final circleColor = isDone
-        ? (isActive ? activeColor : doneColor)
-        : pendingColor;
+    final circleColor =
+        isDone ? (isActive ? activeColor : doneColor) : pendingColor;
     final lineColor = isDone ? doneColor : pendingColor;
-    final textColor = isDone ? const Color(0xFF0F172A) : const Color(0xFF94A3B8);
+    final textColor =
+        isDone ? const Color(0xFF0F172A) : const Color(0xFF94A3B8);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,8 +664,7 @@ class _TimelineStep extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 10),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: const Color(0xFF38BDF8).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(20),
@@ -654,30 +723,59 @@ class _CancelledBanner extends StatelessWidget {
 // CTA Buttons
 // ──────────────────────────────────────────────────────────────────────────────
 
-class _CtaButtons extends StatelessWidget {
+class _CtaButtons extends ConsumerWidget {
   const _CtaButtons({required this.order});
 
   final Order order;
 
   @override
-  Widget build(BuildContext context) {
-    final isActive = order.status == 'SEARCHING' ||
-        order.status == 'ASSIGNED' ||
-        order.status == 'ON_THE_WAY';
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cancellable = {
+      'SEARCHING',
+      'ACCEPTED',
+      'ASSIGNED',
+      'DRIVER_ASSIGNED',
+      'ON_THE_WAY',
+      'ARRIVED',
+    }.contains(order.status);
+    final trackable = {
+      'ACCEPTED',
+      'ASSIGNED',
+      'DRIVER_ASSIGNED',
+      'ON_THE_WAY',
+      'ARRIVED',
+    }.contains(order.status);
+    final delivered = order.status == 'DELIVERED';
 
     return Column(
       children: [
-        if (isActive)
+        if (order.status == 'SEARCHING')
           SizedBox(
             width: double.infinity,
             height: 54,
             child: ElevatedButton.icon(
               onPressed: () {
-                if (order.status == 'SEARCHING') {
-                  context.go(RouteNames.home);
-                } else {
-                  context.go('${RouteNames.tracking}?orderId=${order.id}');
-                }
+                context.go('${RouteNames.searching}?orderId=${order.id}');
+              },
+              icon: const Icon(Icons.radar_rounded, size: 18),
+              label: const Text('View Search',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F172A),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+            ),
+          ),
+        if (trackable)
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                context.go('${RouteNames.tracking}?orderId=${order.id}');
               },
               icon: const Icon(Icons.map_rounded, size: 18),
               label: const Text('Track Order',
@@ -691,7 +789,62 @@ class _CtaButtons extends StatelessWidget {
               ),
             ),
           ),
-        if (isActive) const SizedBox(height: 12),
+        if (cancellable) const SizedBox(height: 12),
+        if (cancellable)
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                final reason = await showCancellationReasonSheet(context,
+                    status: order.status);
+                if (reason == null || !context.mounted) return;
+                await ref
+                    .read(orderServiceProvider)
+                    .cancelOrder(orderId: order.id, reason: reason);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Order cancelled')),
+                  );
+                  context.go(RouteNames.orders);
+                }
+              },
+              icon: const Icon(Icons.cancel_outlined, size: 18),
+              label: const Text('Cancel Request',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFEF4444),
+                side: const BorderSide(color: Color(0xFFFCA5A5), width: 1.5),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+          ),
+        if (delivered) ...[
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Invoice details are on this order.')),
+                );
+              },
+              icon: const Icon(Icons.receipt_long_rounded, size: 18),
+              label: const Text('View Invoice',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F172A),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         SizedBox(
           width: double.infinity,
           height: 54,

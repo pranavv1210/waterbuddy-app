@@ -186,6 +186,19 @@ class AuthService {
     }
   }
 
+  Future<void> resetDevelopmentOtpPassword({
+    required String phoneNumber,
+    required String otpCode,
+    required String newPassword,
+  }) async {
+    final credential = await signInWithDevelopmentOtp(
+      phoneNumber: phoneNumber,
+      otpCode: otpCode,
+    );
+    await credential.user?.updatePassword(newPassword);
+    await signOut();
+  }
+
   Future<void> upsertUserProfile({
     required AppRole role,
     String? fullName,

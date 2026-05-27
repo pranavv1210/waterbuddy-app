@@ -1,12 +1,15 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../../routes/route_names.dart';
 import '../../../providers/app_providers.dart';
-import '../models/searching_tankers_state.dart';
+import '../../../routes/route_names.dart';
+import '../../orders/presentation/cancellation_sheet.dart';
 import '../providers/searching_providers.dart';
 
 class SearchingTankersScreen extends ConsumerStatefulWidget {
@@ -19,38 +22,78 @@ class SearchingTankersScreen extends ConsumerStatefulWidget {
 
 class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+  late final AnimationController _radarController;
+  Timer? _statusTimer;
+  int _statusIndex = 0;
+  bool _cancelOpen = false;
+
+  static const _statuses = [
+    'Searching nearby tankers...',
+    'Finding available drivers...',
+    'Connecting to nearest tanker...',
+    'Matching your request...',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _radarController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1800),
     )..repeat();
-    
+
+    _statusTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted) return;
+      setState(() => _statusIndex = (_statusIndex + 1) % _statuses.length);
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final orderId = GoRouterState.of(context).uri.queryParameters['orderId'];
-      if (orderId != null) {
-        ref.read(searchingControllerProvider.notifier).startWatchingOrder(orderId);
+      if (orderId != null && orderId.isNotEmpty) {
+        ref
+            .read(searchingControllerProvider.notifier)
+            .startWatchingOrder(orderId);
       }
     });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _statusTimer?.cancel();
+    _radarController.dispose();
     super.dispose();
+  }
+
+  Future<void> _confirmCancel(String status) async {
+    if (_cancelOpen) return;
+    _cancelOpen = true;
+    final reason = await showCancellationReasonSheet(context, status: status);
+    _cancelOpen = false;
+    if (reason == null || !mounted) return;
+    await ref.read(searchingControllerProvider.notifier).cancelOrder(
+          reason: reason,
+        );
+    if (mounted) context.go(RouteNames.home);
   }
 
   @override
   Widget build(BuildContext context) {
     final searchingState = ref.watch(searchingControllerProvider);
     final activeOrder = ref.watch(activeOrderProvider).value;
+    final status = searchingState.orderStatus;
 
     ref.listen(searchingControllerProvider, (previous, next) {
-      if (next.orderStatus == 'ASSIGNED' && next.orderId != null) {
+      final nextStatus = next.orderStatus;
+      if (next.orderId == null) return;
+      if (nextStatus == 'ACCEPTED' ||
+          nextStatus == 'ASSIGNED' ||
+          nextStatus == 'DRIVER_ASSIGNED' ||
+          nextStatus == 'ON_THE_WAY' ||
+          nextStatus == 'ARRIVED') {
         context.go('${RouteNames.tracking}?orderId=${next.orderId}');
+      }
+      if (nextStatus == 'CANCELLED') {
+        context.go(RouteNames.home);
       }
     });
 
@@ -58,211 +101,486 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
       return _TimeoutView(onRetry: () => context.go(RouteNames.home));
     }
 
-    final body = Scaffold(
-      body: Stack(
-        children: [
-          // 1. Map Background
-          FlutterMap(
-            options: MapOptions(
-              initialCenter: activeOrder?.location != null 
-                ? LatLng(activeOrder!.location!['latitude'], activeOrder!.location!['longitude'])
-                : const LatLng(12.9716, 77.5946),
-              initialZoom: 15,
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.waterbuddy.customer',
+    final location = activeOrder?.location;
+    final lat = (location?['latitude'] as num?)?.toDouble() ?? 12.9716;
+    final lng = (location?['longitude'] as num?)?.toDouble() ?? 77.5946;
+    final address =
+        (location?['address'] as String?) ?? 'Water delivery location';
+    final tankSize = activeOrder?.tankSize.toInt();
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _confirmCancel(status);
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: Stack(
+          children: [
+            FlutterMap(
+              options: MapOptions(
+                initialCenter: LatLng(lat, lng),
+                initialZoom: 15,
               ),
-              if (activeOrder?.location != null)
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.waterbuddy.customer',
+                ),
                 MarkerLayer(
                   markers: [
                     Marker(
-                      point: LatLng(activeOrder!.location!['latitude'], activeOrder!.location!['longitude']),
-                      width: 80,
-                      height: 80,
-                      child: _buildSearchingMarker(),
+                      point: LatLng(lat, lng),
+                      width: 150,
+                      height: 150,
+                      child: _RadarMarker(animation: _radarController),
                     ),
                   ],
                 ),
-            ],
-          ),
-
-          // 2. Rapido-style Status Overlay (Top)
-          Positioned(
-            top: 50,
-            left: 20,
-            right: 20,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E1E),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              ],
+            ),
+            Container(color: Colors.white.withValues(alpha: 0.18)),
+            Positioned(
+              top: MediaQuery.paddingOf(context).top + 14,
+              left: 18,
+              right: 18,
+              child: Row(
                 children: [
-                  const Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Waiting for Partner to accept',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                      ),
-                    ],
+                  _CircleButton(
+                    icon: Icons.close_rounded,
+                    onTap: () => _confirmCancel(status),
                   ),
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: LinearProgressIndicator(
-                      value: _controller.value,
-                      backgroundColor: Colors.white24,
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
-                      minHeight: 4,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _SearchingStatusCard(
+                      animation: _radarController,
+                      status: _statuses[_statusIndex],
+                      address: address,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-
-          // 3. Rapido-style Info Overlay (Bottom)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 20,
-                    offset: Offset(0, -5),
-                  ),
-                ],
+            Positioned(
+              left: 20,
+              right: 20,
+              top: MediaQuery.sizeOf(context).height * 0.30,
+              child: _DispatchAnimation(animation: _radarController),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _SearchingBottomPanel(
+                statusText: _statuses[_statusIndex],
+                tankSize: tankSize,
+                orderId: searchingState.orderId,
+                onCancel: () => _confirmCancel(status),
+                onDetails: searchingState.orderId == null
+                    ? null
+                    : () => context.push(
+                          '${RouteNames.orderDetails}?orderId=${searchingState.orderId}',
+                        ),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Captains Progress
-                  const Text(
-                    '4 of 197 partners didn\'t accept your request',
-                    style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w900, fontSize: 18),
-                  ),
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: 0.05, // Just a small progress for demo
-                      backgroundColor: Color(0xFFF1F5F9),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0EA5E9)),
-                      minHeight: 8,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchingStatusCard extends StatelessWidget {
+  const _SearchingStatusCard({
+    required this.animation,
+    required this.status,
+    required this.address,
+  });
+
+  final Animation<double> animation;
+  final String status;
+  final String address;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.10),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.water_drop_rounded,
+                  color: Color(0xFF0EA5E9), size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  child: Text(
+                    status,
+                    key: ValueKey(status),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  
-                  // Order Details Card
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFF1F5F9)),
-                    ),
-                    child: Row(
-                      children: [
-                        Image.asset('assets/ui/tanker.png', width: 40, height: 40, errorBuilder: (_, __, ___) => const Icon(Icons.water_drop, color: Colors.blue)),
-                        const SizedBox(width: 16),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Total Fare', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                              Text('₹168', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
-                            ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            address,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: SizedBox(
+              height: 4,
+              child: AnimatedBuilder(
+                animation: animation,
+                builder: (context, _) {
+                  return Stack(
+                    children: [
+                      Container(color: const Color(0xFFE0F2FE)),
+                      FractionallySizedBox(
+                        widthFactor: 0.32,
+                        child: Transform.translate(
+                          offset: Offset(
+                            (MediaQuery.sizeOf(context).width - 80) *
+                                animation.value,
+                            0,
+                          ),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xFF0EA5E9), Color(0xFF14B8A6)],
+                              ),
+                            ),
                           ),
                         ),
-                        TextButton(
-                          onPressed: () {},
-                          style: TextButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFFF1F5F9)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                          ),
-                          child: const Text('Order Details', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Cancel Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: TextButton(
-                      onPressed: () async {
-                        await ref.read(searchingControllerProvider.notifier).cancelOrder();
-                        if (context.mounted) context.go(RouteNames.home);
-                      },
-                      child: const Text('Cancel Request', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
         ],
       ),
     );
+  }
+}
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        await ref.read(searchingControllerProvider.notifier).cancelOrder();
-        if (context.mounted) context.go(RouteNames.home);
-      },
-      child: body,
+class _DispatchAnimation extends StatelessWidget {
+  const _DispatchAnimation({required this.animation});
+
+  final Animation<double> animation;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 250,
+      child: AnimatedBuilder(
+        animation: animation,
+        builder: (context, _) {
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              for (var i = 0; i < 3; i++)
+                Transform.scale(
+                  scale: 0.65 + ((animation.value + (i * 0.33)) % 1) * 1.65,
+                  child: Opacity(
+                    opacity: 1 - ((animation.value + (i * 0.33)) % 1),
+                    child: Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFF0EA5E9),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              Container(
+                width: 94,
+                height: 94,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0EA5E9).withValues(alpha: 0.18),
+                      blurRadius: 26,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.water_drop_rounded,
+                    color: Color(0xFF0EA5E9), size: 42),
+              ),
+              for (var i = 0; i < 5; i++)
+                Transform.translate(
+                  offset: Offset(
+                    math.cos((animation.value * math.pi * 2) +
+                            (i * math.pi * 0.4)) *
+                        105,
+                    math.sin((animation.value * math.pi * 2) +
+                            (i * math.pi * 0.4)) *
+                        76,
+                  ),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE0F2FE)),
+                    ),
+                    child: const Icon(Icons.local_shipping_rounded,
+                        color: Color(0xFF0284C7), size: 20),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
+}
 
-  Widget _buildSearchingMarker() {
+class _RadarMarker extends StatelessWidget {
+  const _RadarMarker({required this.animation});
+
+  final Animation<double> animation;
+
+  @override
+  Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
+      animation: animation,
+      builder: (context, _) {
         return Stack(
           alignment: Alignment.center,
           children: [
-            Container(
-              width: 60 * _controller.value,
-              height: 60 * _controller.value,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.blue.withOpacity(0.3 * (1 - _controller.value)),
+            for (var i = 0; i < 2; i++)
+              Transform.scale(
+                scale: 0.4 + ((animation.value + (i * 0.5)) % 1) * 1.2,
+                child: Opacity(
+                  opacity: 1 - ((animation.value + (i * 0.5)) % 1),
+                  child: Container(
+                    width: 90,
+                    height: 90,
+                    decoration: const BoxDecoration(
+                      color: Color(0x330EA5E9),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            Container(
-              width: 12,
-              height: 12,
-              decoration: const BoxDecoration(
-                color: Colors.blue,
-                shape: BoxShape.circle,
-              ),
-            ),
+            const Icon(Icons.location_on_rounded,
+                color: Color(0xFFEF4444), size: 52),
           ],
         );
       },
+    );
+  }
+}
+
+class _SearchingBottomPanel extends StatelessWidget {
+  const _SearchingBottomPanel({
+    required this.statusText,
+    required this.tankSize,
+    required this.orderId,
+    required this.onCancel,
+    required this.onDetails,
+  });
+
+  final String statusText;
+  final int? tankSize;
+  final String? orderId;
+  final VoidCallback onCancel;
+  final VoidCallback? onDetails;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        MediaQuery.paddingOf(context).bottom + 20,
+      ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x1A0F172A),
+            blurRadius: 30,
+            offset: Offset(0, -10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 42,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFCBD5E1),
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            statusText,
+            style: const TextStyle(
+              color: Color(0xFF0F172A),
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Nearest available tanker partners are being notified in real time.',
+            style: TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0F2FE),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.water_drop_rounded,
+                      color: Color(0xFF0EA5E9)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tankSize == null
+                            ? 'Water tanker request'
+                            : '$tankSize L water tanker',
+                        style: const TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      const Text(
+                        'Estimated wait: 2-5 min',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: onDetails,
+                  child: const Text('Details'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: OutlinedButton(
+              onPressed: onCancel,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFEF4444),
+                side: const BorderSide(color: Color(0xFFFCA5A5), width: 1.4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(17),
+                ),
+              ),
+              child: const Text(
+                'Cancel Request',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CircleButton extends StatelessWidget {
+  const _CircleButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      elevation: 8,
+      shadowColor: Colors.black.withValues(alpha: 0.16),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: 54,
+          height: 54,
+          child: Icon(icon, color: const Color(0xFF0F172A)),
+        ),
+      ),
     );
   }
 }
@@ -274,18 +592,56 @@ class _TimeoutView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.timer_off_rounded, size: 64, color: Colors.red),
-            const SizedBox(height: 24),
-            const Text('No partners available', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            const Text('Please try again in a few minutes', style: TextStyle(color: Colors.grey)),
-            const SizedBox(height: 32),
-            ElevatedButton(onPressed: onRetry, child: const Text('Retry')),
-          ],
+      backgroundColor: const Color(0xFFFFFBF3),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.timer_off_rounded,
+                    size: 64, color: Color(0xFFEF4444)),
+                const SizedBox(height: 24),
+                const Text(
+                  'No tanker available right now',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Try again in a few minutes or choose a different delivery address.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: FilledButton(
+                    onPressed: onRetry,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF0EA5E9),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      'Back to Home',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
