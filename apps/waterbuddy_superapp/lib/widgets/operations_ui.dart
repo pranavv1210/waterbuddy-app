@@ -118,22 +118,53 @@ class OpsScaffold extends StatelessWidget {
         decoration: BoxDecoration(
           border: const Border(top: BorderSide(color: OpsColors.line)),
         ),
-        child: NavigationBar(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          selectedIndex: activeIndex,
-          onDestinationSelected: onTabChanged,
-          indicatorColor: accent.withOpacity(0.15),
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          destinations: [
-            for (final tab in tabs)
-              NavigationDestination(
-                icon: Icon(tab.icon, color: OpsColors.muted),
-                selectedIcon: Icon(tab.icon, color: accent),
-                label: tab.label,
+        child: tabs.length <= 5
+            ? NavigationBar(
+                backgroundColor: Colors.white,
+                surfaceTintColor: Colors.transparent,
+                selectedIndex: activeIndex,
+                onDestinationSelected: onTabChanged,
+                indicatorColor: accent.withOpacity(0.15),
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                destinations: [
+                  for (final tab in tabs)
+                    NavigationDestination(
+                      icon: Icon(tab.icon, color: OpsColors.muted),
+                      selectedIcon: Icon(tab.icon, color: accent),
+                      label: tab.label,
+                    ),
+                ],
+              )
+            : SafeArea(
+                top: false,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                  child: Row(
+                    children: [
+                      for (var index = 0; index < tabs.length; index++)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            selected: activeIndex == index,
+                            onSelected: (_) => onTabChanged(index),
+                            avatar: Icon(
+                              tabs[index].icon,
+                              size: 18,
+                              color: activeIndex == index
+                                  ? accent
+                                  : OpsColors.muted,
+                            ),
+                            label: Text(tabs[index].label),
+                            selectedColor: accent.withOpacity(0.15),
+                            backgroundColor: Colors.white,
+                            side: const BorderSide(color: OpsColors.line),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
-          ],
-        ),
       ),
     );
   }
@@ -283,6 +314,7 @@ Color orderStatusColor(String status) {
   switch (status) {
     case 'SEARCHING':
       return OpsColors.blue;
+    case 'ACCEPTED':
     case 'ASSIGNED':
     case 'DRIVER_ASSIGNED':
       return const Color(0xFF8B5CF6);

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/services/orders/order_service.dart';
+import '../../../models/tank_category.dart';
 import '../../../providers/app_providers.dart';
 
 class OrderCreationState {
@@ -39,8 +40,7 @@ class OrderCreationController extends StateNotifier<OrderCreationState> {
   final FirebaseFirestore _firestore;
 
   Future<String?> createOrder({
-    required num tankSize,
-    required String tankLabel,
+    required TankCategory tankCategory,
     required Map<String, dynamic> location,
     String paymentType = 'COD',
   }) async {
@@ -57,10 +57,7 @@ class OrderCreationController extends StateNotifier<OrderCreationState> {
       }
 
       // Get user details from Firestore
-      final userDoc = await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
 
       final customerName = userDoc.data()?['name'] ?? 'Customer';
       final customerPhone = user.phoneNumber ?? userDoc.data()?['phone'] ?? '';
@@ -69,8 +66,11 @@ class OrderCreationController extends StateNotifier<OrderCreationState> {
         customerId: user.uid,
         customerName: customerName,
         customerPhone: customerPhone,
-        tankSize: tankSize,
-        tankLabel: tankLabel,
+        tankSize: tankCategory.litres,
+        tankLabel: tankCategory.displayName,
+        tankId: tankCategory.id,
+        amount: tankCategory.effectivePrice,
+        pricingSnapshot: tankCategory.toFirestore()..remove('updatedAt'),
         location: location,
         paymentType: paymentType,
       );

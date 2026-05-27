@@ -45,6 +45,7 @@ import '../features/tracking/presentation/order_complete_screen.dart';
 import '../features/tracking/presentation/searching_tankers_screen.dart';
 import '../features/tracking/presentation/tracking_screen.dart';
 import '../models/order.dart' as app_order;
+import '../models/tank_category.dart';
 import '../routes/route_names.dart';
 import '../widgets/main_shell.dart';
 
@@ -353,6 +354,36 @@ final driversProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>(
 );
 final allOrdersProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>(
   (ref) => ref.watch(firestoreProvider).collection('orders').snapshots(),
+);
+
+final tankCategoriesProvider = StreamProvider<List<TankCategory>>((ref) {
+  return ref
+      .watch(firestoreProvider)
+      .collection('tank_categories')
+      .snapshots()
+      .map(
+    (snapshot) {
+      final categories = snapshot.docs.map(TankCategory.fromDocument).toList()
+        ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+      return categories;
+    },
+  );
+});
+
+final activeTankCategoriesProvider = StreamProvider<List<TankCategory>>((ref) {
+  return ref.watch(tankCategoriesProvider.stream).map(
+        (categories) =>
+            categories.where((category) => category.active).toList(),
+      );
+});
+
+final platformConfigProvider =
+    StreamProvider<DocumentSnapshot<Map<String, dynamic>>>(
+  (ref) => ref
+      .watch(firestoreProvider)
+      .collection('configs')
+      .doc('platform')
+      .snapshots(),
 );
 
 final appRouterProvider = Provider<GoRouter>((ref) {

@@ -123,6 +123,11 @@ class _OrderDetailsBody extends ConsumerWidget {
                         label: 'Payment Method',
                         value: order.paymentType,
                       ),
+                      if (order.amount > 0)
+                        _InfoRow(
+                          label: 'Order Amount',
+                          value: 'Rs ${order.amount.toInt()}',
+                        ),
                       _InfoRow(
                         label: 'Payment Status',
                         value: order.paymentStatus,

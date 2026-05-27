@@ -14,6 +14,7 @@ import '../providers/home_providers.dart';
 import '../providers/order_creation_provider.dart';
 import '../../../providers/app_providers.dart';
 import '../../../models/order.dart' as app_order;
+import '../../../models/tank_category.dart';
 import '../../tracking/providers/searching_providers.dart';
 import '../../orders/providers/order_providers.dart';
 
@@ -23,7 +24,10 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(homeDashboardProvider);
-    final selectedTankId = ref.watch(selectedTankIdProvider) ?? 'medium';
+    final categories =
+        ref.watch(activeTankCategoriesProvider).value ?? const [];
+    final selectedTankId = ref.watch(selectedTankIdProvider) ??
+        (categories.isNotEmpty ? categories.first.id : '');
     final activeOrder = ref.watch(activeOrderProvider).value;
 
     // Listen for active orders to redirect if app was closed or user navigated away
@@ -40,6 +44,7 @@ class HomeScreen extends ConsumerWidget {
     return _HomeScreenBody(
       state: dashboard,
       selectedTankId: selectedTankId,
+      tankCategories: categories,
       activeOrder: activeOrder,
       onTankSelected: (tankId) {
         ref.read(selectedTankIdProvider.notifier).state = tankId;
@@ -52,12 +57,14 @@ class _HomeScreenBody extends ConsumerStatefulWidget {
   const _HomeScreenBody({
     required this.state,
     required this.selectedTankId,
+    required this.tankCategories,
     required this.activeOrder,
     required this.onTankSelected,
   });
 
   final HomeDashboard state;
   final String selectedTankId;
+  final List<TankCategory> tankCategories;
   final app_order.Order? activeOrder;
   final ValueChanged<String> onTankSelected;
 
@@ -78,30 +85,6 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
 
   // Default to Bangalore center if location not available
   static const LatLng _defaultLocation = LatLng(12.9716, 77.5946);
-
-  final List<Map<String, dynamic>> tankOptionsData = [
-    {
-      'id': 'small',
-      'size': 'Small Tank',
-      'litres': 10000,
-      'icon': Icons.opacity_rounded,
-      'basePrice': 500
-    },
-    {
-      'id': 'medium',
-      'size': 'Medium Tank',
-      'litres': 15000,
-      'icon': Icons.water_drop_rounded,
-      'basePrice': 750
-    },
-    {
-      'id': 'large',
-      'size': 'Large Tank',
-      'litres': 20000,
-      'icon': Icons.waves_rounded,
-      'basePrice': 1000
-    },
-  ];
 
   @override
   void initState() {
@@ -299,8 +282,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                                 const SizedBox(height: 16),
                                 _buildLocationBar(),
                                 const SizedBox(height: 20),
-                                ...tankOptionsData.map((data) =>
-                                    _buildTankListItem(data, primary)),
+                                if (widget.tankCategories.isEmpty)
+                                  const _NoTankCategoriesCard()
+                                else
+                                  ...widget.tankCategories.map((category) =>
+                                      _buildTankListItem(category, primary)),
                                 const SizedBox(height: 32),
                                 _buildBookButton(primary),
                               ]
@@ -873,8 +859,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ...tankOptionsData
-                        .map((data) => _buildTankListItem(data, primary)),
+                    if (widget.tankCategories.isEmpty)
+                      const _NoTankCategoriesCard()
+                    else
+                      ...widget.tankCategories.map(
+                          (category) => _buildTankListItem(category, primary)),
                     const SizedBox(
                         height: 80), // Space for fixed button + nav bar
                   ],
@@ -893,11 +882,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     );
   }
 
-  Widget _buildTankListItem(Map<String, dynamic> data, Color primary) {
-    final isSelected = widget.selectedTankId == data['id'];
+  Widget _buildTankListItem(TankCategory category, Color primary) {
+    final isSelected = widget.selectedTankId == category.id;
 
     return GestureDetector(
-      onTap: () => widget.onTankSelected(data['id']),
+      onTap: () => widget.onTankSelected(category.id),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 12),
@@ -931,7 +920,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
-                data['icon'],
+                _tankIcon(category.iconKey),
                 color: isSelected ? Colors.white : const Color(0xFF0EA5E9),
                 size: 26,
               ),
@@ -942,7 +931,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    data['size'],
+                    category.displayName,
                     style: const TextStyle(
                       color: Color(0xFF0F172A),
                       fontSize: 16,
@@ -951,7 +940,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${data['litres'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} Litres • Express',
+                    '${_formatLitres(category.litres)} Litres • ${category.estimatedDeliveryTime}',
                     style: TextStyle(
                       color: const Color(0xFF64748B),
                       fontSize: 13,
@@ -965,7 +954,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '₹${data['basePrice']}',
+                  '₹${category.effectivePrice}',
                   style: const TextStyle(
                     color: Color(0xFF0F172A),
                     fontSize: 18,
@@ -973,8 +962,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   ),
                 ),
                 if (isSelected)
-                  const Text(
-                    'Best Value',
+                  Text(
+                    category.expressAvailable ? 'Express' : 'Selected',
                     style: TextStyle(
                       color: Color(0xFF38BDF8),
                       fontSize: 10,
@@ -990,6 +979,27 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
   }
 
   bool _isBooking = false;
+
+  IconData _tankIcon(String iconKey) {
+    switch (iconKey) {
+      case 'opacity':
+      case 'drop':
+        return Icons.opacity_rounded;
+      case 'waves':
+        return Icons.waves_rounded;
+      case 'truck':
+        return Icons.local_shipping_rounded;
+      default:
+        return Icons.water_drop_rounded;
+    }
+  }
+
+  String _formatLitres(int litres) {
+    return litres.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (match) => '${match[1]},',
+        );
+  }
 
   Widget _buildBookButton(Color primary) {
     return Container(
@@ -1018,12 +1028,21 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 try {
                   final orderController =
                       ref.read(orderCreationControllerProvider.notifier);
-                  final selectedOption = tankOptionsData
-                      .firstWhere((t) => t['id'] == widget.selectedTankId);
+                  if (widget.tankCategories.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No active tank categories available.'),
+                      ),
+                    );
+                    return;
+                  }
+                  final selectedOption = widget.tankCategories.firstWhere(
+                    (t) => t.id == widget.selectedTankId,
+                    orElse: () => widget.tankCategories.first,
+                  );
 
                   final orderId = await orderController.createOrder(
-                    tankSize: (selectedOption['litres'] as int).toDouble(),
-                    tankLabel: selectedOption['size'],
+                    tankCategory: selectedOption,
                     location: {
                       'latitude': _selectedLocation?.latitude ?? 0.0,
                       'longitude': _selectedLocation?.longitude ?? 0.0,
@@ -1395,6 +1414,43 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
   }
 }
 
+class _NoTankCategoriesCard extends StatelessWidget {
+  const _NoTankCategoriesCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Bookings are temporarily unavailable',
+            style: TextStyle(
+              color: Color(0xFF0F172A),
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Admin has not enabled any water tank categories yet.',
+            style: TextStyle(
+              color: Color(0xFF64748B),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ServiceCard extends StatelessWidget {
   const _ServiceCard({
     required this.title,
@@ -1661,10 +1717,8 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
     });
   }
 
-  String _getTankLabel(num size) {
-    if (size <= 10000) return 'Small Tank';
-    if (size <= 15000) return 'Medium Tank';
-    return 'Large Tank';
+  String _getTankLabel(app_order.Order? order) {
+    return order?.tankLabel ?? 'Water tanker';
   }
 
   @override
@@ -1853,7 +1907,7 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _getTankLabel(activeOrder?.tankSize ?? 15000),
+                              _getTankLabel(activeOrder),
                               style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 18,

@@ -8,9 +8,11 @@ class Order {
     required this.customerPhone,
     required this.sellerId,
     required this.tankSize,
+    required this.configuredTankLabel,
     required this.status,
     required this.paymentType,
     required this.paymentStatus,
+    required this.amount,
     required this.location,
     this.driverId,
     this.assignedAt,
@@ -29,9 +31,11 @@ class Order {
       customerPhone: data['customerPhone'] as String? ?? '',
       sellerId: data['sellerId'] as String?,
       tankSize: data['tankSize'] as num? ?? 0,
+      configuredTankLabel: (data['tankLabel'] ?? '').toString(),
       status: data['status'] as String? ?? 'SEARCHING',
       paymentType: data['paymentType'] as String? ?? 'COD',
       paymentStatus: data['paymentStatus'] as String? ?? 'PENDING',
+      amount: data['amount'] as num? ?? 0,
       location: Map<String, dynamic>.from(data['location'] as Map? ?? const {}),
       driverId: data['driverId'] as String?,
       assignedAt: data['assignedAt'] as Timestamp?,
@@ -50,9 +54,11 @@ class Order {
   final String customerPhone;
   final String? sellerId;
   final num tankSize;
+  final String configuredTankLabel;
   final String status;
   final String paymentType;
   final String paymentStatus;
+  final num amount;
   final Map<String, dynamic> location;
   final String? driverId;
   final Timestamp? assignedAt;
@@ -64,7 +70,9 @@ class Order {
   String? get deliveryAddress => location['address'] as String?;
   double get latitude => (location['latitude'] as num?)?.toDouble() ?? 0.0;
   double get longitude => (location['longitude'] as num?)?.toDouble() ?? 0.0;
-  String get tankLabel => '${tankSize.toInt()}L Tanker';
+  String get tankLabel => configuredTankLabel.isNotEmpty
+      ? configuredTankLabel
+      : '${tankSize.toInt()}L Tanker';
 }
 
 class TrackingData {
