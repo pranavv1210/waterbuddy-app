@@ -28,6 +28,11 @@ class PaymentController extends StateNotifier<PaymentState> {
   Future<void> selectCod(String orderId) async {
     state = state.copyWith(isProcessing: true, clearError: true);
     try {
+      final settings =
+          await _firestore.collection('system_settings').doc('app').get();
+      if (settings.data()?['codEnabled'] == false) {
+        throw Exception('Cash on delivery is currently disabled.');
+      }
       await _razorpayService.markOrderCod(orderId);
       debugPrint('COD selected for order: $orderId');
       state = state.copyWith(
@@ -45,7 +50,7 @@ class PaymentController extends StateNotifier<PaymentState> {
   Future<void> startOnlinePayment({
     required String orderId,
     required int amountInPaise,
-    required String method,      // 'upi' | 'card' | 'netbanking'
+    required String method, // 'upi' | 'card' | 'netbanking'
     required String customerName,
     required String customerPhone,
     required String customerEmail,

@@ -33,10 +33,11 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   int _tab = 0;
 
-  static const _tabs = [
+  static const _sections = [
     OpsTab(label: 'Dashboard', icon: Icons.dashboard_rounded),
     OpsTab(label: 'Orders', icon: Icons.radar_rounded),
-    OpsTab(label: 'Tank Categories', icon: Icons.water_drop_rounded),
+    OpsTab(label: 'Tankers', icon: Icons.water_drop_rounded),
+    OpsTab(label: 'Settings', icon: Icons.tune_rounded),
     OpsTab(label: 'Pricing', icon: Icons.currency_rupee_rounded),
     OpsTab(label: 'Approvals', icon: Icons.verified_user_rounded),
     OpsTab(label: 'Drivers', icon: Icons.badge_rounded),
@@ -45,9 +46,18 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     OpsTab(label: 'Payments', icon: Icons.payments_rounded),
     OpsTab(label: 'Notifications', icon: Icons.campaign_rounded),
     OpsTab(label: 'Support', icon: Icons.support_agent_rounded),
-    OpsTab(label: 'Settings', icon: Icons.tune_rounded),
     OpsTab(label: 'Profile', icon: Icons.admin_panel_settings_rounded),
   ];
+
+  int get _bottomIndex {
+    return switch (_tab) {
+      0 => 0,
+      1 => 1,
+      2 => 2,
+      3 => 3,
+      _ => 3,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,46 +93,60 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           );
         }
 
-        return OpsScaffold(
-          title: 'Admin Control',
-          subtitle: user.email ?? 'Operations console',
-          accent: OpsColors.green,
-          tabs: _tabs,
-          activeIndex: _tab,
-          onTabChanged: (index) => setState(() => _tab = index),
-          actions: const [],
+        return _AdminShell(
+          title: _sections[_tab].label,
+          activeBottomIndex: _bottomIndex,
+          onBottomChanged: (index) {
+            FocusManager.instance.primaryFocus?.unfocus();
+            setState(() {
+              _tab = switch (index) {
+                0 => 0,
+                1 => 1,
+                2 => 2,
+                _ => 3,
+              };
+            });
+          },
+          onDrawerSelected: (index) {
+            FocusManager.instance.primaryFocus?.unfocus();
+            setState(() => _tab = index);
+          },
+          onLogout: () async {
+            await signOutToRoleSelection(context: context, ref: ref);
+          },
           body: IndexedStack(
             index: _tab,
-            children: const [
-              _AdminOverview(),
-              _AdminOrdersView(),
-              _TankCategoriesView(),
-              _PricingView(),
-              _ApprovalsView(),
-              _RoleCollectionView(
+            children: [
+              _AdminOverview(
+                  onNavigate: (index) => setState(() => _tab = index)),
+              const _AdminOrdersView(),
+              const _TankCategoriesView(),
+              const _AdminSettingsView(),
+              const _PricingView(),
+              const _ApprovalsView(),
+              const _RoleCollectionView(
                 title: 'Drivers',
                 collection: 'drivers',
                 icon: Icons.badge_rounded,
                 roleLabel: 'driver',
               ),
-              _RoleCollectionView(
+              const _RoleCollectionView(
                 title: 'Tank Owners',
                 collection: 'sellers',
                 icon: Icons.local_shipping_rounded,
                 roleLabel: 'seller',
               ),
-              _RoleCollectionView(
+              const _RoleCollectionView(
                 title: 'Consumers',
                 collection: 'users',
                 icon: Icons.person_rounded,
                 roleLabel: 'consumer',
                 roleFilter: 'consumer',
               ),
-              _PaymentsView(),
-              _NotificationsView(),
-              _SupportView(),
-              _AdminSettingsView(),
-              _AdminProfileView(),
+              const _PaymentsView(),
+              const _NotificationsView(),
+              const _SupportView(),
+              const _AdminProfileView(),
             ],
           ),
         );
@@ -131,12 +155,317 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   }
 }
 
+class _AdminShell extends StatelessWidget {
+  const _AdminShell({
+    required this.title,
+    required this.activeBottomIndex,
+    required this.onBottomChanged,
+    required this.onDrawerSelected,
+    required this.onLogout,
+    required this.body,
+  });
+
+  final String title;
+  final int activeBottomIndex;
+  final ValueChanged<int> onBottomChanged;
+  final ValueChanged<int> onDrawerSelected;
+  final VoidCallback onLogout;
+  final Widget body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: OpsColors.surface,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        titleSpacing: 0,
+        foregroundColor: OpsColors.ink,
+        title: Row(
+          children: [
+            const _AdminLogo(),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'WATERBUDDY',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: OpsColors.ink,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    'Admin - $title',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: OpsColors.muted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Notifications',
+            onPressed: () => onDrawerSelected(10),
+            icon: const Icon(Icons.notifications_none_rounded),
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        backgroundColor: Colors.white,
+        child: SafeArea(
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 18, 20, 14),
+                child: Row(
+                  children: [
+                    _AdminLogo(size: 42),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'WaterBuddy',
+                            style: TextStyle(
+                              color: OpsColors.ink,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 18,
+                            ),
+                          ),
+                          Text(
+                            'Operations menu',
+                            style: TextStyle(
+                              color: OpsColors.muted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  children: [
+                    _DrawerItem(
+                      icon: Icons.currency_rupee_rounded,
+                      label: 'Pricing',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDrawerSelected(4);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.verified_user_rounded,
+                      label: 'User Approvals',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDrawerSelected(5);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.badge_rounded,
+                      label: 'Drivers',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDrawerSelected(6);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.local_shipping_rounded,
+                      label: 'Tank Owners',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDrawerSelected(7);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.people_alt_rounded,
+                      label: 'Consumers',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDrawerSelected(8);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.payments_rounded,
+                      label: 'Payments',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDrawerSelected(9);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.campaign_rounded,
+                      label: 'Notifications',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDrawerSelected(10);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.support_agent_rounded,
+                      label: 'Support',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDrawerSelected(11);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.analytics_rounded,
+                      label: 'Analytics',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDrawerSelected(0);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.tune_rounded,
+                      label: 'Service Config',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDrawerSelected(3);
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.admin_panel_settings_rounded,
+                      label: 'Profile',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDrawerSelected(12);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              _DrawerItem(
+                icon: Icons.logout_rounded,
+                label: 'Logout',
+                destructive: true,
+                onTap: () {
+                  Navigator.pop(context);
+                  onLogout();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: body,
+      ),
+      bottomNavigationBar: NavigationBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        selectedIndex: activeBottomIndex,
+        onDestinationSelected: onBottomChanged,
+        indicatorColor: OpsColors.green.withValues(alpha: 0.15),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard_rounded),
+            label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.radar_outlined),
+            selectedIcon: Icon(Icons.radar_rounded),
+            label: 'Orders',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.water_drop_outlined),
+            selectedIcon: Icon(Icons.water_drop_rounded),
+            label: 'Tankers',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.tune_outlined),
+            selectedIcon: Icon(Icons.tune_rounded),
+            label: 'Settings',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DrawerItem extends StatelessWidget {
+  const _DrawerItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.destructive = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool destructive;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = destructive ? OpsColors.red : OpsColors.ink;
+    return ListTile(
+      leading: Icon(icon, color: destructive ? OpsColors.red : OpsColors.blue),
+      title: Text(
+        label,
+        style: TextStyle(color: color, fontWeight: FontWeight.w800),
+      ),
+      onTap: onTap,
+    );
+  }
+}
+
+class _AdminLogo extends StatelessWidget {
+  const _AdminLogo({this.size = 34});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: OpsColors.blue.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: OpsColors.blue.withValues(alpha: 0.22)),
+      ),
+      padding: const EdgeInsets.all(5),
+      child: Image.asset(
+        'assets/images/logo.png',
+        errorBuilder: (_, __, ___) =>
+            const Icon(Icons.water_drop_rounded, color: OpsColors.blue),
+      ),
+    );
+  }
+}
+
 class _AdminOverview extends ConsumerWidget {
-  const _AdminOverview();
+  const _AdminOverview({required this.onNavigate});
+
+  final ValueChanged<int> onNavigate;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final users = ref.watch(usersProvider);
     final sellers = ref.watch(sellersProvider);
     final drivers = ref.watch(driversProvider);
     final orders = ref.watch(allOrdersProvider);
@@ -145,85 +474,141 @@ class _AdminOverview extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       children: [
         const _AdminHeader(
-          title: 'Live operations',
-          subtitle: 'Counts come directly from Firestore collections.',
+          title: 'Operations dashboard',
+          subtitle: 'Live platform status and the actions needed today.',
         ),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final width = _adminCardWidth(constraints.maxWidth);
-            return Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: [
-                SizedBox(
-                  width: width,
-                  child: _CountMetric(
-                    title: 'Users',
-                    icon: Icons.people_alt_rounded,
-                    async: users,
-                  ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: _CountMetric(
-                    title: 'Sellers',
-                    icon: Icons.storefront_rounded,
-                    async: sellers,
-                  ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: _CountMetric(
-                    title: 'Drivers',
-                    icon: Icons.local_shipping_rounded,
-                    async: drivers,
-                  ),
-                ),
-                SizedBox(
-                  width: width,
-                  child: _CountMetric(
-                    title: 'Orders',
-                    icon: Icons.water_drop_rounded,
-                    async: orders,
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: 24),
         orders.when(
-          data: (snapshot) {
-            final active = snapshot.docs.where((doc) {
+          data: (orderSnapshot) {
+            final docs = orderSnapshot.docs;
+            final now = DateTime.now();
+            final startOfDay = DateTime(now.year, now.month, now.day);
+            final ordersToday = docs.where((doc) {
+              final createdAt = doc.data()['createdAt'];
+              return createdAt is Timestamp &&
+                  createdAt.toDate().isAfter(startOfDay);
+            }).length;
+            final activeDeliveries = docs.where((doc) {
               final status = (doc.data()['status'] ?? '').toString();
               return status != 'DELIVERED' && status != 'CANCELLED';
-            }).toList();
-            if (active.isEmpty) {
-              return const OpsCard(
-                child: Text(
-                  'No active deliveries at the moment.',
-                  style: TextStyle(
-                      color: OpsColors.muted, fontWeight: FontWeight.w600),
-                ),
-              );
-            }
+            }).length;
+            final recentActive = docs
+                .where((doc) {
+                  final status = (doc.data()['status'] ?? '').toString();
+                  return status != 'DELIVERED' && status != 'CANCELLED';
+                })
+                .take(5)
+                .toList();
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _AdminHeader(
-                  title: 'Active delivery monitor',
-                  subtitle: 'Current non-final orders.',
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = _adminCardWidth(constraints.maxWidth);
+                    return Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      children: [
+                        SizedBox(
+                          width: width,
+                          child: _PlainMetric(
+                            title: 'Total orders today',
+                            value: '$ordersToday',
+                            icon: Icons.receipt_long_rounded,
+                          ),
+                        ),
+                        SizedBox(
+                          width: width,
+                          child: _PlainMetric(
+                            title: 'Active deliveries',
+                            value: '$activeDeliveries',
+                            icon: Icons.radar_rounded,
+                          ),
+                        ),
+                        SizedBox(
+                          width: width,
+                          child: _CollectionMetric(
+                            title: 'Online tankers',
+                            icon: Icons.local_shipping_rounded,
+                            async: sellers,
+                            countWhere: _isOnlineRecord,
+                          ),
+                        ),
+                        SizedBox(
+                          width: width,
+                          child: _CollectionMetric(
+                            title: 'Online drivers',
+                            icon: Icons.badge_rounded,
+                            async: drivers,
+                            countWhere: _isOnlineRecord,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
-                for (final doc in active.take(8))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _OrderAdminCard(doc: doc),
-                  ),
+                const SizedBox(height: 24),
+                const _AdminHeader(
+                  title: 'Live orders',
+                  subtitle: 'Searching, assigned, and in-progress bookings.',
+                ),
+                if (recentActive.isEmpty)
+                  const OpsCard(
+                    child: Text(
+                      'No active deliveries at the moment.',
+                      style: TextStyle(
+                        color: OpsColors.muted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                else
+                  for (final doc in recentActive)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _OrderAdminCard(doc: doc),
+                    ),
               ],
             );
           },
           loading: () => const LinearProgressIndicator(minHeight: 2),
           error: (error, _) => Text(error.toString()),
+        ),
+        const SizedBox(height: 24),
+        const _AdminHeader(
+          title: 'Pending approvals',
+          subtitle: 'Partners waiting for access to operations.',
+        ),
+        _PendingApprovalsSummary(
+          sellers: sellers,
+          drivers: drivers,
+          onOpenApprovals: () => onNavigate(5),
+        ),
+        const SizedBox(height: 24),
+        const _AdminHeader(
+          title: 'Quick actions',
+          subtitle: 'Common operations without opening advanced tools.',
+        ),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            FilledButton.icon(
+              onPressed: () => _showTankCategoryForm(context),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Add Tank Category'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => onNavigate(5),
+              icon: const Icon(Icons.verified_user_rounded),
+              label: const Text('Approve Tankers'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => onNavigate(10),
+              icon: const Icon(Icons.campaign_rounded),
+              label: const Text('Broadcast Notice'),
+            ),
+          ],
         ),
       ],
     );
@@ -235,20 +620,79 @@ double _adminCardWidth(double maxWidth) {
   return (maxWidth - 16) / 2;
 }
 
-class _CountMetric extends StatelessWidget {
-  const _CountMetric({
+bool _isOnlineRecord(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+  final data = doc.data();
+  return data['isOnline'] == true ||
+      data['online'] == true ||
+      data['onDuty'] == true ||
+      data['isAvailable'] == true ||
+      (data['availabilityStatus'] ?? '').toString().toLowerCase() == 'online';
+}
+
+class _PlainMetric extends StatelessWidget {
+  const _PlainMetric({
+    required this.title,
+    required this.value,
+    required this.icon,
+  });
+
+  final String title;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return OpsCard(
+      child: Row(
+        children: [
+          Icon(icon, color: OpsColors.green),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: OpsColors.ink,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: OpsColors.muted,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CollectionMetric extends StatelessWidget {
+  const _CollectionMetric({
     required this.title,
     required this.icon,
     required this.async,
+    required this.countWhere,
   });
 
   final String title;
   final IconData icon;
   final AsyncValue<QuerySnapshot<Map<String, dynamic>>> async;
+  final bool Function(QueryDocumentSnapshot<Map<String, dynamic>>) countWhere;
 
   @override
   Widget build(BuildContext context) {
-    final count = async.value?.docs.length;
+    final count = async.value?.docs.where(countWhere).length;
     return OpsCard(
       child: Row(
         children: [
@@ -284,6 +728,57 @@ class _CountMetric extends StatelessWidget {
   }
 }
 
+class _PendingApprovalsSummary extends StatelessWidget {
+  const _PendingApprovalsSummary({
+    required this.sellers,
+    required this.drivers,
+    required this.onOpenApprovals,
+  });
+
+  final AsyncValue<QuerySnapshot<Map<String, dynamic>>> sellers;
+  final AsyncValue<QuerySnapshot<Map<String, dynamic>>> drivers;
+  final VoidCallback onOpenApprovals;
+
+  @override
+  Widget build(BuildContext context) {
+    final sellerCount = sellers.value?.docs.where((doc) {
+          final status = _approvalStatus(doc.data());
+          return status == 'pending' || status == 'under_review';
+        }).length ??
+        0;
+    final driverCount = drivers.value?.docs.where((doc) {
+          final status = _approvalStatus(doc.data());
+          return status == 'pending' || status == 'under_review';
+        }).length ??
+        0;
+    final total = sellerCount + driverCount;
+
+    return OpsCard(
+      child: Row(
+        children: [
+          const Icon(Icons.verified_user_rounded, color: OpsColors.blue),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              total == 0
+                  ? 'No pending approvals right now.'
+                  : '$total pending approvals: $sellerCount tank owners, $driverCount drivers.',
+              style: const TextStyle(
+                color: OpsColors.ink,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onOpenApprovals,
+            child: const Text('Review'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TankCategoriesView extends ConsumerWidget {
   const _TankCategoriesView();
 
@@ -295,8 +790,7 @@ class _TankCategoriesView extends ConsumerWidget {
       children: [
         _AdminHeader(
           title: 'Tank category control',
-          subtitle:
-              'Add, edit, disable, or delete bookable tanker categories from Firestore.',
+          subtitle: 'Manage the tank sizes and prices customers can book.',
           action: FilledButton.icon(
             onPressed: () => _showTankCategoryForm(context),
             icon: const Icon(Icons.add_rounded),
@@ -377,20 +871,8 @@ class _TankCategoryAdminCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          _ConfigLine(label: 'Litres', value: '${category.litres}L'),
-          _ConfigLine(label: 'Base price', value: 'Rs ${category.basePrice}'),
-          _ConfigLine(
-            label: 'Surge multiplier',
-            value: '${category.surgeMultiplier}x',
-          ),
-          _ConfigLine(
-            label: 'ETA',
-            value: category.estimatedDeliveryTime,
-          ),
-          _ConfigLine(
-            label: 'Radius',
-            value: '${category.serviceRadius} km',
-          ),
+          _ConfigLine(label: 'Capacity', value: '${category.litres}L'),
+          _ConfigLine(label: 'Price', value: 'Rs ${category.basePrice}'),
           const SizedBox(height: 14),
           Wrap(
             spacing: 10,
@@ -418,9 +900,9 @@ class _TankCategoryAdminCard extends StatelessWidget {
 
   static IconData _tankIcon(String key) {
     return switch (key) {
-      'opacity' || 'drop' => Icons.opacity_rounded,
-      'waves' => Icons.waves_rounded,
-      'truck' => Icons.local_shipping_rounded,
+      'opacity' || 'water_drop' || 'drop' => Icons.opacity_rounded,
+      'waves' || 'water' => Icons.waves_rounded,
+      'truck' || 'tanker' => Icons.local_shipping_rounded,
       _ => Icons.water_drop_rounded,
     };
   }
@@ -431,6 +913,7 @@ class _TankCategoryAdminCard extends StatelessWidget {
         .doc(category.id)
         .set({
       'active': !category.active,
+      'isActive': !category.active,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -470,186 +953,330 @@ Future<void> _showTankCategoryForm(
   BuildContext context, {
   TankCategory? category,
 }) async {
-  final id = TextEditingController(text: category?.id ?? '');
-  final name = TextEditingController(text: category?.displayName ?? '');
-  final litres = TextEditingController(text: category?.litres.toString() ?? '');
-  final basePrice =
-      TextEditingController(text: category?.basePrice.toString() ?? '');
-  final surge =
-      TextEditingController(text: category?.surgeMultiplier.toString() ?? '1');
-  final eta =
-      TextEditingController(text: category?.estimatedDeliveryTime ?? '');
-  final icon = TextEditingController(text: category?.iconKey ?? 'water_drop');
-  final order =
-      TextEditingController(text: category?.displayOrder.toString() ?? '1');
-  final radius =
-      TextEditingController(text: category?.serviceRadius.toString() ?? '5');
-  final night =
-      TextEditingController(text: category?.nightCharge.toString() ?? '0');
-  final extra = TextEditingController(
-      text: category?.extraDistanceCharge.toString() ?? '0');
-  final description = TextEditingController(text: category?.description ?? '');
-  var active = category?.active ?? true;
-  var express = category?.expressAvailable ?? true;
+  await Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => _TankCategoryFormPage(category: category),
+    ),
+  );
+}
 
-  await showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    backgroundColor: Colors.white,
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setSheetState) {
-          return SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                20,
-                8,
-                20,
-                MediaQuery.viewInsetsOf(context).bottom + 20,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      category == null
-                          ? 'Add tank category'
-                          : 'Edit tank category',
-                      style: const TextStyle(
+class _AdminPageScaffold extends StatelessWidget {
+  const _AdminPageScaffold({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: OpsColors.surface,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: OpsColors.ink,
+        leading: IconButton(
+          tooltip: 'Back',
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.maybePop(context),
+        ),
+        title: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: OpsColors.ink,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+      body: SafeArea(child: child),
+    );
+  }
+}
+
+class _TankCategoryFormPage extends StatefulWidget {
+  const _TankCategoryFormPage({this.category});
+
+  final TankCategory? category;
+
+  @override
+  State<_TankCategoryFormPage> createState() => _TankCategoryFormPageState();
+}
+
+class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _name;
+  late final TextEditingController _litres;
+  late final TextEditingController _price;
+  late bool _active;
+  late String _iconKey;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final category = widget.category;
+    _name = TextEditingController(text: category?.displayName ?? '');
+    _litres = TextEditingController(text: category?.litres.toString() ?? '');
+    _price = TextEditingController(text: category?.basePrice.toString() ?? '');
+    _active = category?.active ?? true;
+    _iconKey = category?.iconType ?? 'drop';
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _litres.dispose();
+    _price.dispose();
+    super.dispose();
+  }
+
+  String _newId() {
+    final base = _name.text
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'^_+|_+$'), '');
+    if (base.isNotEmpty) return base;
+    return 'tank_${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _saving = true);
+    try {
+      final category = widget.category;
+      final tankId = category?.id ?? _newId();
+      final name = _name.text.trim();
+      final litres = int.tryParse(_litres.text.trim()) ?? 0;
+      final price = num.tryParse(_price.text.trim()) ?? 0;
+      await FirebaseFirestore.instance
+          .collection('tank_categories')
+          .doc(tankId)
+          .set({
+        'id': tankId,
+        'name': name,
+        'displayName': name,
+        'litres': litres,
+        'price': price,
+        'basePrice': price,
+        'iconType': _iconKey,
+        'iconKey': _iconKey,
+        'isActive': _active,
+        'active': _active,
+        'surgeMultiplier': category?.surgeMultiplier ?? 1,
+        'displayOrder': category?.displayOrder ?? 999,
+        'serviceRadius': category?.serviceRadius ?? 5,
+        'expressAvailable': category?.expressAvailable ?? true,
+        'nightCharge': category?.nightCharge ?? 0,
+        'extraDistanceCharge': category?.extraDistanceCharge ?? 0,
+        'description': category?.description ?? '',
+        'updatedAt': FieldValue.serverTimestamp(),
+        if (category == null) 'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tank category saved')),
+      );
+      Navigator.pop(context);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save tank category: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _AdminPageScaffold(
+      title:
+          widget.category == null ? 'Add Tank Category' : 'Edit Tank Category',
+      child: Form(
+        key: _formKey,
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            MediaQuery.viewInsetsOf(context).bottom + 24,
+          ),
+          children: [
+            const _AdminHeader(
+              title: 'Tank category',
+              subtitle:
+                  'Only the fields customers and operators need right now.',
+            ),
+            OpsCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _RequiredAdminField(
+                    controller: _name,
+                    label: 'Tank Name',
+                    textInputAction: TextInputAction.next,
+                  ),
+                  _RequiredAdminField(
+                    controller: _litres,
+                    label: 'Capacity (Litres)',
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  _RequiredAdminField(
+                    controller: _price,
+                    label: 'Price',
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Icon',
+                    style: TextStyle(
+                      color: OpsColors.muted,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _IconChoice(
+                        selected: _iconKey == 'drop',
+                        icon: Icons.water_drop_rounded,
+                        label: 'Drop',
+                        onTap: () => setState(() => _iconKey = 'drop'),
+                      ),
+                      _IconChoice(
+                        selected: _iconKey == 'tanker',
+                        icon: Icons.local_shipping_rounded,
+                        label: 'Tanker',
+                        onTap: () => setState(() => _iconKey = 'tanker'),
+                      ),
+                      _IconChoice(
+                        selected: _iconKey == 'water',
+                        icon: Icons.waves_rounded,
+                        label: 'Water',
+                        onTap: () => setState(() => _iconKey = 'water'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _active,
+                    title: const Text(
+                      'Active for booking',
+                      style: TextStyle(
                         color: OpsColors.ink,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    _AdminTextField(
-                      controller: id,
-                      label: 'Tank ID',
-                      enabled: category == null,
-                    ),
-                    _AdminTextField(controller: name, label: 'Display name'),
-                    _AdminTextField(
-                      controller: litres,
-                      label: 'Litres',
-                      keyboardType: TextInputType.number,
-                    ),
-                    _AdminTextField(
-                      controller: basePrice,
-                      label: 'Base price',
-                      keyboardType: TextInputType.number,
-                    ),
-                    _AdminTextField(
-                      controller: surge,
-                      label: 'Surge multiplier',
-                      keyboardType: TextInputType.number,
-                    ),
-                    _AdminTextField(
-                      controller: eta,
-                      label: 'Estimated delivery time',
-                    ),
-                    _AdminTextField(
-                      controller: icon,
-                      label: 'Icon key',
-                    ),
-                    _AdminTextField(
-                      controller: order,
-                      label: 'Display order',
-                      keyboardType: TextInputType.number,
-                    ),
-                    _AdminTextField(
-                      controller: radius,
-                      label: 'Service radius km',
-                      keyboardType: TextInputType.number,
-                    ),
-                    _AdminTextField(
-                      controller: night,
-                      label: 'Night charge',
-                      keyboardType: TextInputType.number,
-                    ),
-                    _AdminTextField(
-                      controller: extra,
-                      label: 'Extra distance charge',
-                      keyboardType: TextInputType.number,
-                    ),
-                    _AdminTextField(
-                      controller: description,
-                      label: 'Description',
-                      maxLines: 2,
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      value: active,
-                      title: const Text('Active for booking'),
-                      onChanged: (value) => setSheetState(() => active = value),
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      value: express,
-                      title: const Text('Express available'),
-                      onChanged: (value) =>
-                          setSheetState(() => express = value),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () async {
-                        final tankId = id.text.trim();
-                        if (tankId.isEmpty || name.text.trim().isEmpty) return;
-                        await FirebaseFirestore.instance
-                            .collection('tank_categories')
-                            .doc(tankId)
-                            .set({
-                          'displayName': name.text.trim(),
-                          'litres': int.tryParse(litres.text.trim()) ?? 0,
-                          'basePrice': num.tryParse(basePrice.text.trim()) ?? 0,
-                          'surgeMultiplier':
-                              double.tryParse(surge.text.trim()) ?? 1,
-                          'estimatedDeliveryTime': eta.text.trim(),
-                          'iconKey': icon.text.trim(),
-                          'active': active,
-                          'displayOrder':
-                              int.tryParse(order.text.trim()) ?? 999,
-                          'serviceRadius':
-                              double.tryParse(radius.text.trim()) ?? 5,
-                          'expressAvailable': express,
-                          'nightCharge': num.tryParse(night.text.trim()) ?? 0,
-                          'extraDistanceCharge':
-                              num.tryParse(extra.text.trim()) ?? 0,
-                          'description': description.text.trim(),
-                          'updatedAt': FieldValue.serverTimestamp(),
-                          if (category == null)
-                            'createdAt': FieldValue.serverTimestamp(),
-                        }, SetOptions(merge: true));
-                        if (context.mounted) Navigator.pop(context);
-                      },
-                      child: const Text('Save category'),
-                    ),
-                  ],
-                ),
+                    onChanged: (value) => setState(() => _active = value),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child: _saving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Save Category'),
+                  ),
+                ],
               ),
             ),
-          );
-        },
-      );
-    },
-  );
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-  for (final controller in [
-    id,
-    name,
-    litres,
-    basePrice,
-    surge,
-    eta,
-    icon,
-    order,
-    radius,
-    night,
-    extra,
-    description,
-  ]) {
-    controller.dispose();
+class _RequiredAdminField extends StatelessWidget {
+  const _RequiredAdminField({
+    required this.controller,
+    required this.label,
+    this.keyboardType,
+    this.textInputAction,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        textInputAction: textInputAction,
+        validator: (value) {
+          if ((value ?? '').trim().isEmpty) return '$label is required';
+          return null;
+        },
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: const Color(0xFFF8FAFC),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: OpsColors.line),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: OpsColors.line),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: OpsColors.blue, width: 1.5),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IconChoice extends StatelessWidget {
+  const _IconChoice({
+    required this.selected,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final bool selected;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChoiceChip(
+      selected: selected,
+      showCheckmark: false,
+      avatar:
+          Icon(icon, size: 18, color: selected ? Colors.white : OpsColors.blue),
+      label: Text(label),
+      onSelected: (_) => onTap(),
+      selectedColor: OpsColors.blue,
+      labelStyle: TextStyle(
+        color: selected ? Colors.white : OpsColors.ink,
+        fontWeight: FontWeight.w800,
+      ),
+    );
   }
 }
 
@@ -661,20 +1288,11 @@ class _PricingView extends ConsumerWidget {
     final config = ref.watch(platformConfigProvider);
     return config.when(
       data: (snapshot) => _PlatformConfigEditor(
-        title: 'Pricing and payout rules',
-        subtitle:
-            'Control surge, cancellation charges, commission, and payout percentages.',
+        title: 'Pricing',
+        subtitle: 'Simple MVP controls. Tank prices are managed in Tankers.',
         fields: const [
-          _ConfigFieldSpec('surgeEnabled', 'Surge pricing enabled', 'bool'),
-          _ConfigFieldSpec('peakHourMultiplier', 'Peak hour multiplier', 'num'),
-          _ConfigFieldSpec(
-              'emergencyMultiplier', 'Emergency multiplier', 'num'),
-          _ConfigFieldSpec('holidayMultiplier', 'Holiday multiplier', 'num'),
+          _ConfigFieldSpec('deliveryCharge', 'Delivery charge', 'num'),
           _ConfigFieldSpec('cancellationCharge', 'Cancellation charge', 'num'),
-          _ConfigFieldSpec(
-              'platformCommission', 'Platform commission %', 'num'),
-          _ConfigFieldSpec('driverPayoutPercent', 'Driver payout %', 'num'),
-          _ConfigFieldSpec('ownerPayoutPercent', 'Owner payout %', 'num'),
           _ConfigFieldSpec('codEnabled', 'COD enabled', 'bool'),
         ],
         data: snapshot.data() ?? const {},
@@ -693,22 +1311,15 @@ class _AdminSettingsView extends ConsumerWidget {
     final config = ref.watch(platformConfigProvider);
     return config.when(
       data: (snapshot) => _PlatformConfigEditor(
-        title: 'Dispatch and service settings',
-        subtitle:
-            'Control booking availability, service radius, assignment rules, support contact, and maintenance mode.',
+        title: 'Settings',
+        subtitle: 'Core service controls for daily operations.',
         fields: const [
           _ConfigFieldSpec('bookingsEnabled', 'Bookings enabled', 'bool'),
           _ConfigFieldSpec('maintenanceMode', 'Maintenance mode', 'bool'),
           _ConfigFieldSpec('dispatchRadiusKm', 'Dispatch radius km', 'num'),
-          _ConfigFieldSpec('topSellerLimit', 'Nearest seller limit', 'num'),
-          _ConfigFieldSpec(
-              'autoDriverAssignment', 'Auto driver assignment', 'bool'),
-          _ConfigFieldSpec(
-              'selfDriveEnabled', 'Owner self-drive enabled', 'bool'),
           _ConfigFieldSpec('serviceCity', 'Service city', 'text'),
           _ConfigFieldSpec('supportEmail', 'Support email', 'text'),
           _ConfigFieldSpec('supportNumber', 'Support number', 'text'),
-          _ConfigFieldSpec('razorpayMode', 'Razorpay mode', 'text'),
         ],
         data: snapshot.data() ?? const {},
       ),
@@ -738,6 +1349,7 @@ class _PlatformConfigEditor extends StatefulWidget {
 class _PlatformConfigEditorState extends State<_PlatformConfigEditor> {
   final Map<String, TextEditingController> _controllers = {};
   final Map<String, bool> _switches = {};
+  bool _saving = false;
 
   @override
   void initState() {
@@ -754,13 +1366,30 @@ class _PlatformConfigEditorState extends State<_PlatformConfigEditor> {
   void _syncFromData() {
     for (final field in widget.fields) {
       if (field.type == 'bool') {
-        _switches[field.key] = widget.data[field.key] as bool? ?? false;
+        _switches[field.key] =
+            widget.data[field.key] as bool? ?? _defaultBool(field.key);
       } else {
         _controllers[field.key] ??= TextEditingController();
         _controllers[field.key]!.text =
-            (widget.data[field.key] ?? '').toString();
+            (widget.data[field.key] ?? _defaultValue(field.key)).toString();
       }
     }
+  }
+
+  bool _defaultBool(String key) {
+    return switch (key) {
+      'bookingsEnabled' || 'codEnabled' => true,
+      _ => false,
+    };
+  }
+
+  Object _defaultValue(String key) {
+    return switch (key) {
+      'dispatchRadiusKm' => 10,
+      'serviceCity' => 'Bengaluru',
+      'supportEmail' => 'waterbuddyapp.wb@gmail.com',
+      _ => '',
+    };
   }
 
   @override
@@ -772,6 +1401,7 @@ class _PlatformConfigEditorState extends State<_PlatformConfigEditor> {
   }
 
   Future<void> _save() async {
+    setState(() => _saving = true);
     final patch = <String, dynamic>{
       'updatedAt': FieldValue.serverTimestamp(),
     };
@@ -785,14 +1415,28 @@ class _PlatformConfigEditorState extends State<_PlatformConfigEditor> {
         patch[field.key] = _controllers[field.key]?.text.trim() ?? '';
       }
     }
-    await FirebaseFirestore.instance
-        .collection('configs')
-        .doc('platform')
-        .set(patch, SetOptions(merge: true));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configuration saved')),
-    );
+    try {
+      final firestore = FirebaseFirestore.instance;
+      await firestore
+          .collection('system_settings')
+          .doc('app')
+          .set(patch, SetOptions(merge: true));
+      await firestore
+          .collection('configs')
+          .doc('platform')
+          .set(patch, SetOptions(merge: true));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Configuration saved')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save configuration: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -833,8 +1477,14 @@ class _PlatformConfigEditorState extends State<_PlatformConfigEditor> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: _save,
-                  child: const Text('Save configuration'),
+                  onPressed: _saving ? null : _save,
+                  child: _saving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Save configuration'),
                 ),
               ),
             ],
@@ -881,6 +1531,24 @@ class _RoleCollectionView extends ConsumerWidget {
           if (roleFilter == null) return true;
           return (doc.data()['role'] ?? '').toString() == roleFilter;
         }).toList();
+        if (docs.isEmpty) {
+          return ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              _AdminHeader(
+                title: title,
+                subtitle:
+                    'Manage live $roleLabel records, approvals, and account access.',
+              ),
+              OpsEmptyState(
+                icon: icon,
+                title: 'No $title found',
+                message:
+                    'New $roleLabel accounts will appear here after registration.',
+              ),
+            ],
+          );
+        }
         return ListView.separated(
           padding: const EdgeInsets.all(20),
           itemCount: docs.length + 1,
@@ -934,6 +1602,13 @@ class _RoleRecordCard extends StatelessWidget {
             .toString();
     final status = _approvalStatus(data);
     final blocked = data['isBlocked'] as bool? ?? status == 'suspended';
+    final createdAt = data['createdAt'];
+    final joinedDate = createdAt is Timestamp
+        ? '${createdAt.toDate().day}/${createdAt.toDate().month}/${createdAt.toDate().year}'
+        : 'Not recorded';
+    final activeOrders = data['activeOrders'] ?? data['activeOrderCount'] ?? 0;
+    final tankerCount = data['tankerCount'] ?? data['fleetSize'] ?? 0;
+    final online = data['isOnline'] as bool? ?? false;
 
     return OpsCard(
       child: Column(
@@ -971,6 +1646,17 @@ class _RoleRecordCard extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          if (collection == 'users') ...[
+            _ConfigLine(label: 'Phone', value: contact),
+            _ConfigLine(label: 'Active orders', value: activeOrders.toString()),
+            _ConfigLine(label: 'Joined', value: joinedDate),
+          ] else if (collection == 'sellers') ...[
+            _ConfigLine(label: 'Business', value: name),
+            _ConfigLine(label: 'Tankers', value: tankerCount.toString()),
+            _ConfigLine(label: 'Online', value: online ? 'Yes' : 'No'),
+            _ConfigLine(label: 'Approval', value: status),
+          ],
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,
@@ -1244,14 +1930,12 @@ class _AdminTextField extends StatelessWidget {
     required this.controller,
     required this.label,
     this.keyboardType,
-    this.enabled = true,
     this.maxLines = 1,
   });
 
   final TextEditingController controller;
   final String label;
   final TextInputType? keyboardType;
-  final bool enabled;
   final int maxLines;
 
   @override
@@ -1260,7 +1944,6 @@ class _AdminTextField extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: TextField(
         controller: controller,
-        enabled: enabled,
         keyboardType: keyboardType,
         maxLines: maxLines,
         decoration: InputDecoration(
@@ -1706,119 +2389,6 @@ class _OrderAdminCard extends StatelessWidget {
     );
     owner.dispose();
     driver.dispose();
-  }
-}
-
-class _UsersView extends ConsumerWidget {
-  const _UsersView();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final users = ref.watch(usersProvider);
-    return users.when(
-      data: (snapshot) {
-        if (snapshot.docs.isEmpty) {
-          return const OpsEmptyState(
-            icon: Icons.people_alt_outlined,
-            title: 'No users',
-            message:
-                'Registered consumer, seller, driver, and admin profiles will appear here.',
-          );
-        }
-        return ListView.separated(
-          padding: const EdgeInsets.all(20),
-          itemCount: snapshot.docs.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) =>
-              _UserAdminCard(doc: snapshot.docs[index]),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(child: Text(error.toString())),
-    );
-  }
-}
-
-class _UserAdminCard extends StatelessWidget {
-  const _UserAdminCard({required this.doc});
-
-  final QueryDocumentSnapshot<Map<String, dynamic>> doc;
-
-  @override
-  Widget build(BuildContext context) {
-    final data = doc.data();
-    final blocked = data['isBlocked'] as bool? ?? false;
-    final name = (data['fullName'] ?? data['displayName'] ?? doc.id).toString();
-    final role = (data['role'] ?? 'consumer').toString();
-    final contact =
-        (data['email'] ?? data['phoneNumber'] ?? 'No contact').toString();
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 420;
-        final identity = Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: OpsColors.green.withValues(alpha: 0.1),
-              child: const Icon(Icons.person_rounded, color: OpsColors.green),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: OpsColors.ink,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  Text(
-                    '$role  |  $contact',
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: OpsColors.muted),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-
-        final action = OutlinedButton(
-          onPressed: () =>
-              FirebaseFirestore.instance.collection('users').doc(doc.id).set({
-            'isBlocked': !blocked,
-            'updatedAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true)),
-          child: Text(blocked ? 'Activate' : 'Suspend'),
-        );
-
-        return OpsCard(
-          child: compact
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    identity,
-                    const SizedBox(height: 12),
-                    action,
-                  ],
-                )
-              : Row(
-                  children: [
-                    Expanded(child: identity),
-                    const SizedBox(width: 12),
-                    action,
-                  ],
-                ),
-        );
-      },
-    );
   }
 }
 

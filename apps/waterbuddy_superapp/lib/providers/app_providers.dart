@@ -45,6 +45,7 @@ import '../features/tracking/presentation/order_complete_screen.dart';
 import '../features/tracking/presentation/searching_tankers_screen.dart';
 import '../features/tracking/presentation/tracking_screen.dart';
 import '../models/order.dart' as app_order;
+import '../models/system_settings.dart';
 import '../models/tank_category.dart';
 import '../routes/route_names.dart';
 import '../widgets/main_shell.dart';
@@ -248,6 +249,8 @@ final searchingOrdersProvider = StreamProvider<List<app_order.Order>>((ref) {
 
   final currentUser = ref.watch(currentUserProvider);
   if (currentUser == null) return Stream.value(const <app_order.Order>[]);
+  final settings = ref.watch(systemSettingsProvider).valueOrNull ??
+      SystemSettings.defaults();
   final currentLocAsync = ref.watch(sellerCurrentLocationProvider);
   final onlineSellersAsync = ref.watch(onlineSellersProvider);
 
@@ -267,7 +270,7 @@ final searchingOrdersProvider = StreamProvider<List<app_order.Order>>((ref) {
 
       final currentDistance = Geolocator.distanceBetween(
           currentLoc.latitude, currentLoc.longitude, orderLat, orderLng);
-      if (currentDistance > 5000) return false;
+      if (currentDistance > settings.dispatchRadiusKm * 1000) return false;
 
       final sellerDistances = sellers
           .map((seller) {
@@ -381,10 +384,19 @@ final platformConfigProvider =
     StreamProvider<DocumentSnapshot<Map<String, dynamic>>>(
   (ref) => ref
       .watch(firestoreProvider)
-      .collection('configs')
-      .doc('platform')
+      .collection('system_settings')
+      .doc('app')
       .snapshots(),
 );
+
+final systemSettingsProvider = StreamProvider<SystemSettings>((ref) {
+  return ref
+      .watch(firestoreProvider)
+      .collection('system_settings')
+      .doc('app')
+      .snapshots()
+      .map((doc) => SystemSettings.fromMap(doc.data()));
+});
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(

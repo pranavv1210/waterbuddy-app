@@ -14,6 +14,7 @@ import '../providers/home_providers.dart';
 import '../providers/order_creation_provider.dart';
 import '../../../providers/app_providers.dart';
 import '../../../models/order.dart' as app_order;
+import '../../../models/system_settings.dart';
 import '../../../models/tank_category.dart';
 import '../../tracking/providers/searching_providers.dart';
 import '../../orders/providers/order_providers.dart';
@@ -24,8 +25,10 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(homeDashboardProvider);
-    final categories =
-        ref.watch(activeTankCategoriesProvider).value ?? const [];
+    final categoriesAsync = ref.watch(activeTankCategoriesProvider);
+    final categories = categoriesAsync.valueOrNull ?? const [];
+    final settings = ref.watch(systemSettingsProvider).valueOrNull ??
+        SystemSettings.defaults();
     final selectedTankId = ref.watch(selectedTankIdProvider) ??
         (categories.isNotEmpty ? categories.first.id : '');
     final activeOrder = ref.watch(activeOrderProvider).value;
@@ -45,6 +48,8 @@ class HomeScreen extends ConsumerWidget {
       state: dashboard,
       selectedTankId: selectedTankId,
       tankCategories: categories,
+      categoriesLoading: categoriesAsync.isLoading,
+      systemSettings: settings,
       activeOrder: activeOrder,
       onTankSelected: (tankId) {
         ref.read(selectedTankIdProvider.notifier).state = tankId;
@@ -58,6 +63,8 @@ class _HomeScreenBody extends ConsumerStatefulWidget {
     required this.state,
     required this.selectedTankId,
     required this.tankCategories,
+    required this.categoriesLoading,
+    required this.systemSettings,
     required this.activeOrder,
     required this.onTankSelected,
   });
@@ -65,6 +72,8 @@ class _HomeScreenBody extends ConsumerStatefulWidget {
   final HomeDashboard state;
   final String selectedTankId;
   final List<TankCategory> tankCategories;
+  final bool categoriesLoading;
+  final SystemSettings systemSettings;
   final app_order.Order? activeOrder;
   final ValueChanged<String> onTankSelected;
 
@@ -283,7 +292,16 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                                 _buildLocationBar(),
                                 const SizedBox(height: 20),
                                 if (widget.tankCategories.isEmpty)
-                                  const _NoTankCategoriesCard()
+                                  widget.categoriesLoading
+                                      ? const Center(
+                                          child: CircularProgressIndicator(),
+                                        )
+                                      : _NoTankCategoriesCard(
+                                          message: widget.systemSettings
+                                                  .serviceAvailable
+                                              ? 'Admin has not enabled any water tank categories yet.'
+                                              : 'Bookings are disabled by WaterBuddy operations.',
+                                        )
                                 else
                                   ...widget.tankCategories.map((category) =>
                                       _buildTankListItem(category, primary)),
@@ -860,7 +878,13 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                     ),
                     const SizedBox(height: 16),
                     if (widget.tankCategories.isEmpty)
-                      const _NoTankCategoriesCard()
+                      widget.categoriesLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : _NoTankCategoriesCard(
+                              message: widget.systemSettings.serviceAvailable
+                                  ? 'Admin has not enabled any water tank categories yet.'
+                                  : 'Bookings are disabled by WaterBuddy operations.',
+                            )
                     else
                       ...widget.tankCategories.map(
                           (category) => _buildTankListItem(category, primary)),
@@ -940,7 +964,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${_formatLitres(category.litres)} Litres • ${category.estimatedDeliveryTime}',
+                    '${_formatLitres(category.litres)} Litres',
                     style: TextStyle(
                       color: const Color(0xFF64748B),
                       fontSize: 13,
@@ -983,11 +1007,14 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
   IconData _tankIcon(String iconKey) {
     switch (iconKey) {
       case 'opacity':
+      case 'water_drop':
       case 'drop':
         return Icons.opacity_rounded;
       case 'waves':
+      case 'water':
         return Icons.waves_rounded;
       case 'truck':
+      case 'tanker':
         return Icons.local_shipping_rounded;
       default:
         return Icons.water_drop_rounded;
@@ -1028,6 +1055,14 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                 try {
                   final orderController =
                       ref.read(orderCreationControllerProvider.notifier);
+                  if (!widget.systemSettings.serviceAvailable) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Bookings are currently disabled.'),
+                      ),
+                    );
+                    return;
+                  }
                   if (widget.tankCategories.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -1048,7 +1083,8 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                       'longitude': _selectedLocation?.longitude ?? 0.0,
                       'address': _currentAddress ?? '',
                     },
-                    paymentType: 'COD',
+                    paymentType:
+                        widget.systemSettings.codEnabled ? 'COD' : 'ONLINE',
                   );
 
                   if (orderId != null && mounted) {
@@ -1159,9 +1195,12 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
                     color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
             onTap: () {
               Navigator.pop(context);
+              final settings = ref.read(systemSettingsProvider).valueOrNull;
+              final support = settings?.supportNumber.isNotEmpty == true
+                  ? settings!.supportNumber
+                  : settings?.supportEmail ?? 'waterbuddyapp.wb@gmail.com';
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Support: waterbuddyapp.wb@gmail.com')),
+                SnackBar(content: Text('Support: $support')),
               );
             },
           ),
@@ -1415,7 +1454,11 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
 }
 
 class _NoTankCategoriesCard extends StatelessWidget {
-  const _NoTankCategoriesCard();
+  const _NoTankCategoriesCard({
+    this.message = 'Admin has not enabled any water tank categories yet.',
+  });
+
+  final String message;
 
   @override
   Widget build(BuildContext context) {
@@ -1427,10 +1470,10 @@ class _NoTankCategoriesCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Bookings are temporarily unavailable',
             style: TextStyle(
               color: Color(0xFF0F172A),
@@ -1439,8 +1482,8 @@ class _NoTankCategoriesCard extends StatelessWidget {
           ),
           SizedBox(height: 6),
           Text(
-            'Admin has not enabled any water tank categories yet.',
-            style: TextStyle(
+            message,
+            style: const TextStyle(
               color: Color(0xFF64748B),
               fontWeight: FontWeight.w600,
             ),

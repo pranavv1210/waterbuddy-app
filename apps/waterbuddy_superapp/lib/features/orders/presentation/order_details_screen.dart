@@ -751,6 +751,7 @@ class _CtaButtons extends ConsumerWidget {
       'ARRIVED',
     }.contains(order.status);
     final delivered = order.status == 'DELIVERED';
+    final settings = ref.watch(systemSettingsProvider).valueOrNull;
 
     return Column(
       children: [
@@ -802,7 +803,8 @@ class _CtaButtons extends ConsumerWidget {
             child: OutlinedButton.icon(
               onPressed: () async {
                 final reason = await showCancellationReasonSheet(context,
-                    status: order.status);
+                    status: order.status,
+                    cancellationCharge: settings?.cancellationCharge ?? 0);
                 if (reason == null || !context.mounted) return;
                 await ref
                     .read(orderServiceProvider)

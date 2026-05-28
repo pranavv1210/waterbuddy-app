@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/auth/session_actions.dart';
@@ -17,6 +19,13 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).value;
     final orders = ref.watch(orderHistoryProvider);
+    final settings = ref.watch(systemSettingsProvider).valueOrNull;
+    final supportEmail = settings?.supportEmail.isNotEmpty == true
+        ? settings!.supportEmail
+        : AppConstants.supportEmail;
+    final supportSubtitle = settings?.supportNumber.isNotEmpty == true
+        ? '${settings!.supportNumber} • $supportEmail'
+        : supportEmail;
     const appBg = Color(0xFFFFFBF3);
 
     if (user == null) {
@@ -99,6 +108,25 @@ class ProfileScreen extends ConsumerWidget {
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: OpsColors.blue.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: const Text(
+                          'Consumer',
+                          style: TextStyle(
+                            color: OpsColors.blue,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -132,13 +160,19 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () => context.push(RouteNames.payments),
           ),
           _ProfileAction(
+            icon: Icons.edit_rounded,
+            title: 'Edit profile',
+            subtitle: 'Manage your name and contact details',
+            onTap: () => _showEditProfileDialog(context, user),
+          ),
+          _ProfileAction(
             icon: Icons.support_agent_rounded,
             title: 'Support',
-            subtitle: AppConstants.supportEmail,
+            subtitle: supportSubtitle,
             onTap: () {
               launchUrl(Uri(
                 scheme: 'mailto',
-                path: AppConstants.supportEmail,
+                path: supportEmail,
                 query: 'subject=WaterBuddy support',
               ));
             },
@@ -194,6 +228,46 @@ class _ProfileMetric extends StatelessWidget {
       ],
     );
   }
+}
+
+Future<void> _showEditProfileDialog(BuildContext context, User user) async {
+  final nameController =
+      TextEditingController(text: user.displayName ?? 'WaterBuddy User');
+  final saved = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Edit profile'),
+      content: TextField(
+        controller: nameController,
+        textInputAction: TextInputAction.done,
+        decoration: const InputDecoration(labelText: 'Full name'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Save'),
+        ),
+      ],
+    ),
+  );
+  final name = nameController.text.trim();
+  nameController.dispose();
+  if (saved != true || !context.mounted) return;
+  if (name.isEmpty) return;
+  await user.updateDisplayName(name);
+  await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+    'name': name,
+    'displayName': name,
+    'updatedAt': FieldValue.serverTimestamp(),
+  }, SetOptions(merge: true));
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Profile updated')),
+  );
 }
 
 class _ProfileAction extends StatelessWidget {

@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/operations_ui.dart';
 
-class AppSettingsScreen extends StatefulWidget {
+class AppSettingsScreen extends ConsumerStatefulWidget {
   const AppSettingsScreen({super.key});
 
   @override
-  State<AppSettingsScreen> createState() => _AppSettingsScreenState();
+  ConsumerState<AppSettingsScreen> createState() => _AppSettingsScreenState();
 }
 
-class _AppSettingsScreenState extends State<AppSettingsScreen> {
+class _AppSettingsScreenState extends ConsumerState<AppSettingsScreen> {
   bool _orderAlerts = true;
   bool _locationUpdates = true;
   bool _saving = true;
@@ -68,6 +70,13 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(systemSettingsProvider).valueOrNull;
+    final supportEmail = settings?.supportEmail.isNotEmpty == true
+        ? settings!.supportEmail
+        : AppConstants.supportEmail;
+    final supportSubtitle = settings?.supportNumber.isNotEmpty == true
+        ? '${settings!.supportNumber} • $supportEmail'
+        : supportEmail;
     const bg = Color(0xFFFFFBF3);
     return PopScope(
       canPop: false,
@@ -166,12 +175,12 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                   _SettingsRow(
                     icon: Icons.support_agent_rounded,
                     title: 'Support',
-                    subtitle: AppConstants.supportEmail,
+                    subtitle: supportSubtitle,
                     trailing: TextButton(
                       onPressed: () {
                         launchUrl(Uri(
                           scheme: 'mailto',
-                          path: AppConstants.supportEmail,
+                          path: supportEmail,
                           query: 'subject=WaterBuddy support',
                         ));
                       },

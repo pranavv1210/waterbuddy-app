@@ -177,9 +177,13 @@ class OrderService {
   }) async {
     await _firestore.runTransaction((transaction) async {
       final orderRef = _firestore.collection('orders').doc(orderId);
+      final settingsRef = _firestore.collection('system_settings').doc('app');
       final snapshot = await transaction.get(orderRef);
+      final settingsSnapshot = await transaction.get(settingsRef);
       if (!snapshot.exists) throw Exception('Order does not exist');
       final data = snapshot.data() as Map<String, dynamic>;
+      final settings = settingsSnapshot.data() ?? const <String, dynamic>{};
+      final cancellationCharge = settings['cancellationCharge'] as num? ?? 0;
       final currentStatus = data['status'] as String? ?? 'SEARCHING';
       if (!_isValidTransition(currentStatus, 'CANCELLED')) {
         throw Exception('This order can no longer be cancelled.');
@@ -187,6 +191,7 @@ class OrderService {
       transaction.update(orderRef, {
         'status': 'CANCELLED',
         'cancellationReason': reason,
+        'cancellationCharge': cancellationCharge,
         'cancelledBy': 'customer',
         'cancelledAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),

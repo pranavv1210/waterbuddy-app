@@ -58,9 +58,31 @@ class OrderCreationController extends StateNotifier<OrderCreationState> {
 
       // Get user details from Firestore
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      final settingsDoc =
+          await _firestore.collection('system_settings').doc('app').get();
+      final settings = settingsDoc.data() ?? const <String, dynamic>{};
+      final bookingsEnabled = settings['bookingsEnabled'] as bool? ?? true;
+      final maintenanceMode = settings['maintenanceMode'] as bool? ?? false;
+      final codEnabled = settings['codEnabled'] as bool? ?? true;
+      final deliveryCharge = settings['deliveryCharge'] as num? ?? 0;
+
+      if (!bookingsEnabled || maintenanceMode) {
+        throw Exception('Bookings are currently disabled.');
+      }
+      if (paymentType == 'COD' && !codEnabled) {
+        throw Exception('Cash on delivery is currently disabled.');
+      }
 
       final customerName = userDoc.data()?['name'] ?? 'Customer';
       final customerPhone = user.phoneNumber ?? userDoc.data()?['phone'] ?? '';
+      final amount = tankCategory.effectivePrice + deliveryCharge;
+      final pricingSnapshot = tankCategory.toFirestore()
+        ..remove('updatedAt')
+        ..addAll({
+          'deliveryCharge': deliveryCharge,
+          'cancellationCharge': settings['cancellationCharge'] as num? ?? 0,
+          'codEnabled': codEnabled,
+        });
 
       final orderId = await _orderService.createOrder(
         customerId: user.uid,
@@ -69,8 +91,8 @@ class OrderCreationController extends StateNotifier<OrderCreationState> {
         tankSize: tankCategory.litres,
         tankLabel: tankCategory.displayName,
         tankId: tankCategory.id,
-        amount: tankCategory.effectivePrice,
-        pricingSnapshot: tankCategory.toFirestore()..remove('updatedAt'),
+        amount: amount,
+        pricingSnapshot: pricingSnapshot,
         location: location,
         paymentType: paymentType,
       );

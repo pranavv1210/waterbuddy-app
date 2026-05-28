@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 Future<String?> showCancellationReasonSheet(
   BuildContext context, {
   String status = 'SEARCHING',
+  num cancellationCharge = 0,
 }) {
   const reasons = [
     'Booked by mistake',
@@ -45,7 +46,7 @@ Future<String?> showCancellationReasonSheet(
                   const SizedBox(height: 8),
                   Text(
                     showWarning
-                        ? 'A partner may already be moving toward you. Please select a reason before cancelling.'
+                        ? 'A partner may already be moving toward you. Cancellation charge: Rs ${cancellationCharge.toInt()}.'
                         : 'Tell us why you are cancelling so we can improve dispatch.',
                     style: const TextStyle(
                       color: Color(0xFF64748B),
