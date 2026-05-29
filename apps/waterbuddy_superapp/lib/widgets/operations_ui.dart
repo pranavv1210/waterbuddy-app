@@ -314,17 +314,22 @@ Color orderStatusColor(String status) {
   switch (status) {
     case 'SEARCHING':
       return OpsColors.blue;
+    case 'OFFER_SENT':
+      return const Color(0xFF6366F1);
     case 'ACCEPTED':
     case 'ASSIGNED':
     case 'DRIVER_ASSIGNED':
       return const Color(0xFF8B5CF6);
     case 'ON_THE_WAY':
     case 'ARRIVED':
+    case 'DELIVERING':
       return OpsColors.amber;
     case 'DELIVERED':
     case 'approved':
       return OpsColors.green;
     case 'CANCELLED':
+    case 'NO_PARTNER_FOUND':
+    case 'FAILED':
     case 'rejected':
     case 'suspended':
       return OpsColors.red;

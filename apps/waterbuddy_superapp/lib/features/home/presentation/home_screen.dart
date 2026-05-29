@@ -37,7 +37,9 @@ class HomeScreen extends ConsumerWidget {
     ref.listen(activeOrderProvider, (previous, next) {
       final activeOrder = next.value;
       if (activeOrder != null) {
-        if (activeOrder.status == 'ASSIGNED' ||
+        if (activeOrder.status == 'ACCEPTED' ||
+            activeOrder.status == 'ASSIGNED' ||
+            activeOrder.status == 'DRIVER_ASSIGNED' ||
             activeOrder.status == 'ON_THE_WAY') {
           context.go('${RouteNames.tracking}?orderId=${activeOrder.id}');
         }
@@ -168,7 +170,9 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     final user = FirebaseAuth.instance.currentUser;
     final searchingState = ref.watch(searchingControllerProvider);
     final isSearching = searchingState.orderId != null &&
-        (searchingState.orderStatus == 'SEARCHING' || searchingState.isLoading);
+        (searchingState.orderStatus == 'SEARCHING' ||
+            searchingState.orderStatus == 'OFFER_SENT' ||
+            searchingState.isLoading);
 
     // WaterBuddy light palette
     const primary = Color(0xFF0EA5E9);
@@ -774,7 +778,9 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       User? user, Color primary, Color accent, app_order.Order? activeOrder) {
     final searchingState = ref.watch(searchingControllerProvider);
     final isSearching = searchingState.orderId != null &&
-        (searchingState.orderStatus == 'SEARCHING' || searchingState.isLoading);
+        (searchingState.orderStatus == 'SEARCHING' ||
+            searchingState.orderStatus == 'OFFER_SENT' ||
+            searchingState.isLoading);
 
     if (isSearching) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1772,6 +1778,17 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
 
     const primaryColor = Color(0xFF0F172A);
     const accentColor = Color(0xFF38BDF8);
+    final searchTitle = switch (searchingState.orderStatus) {
+      'OFFER_SENT' => 'Contacting nearest tanker...',
+      'ACCEPTED' || 'DRIVER_ASSIGNED' => 'Driver found...',
+      'NO_PARTNER_FOUND' => 'No tanker found',
+      _ => 'Finding nearby tankers...',
+    };
+    final searchSubtitle = switch (searchingState.orderStatus) {
+      'OFFER_SENT' => 'Waiting for driver response.',
+      'ACCEPTED' || 'DRIVER_ASSIGNED' => 'Preparing live tracking.',
+      _ => 'Scanning approved online tankers in your service area.',
+    };
 
     if (searchingState.hasTimedOut) {
       final timedOutContent = Container(
@@ -1889,8 +1906,8 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Finding your tanker...',
+                    Text(
+                      searchTitle,
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
@@ -1907,8 +1924,8 @@ class _SearchingBottomSheetState extends ConsumerState<_SearchingBottomSheet> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Broadcasting your request to 5 nearby partners.',
+                Text(
+                  searchSubtitle,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,

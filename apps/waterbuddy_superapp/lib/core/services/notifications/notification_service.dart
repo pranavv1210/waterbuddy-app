@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -74,7 +72,8 @@ class FcmService {
     // 7. Handle notification that launched the app from terminated state
     final initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
-      debugPrint('[FCM] App launched via notification: ${initialMessage.messageId}');
+      debugPrint(
+          '[FCM] App launched via notification: ${initialMessage.messageId}');
       _handleNotificationTap(initialMessage);
     }
   }
@@ -105,6 +104,16 @@ class FcmService {
         },
         SetOptions(merge: true),
       );
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('fcmTokens')
+          .doc(token)
+          .set({
+        'token': token,
+        'platform': defaultTargetPlatform.name,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
       debugPrint('[FCM] Token saved for user ${user.uid}');
     } catch (e) {
       debugPrint('[FCM] Failed to save token: $e');
@@ -120,10 +129,19 @@ class FcmService {
     if (user == null) return;
 
     try {
+      final token = await _messaging.getToken();
       await _firestore.collection('users').doc(user.uid).update({
         'fcmToken': FieldValue.delete(),
         'fcmUpdatedAt': FieldValue.serverTimestamp(),
       });
+      if (token != null) {
+        await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('fcmTokens')
+            .doc(token)
+            .delete();
+      }
       await _messaging.deleteToken();
       debugPrint('[FCM] Token cleared on logout');
     } catch (e) {
@@ -141,7 +159,8 @@ class FcmService {
   }
 
   void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('[FCM FG] ${message.notification?.title}: ${message.notification?.body}');
+    debugPrint(
+        '[FCM FG] ${message.notification?.title}: ${message.notification?.body}');
     // Foreground messages: the system does NOT show a banner on Android by default.
     // A local notification library (flutter_local_notifications) would be needed
     // to display a heads-up banner. We log here so the developer can add it later.

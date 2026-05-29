@@ -6,7 +6,8 @@
     ]
   },
   "firestore": {
-    "rules": "firestore_rules/firestore.rules"
+    "rules": "firestore_rules/firestore.rules",
+    "indexes": "firestore.indexes.json"
   },
   "hosting": {
     "public": "hosting/admin_dashboard",

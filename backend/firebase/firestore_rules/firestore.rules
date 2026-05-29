@@ -59,17 +59,57 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow read: if isAdminRole()
         || (isConsumerRole() && resource.data.customerId == request.auth.uid)
-        || (isSellerRole() && (resource.data.sellerId == request.auth.uid || resource.data.status == 'SEARCHING'))
+        || (isSellerRole() && resource.data.sellerId == request.auth.uid)
         || (isDriverRole() && resource.data.driverId == request.auth.uid);
 
       allow create: if isConsumerRole() && request.resource.data.customerId == request.auth.uid;
 
       allow update: if isAdminRole()
-        || (isConsumerRole() && resource.data.customerId == request.auth.uid)
+        || (isConsumerRole()
+          && resource.data.customerId == request.auth.uid
+          && request.resource.data.status in ['CANCELLED'])
         || (isSellerRole() && resource.data.sellerId == request.auth.uid)
         || (isDriverRole() && resource.data.driverId == request.auth.uid);
 
       allow delete: if isAdminRole();
+    }
+
+    match /order_offers/{offerId} {
+      allow read: if isAdminRole()
+        || (isSellerRole() && resource.data.sellerId == request.auth.uid)
+        || (isDriverRole() && resource.data.driverId == request.auth.uid);
+      allow update: if isSellerRole()
+        && resource.data.sellerId == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.sellerId == resource.data.sellerId
+        && request.resource.data.orderId == resource.data.orderId
+        && request.resource.data.status in ['accepted', 'rejected'];
+      allow create, delete: if false;
+    }
+
+    match /dispatch_logs/{logId} {
+      allow read: if isAdminRole();
+      allow write: if false;
+    }
+
+    match /system_settings/{settingsId} {
+      allow read: if isSignedIn();
+      allow write: if isAdminRole();
+    }
+
+    match /tank_categories/{categoryId} {
+      allow read: if isSignedIn();
+      allow write: if isAdminRole();
+    }
+
+    match /seller_locations/{sellerId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(sellerId) || isAdminRole();
+    }
+
+    match /driver_locations/{driverId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(driverId) || isAdminRole();
     }
 
     match /notifications/{notificationId} {

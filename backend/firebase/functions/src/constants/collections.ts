@@ -4,7 +4,12 @@ export const collections = {
   drivers: "drivers",
   admins: "admins",
   orders: "orders",
+  orderOffers: "order_offers",
   notifications: "notifications",
+  dispatchLogs: "dispatch_logs",
+  systemSettings: "system_settings",
+  sellerLocations: "seller_locations",
+  driverLocations: "driver_locations",
   tracking: "tracking",
   complaints: "complaints",
 } as const;

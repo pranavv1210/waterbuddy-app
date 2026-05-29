@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../core/auth/session_actions.dart';
 import '../../../models/order.dart' as app_order;
+import '../../../models/order_offer.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/operations_ui.dart';
@@ -160,7 +161,7 @@ class _SellerOrdersView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final online = ref.watch(sellerOnlineProvider);
     final active = ref.watch(sellerActiveOrdersProvider);
-    final nearby = ref.watch(searchingOrdersProvider);
+    final offers = ref.watch(sellerPendingOffersProvider);
     final location = ref.watch(sellerCurrentLocationProvider);
 
     return ListView(
@@ -170,7 +171,11 @@ class _SellerOrdersView extends ConsumerWidget {
           online: online,
           location: location.value,
           activeOrders: active.value ?? const [],
-          nearbyOrders: nearby.value ?? const [],
+          nearbyOrders: offers.value
+                  ?.map((offer) => offer.order)
+                  .whereType<app_order.Order>()
+                  .toList() ??
+              const [],
         ),
         const SizedBox(height: 22),
         const _SectionHeader(
@@ -198,10 +203,10 @@ class _SellerOrdersView extends ConsumerWidget {
         ),
         const SizedBox(height: 28),
         _SectionHeader(
-          title: 'Nearby request feed',
+          title: 'Incoming order offers',
           subtitle: online
-              ? 'Live requests available for acceptance.'
-              : 'Go online to receive nearby requests.',
+              ? 'Backend-dispatched offers assigned to this tanker account.'
+              : 'Go online to receive dispatched offers.',
           icon: Icons.radar_rounded,
         ),
         if (!online)
@@ -213,11 +218,11 @@ class _SellerOrdersView extends ConsumerWidget {
             ),
           )
         else
-          nearby.when(
-            data: (orders) => orders.isEmpty
+          offers.when(
+            data: (items) => items.isEmpty
                 ? const OpsCard(
                     child: Text(
-                      'No nearby requests right now.',
+                      'No incoming offers right now.',
                       style: TextStyle(
                         color: OpsColors.muted,
                         fontWeight: FontWeight.w600,
@@ -225,8 +230,8 @@ class _SellerOrdersView extends ConsumerWidget {
                     ),
                   )
                 : _OrderWrap(
-                    orders: orders,
-                    builder: (order) => _NearbyOrderCard(order: order),
+                    orders: items,
+                    builder: (offer) => _IncomingOfferCard(offer: offer),
                   ),
             loading: () => const _LoadingLine(),
             error: (error, _) => _ErrorLine(message: error.toString()),
@@ -374,11 +379,11 @@ class _SellerMapPanel extends StatelessWidget {
   }
 }
 
-class _OrderWrap extends StatelessWidget {
+class _OrderWrap<T> extends StatelessWidget {
   const _OrderWrap({required this.orders, required this.builder});
 
-  final List<app_order.Order> orders;
-  final Widget Function(app_order.Order order) builder;
+  final List<T> orders;
+  final Widget Function(T item) builder;
 
   @override
   Widget build(BuildContext context) {
@@ -405,33 +410,61 @@ double _responsiveCardWidth(double maxWidth) {
   return (maxWidth - 16) / 2;
 }
 
-class _NearbyOrderCard extends ConsumerWidget {
-  const _NearbyOrderCard({required this.order});
+class _IncomingOfferCard extends ConsumerWidget {
+  const _IncomingOfferCard({required this.offer});
 
-  final app_order.Order order;
+  final OrderOffer offer;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final uid = ref.watch(currentUserProvider)?.uid;
+    final order = offer.order;
+    if (order == null) return const SizedBox.shrink();
     return OpsCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _OrderTitle(order: order),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: uid == null
-                  ? null
-                  : () async {
-                      await ref
-                          .read(orderServiceProvider)
-                          .acceptOrder(order.id, uid);
-                    },
-              icon: const Icon(Icons.check_rounded),
-              label: const Text('Accept request'),
+          const SizedBox(height: 8),
+          Text(
+            '${offer.distanceKm.toStringAsFixed(1)} km away • attempt ${offer.attemptNumber}',
+            style: const TextStyle(
+              color: OpsColors.muted,
+              fontWeight: FontWeight.w700,
             ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: uid == null
+                      ? null
+                      : () async {
+                          await ref
+                              .read(orderServiceProvider)
+                              .rejectOffer(offerId: offer.id);
+                        },
+                  icon: const Icon(Icons.close_rounded),
+                  label: const Text('Reject'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: uid == null
+                      ? null
+                      : () async {
+                          await ref.read(orderServiceProvider).acceptOffer(
+                                offerId: offer.id,
+                                driverId: uid,
+                              );
+                        },
+                  icon: const Icon(Icons.check_rounded),
+                  label: const Text('Accept'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

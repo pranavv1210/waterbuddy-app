@@ -45,6 +45,7 @@ import '../features/tracking/presentation/order_complete_screen.dart';
 import '../features/tracking/presentation/searching_tankers_screen.dart';
 import '../features/tracking/presentation/tracking_screen.dart';
 import '../models/order.dart' as app_order;
+import '../models/order_offer.dart';
 import '../models/system_settings.dart';
 import '../models/tank_category.dart';
 import '../routes/route_names.dart';
@@ -155,6 +156,7 @@ class SellerOnlineController extends StateNotifier<bool> {
     await _firestore.collection('sellers').doc(_user.uid).set({
       'uid': _user.uid,
       'isOnline': value,
+      'isAvailable': value,
       'lastActiveAt': FieldValue.serverTimestamp(),
       if (!value) 'currentLocation': FieldValue.delete(),
     }, SetOptions(merge: true));
@@ -294,6 +296,38 @@ final searchingOrdersProvider = StreamProvider<List<app_order.Order>>((ref) {
   });
 });
 
+final sellerPendingOffersProvider = StreamProvider<List<OrderOffer>>((ref) {
+  final currentUser = ref.watch(currentUserProvider);
+  if (currentUser == null) return Stream.value(const <OrderOffer>[]);
+
+  return ref
+      .watch(firestoreProvider)
+      .collection('order_offers')
+      .where('sellerId', isEqualTo: currentUser.uid)
+      .where('status', isEqualTo: 'pending')
+      .snapshots()
+      .asyncMap((snapshot) async {
+    final firestore = ref.read(firestoreProvider);
+    final offers = <OrderOffer>[];
+    for (final doc in snapshot.docs) {
+      final orderId = (doc.data()['orderId'] ?? '').toString();
+      if (orderId.isEmpty) continue;
+      final orderDoc = await firestore.collection('orders').doc(orderId).get();
+      if (!orderDoc.exists) continue;
+      offers.add(
+        OrderOffer.fromDocument(
+          doc,
+          order: app_order.Order.fromDocument(orderDoc),
+        ),
+      );
+    }
+    offers.sort((a, b) => a.expiresAt == null || b.expiresAt == null
+        ? 0
+        : a.expiresAt!.compareTo(b.expiresAt!));
+    return offers;
+  });
+});
+
 final activeOrderProvider = StreamProvider<app_order.Order?>((ref) {
   final user = ref.watch(currentUserProvider);
   if (user == null) return Stream.value(null);
@@ -302,10 +336,13 @@ final activeOrderProvider = StreamProvider<app_order.Order?>((ref) {
       .watchCustomerOrders(user.uid)
       .map((orders) {
     for (final order in orders) {
-      if (order.status == 'ACCEPTED' ||
+      if (order.status == 'SEARCHING' ||
+          order.status == 'OFFER_SENT' ||
+          order.status == 'ACCEPTED' ||
           order.status == 'ASSIGNED' ||
           order.status == 'DRIVER_ASSIGNED' ||
           order.status == 'ON_THE_WAY' ||
+          order.status == 'DELIVERING' ||
           order.status == 'ARRIVED') {
         return order;
       }
@@ -323,10 +360,12 @@ final sellerActiveOrdersProvider = StreamProvider<List<app_order.Order>>((ref) {
       .map((orders) {
     return orders
         .where((o) =>
+            o.status == 'OFFER_SENT' ||
             o.status == 'ACCEPTED' ||
             o.status == 'ASSIGNED' ||
             o.status == 'DRIVER_ASSIGNED' ||
             o.status == 'ON_THE_WAY' ||
+            o.status == 'DELIVERING' ||
             o.status == 'ARRIVED')
         .toList();
   });

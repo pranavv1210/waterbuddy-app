@@ -16,7 +16,8 @@ class SellerLocationTrackingService {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
-    return permission == LocationPermission.always || permission == LocationPermission.whileInUse;
+    return permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse;
   }
 
   Future<void> start({required String sellerId}) async {
@@ -28,9 +29,13 @@ class SellerLocationTrackingService {
       accuracy: LocationAccuracy.high,
       distanceFilter: 25,
     );
-    _subscription = Geolocator.getPositionStream(locationSettings: locationSettings).listen((position) async {
+    _subscription =
+        Geolocator.getPositionStream(locationSettings: locationSettings)
+            .listen((position) async {
       final now = DateTime.now();
-      if (_lastWriteAt != null && now.difference(_lastWriteAt!).inSeconds < 5) return;
+      if (_lastWriteAt != null && now.difference(_lastWriteAt!).inSeconds < 5) {
+        return;
+      }
       _lastWriteAt = now;
       await _firestore.collection('sellers').doc(sellerId).set({
         'currentLocation': {
@@ -39,6 +44,14 @@ class SellerLocationTrackingService {
           'heading': position.heading,
           'updatedAt': FieldValue.serverTimestamp(),
         },
+        'lastLocationAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      await _firestore.collection('seller_locations').doc(sellerId).set({
+        'sellerId': sellerId,
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'heading': position.heading,
+        'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     });
   }

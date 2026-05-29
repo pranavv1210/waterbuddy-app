@@ -118,6 +118,24 @@ class OrderService {
     });
   }
 
+  Future<void> acceptOffer({
+    required String offerId,
+    String? driverId,
+  }) async {
+    await _firestore.collection('order_offers').doc(offerId).set({
+      'status': 'accepted',
+      if (driverId != null) 'driverId': driverId,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> rejectOffer({required String offerId}) async {
+    await _firestore.collection('order_offers').doc(offerId).set({
+      'status': 'rejected',
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
   Future<void> assignDriver({
     required String orderId,
     required String sellerId,
