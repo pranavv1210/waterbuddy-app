@@ -72,8 +72,9 @@ class _OrderCompleteScreenState extends ConsumerState<OrderCompleteScreen> {
         ),
         body: orderAsync.when(
           data: (order) {
-            if (order == null)
+            if (order == null) {
               return const Center(child: Text('Order not found'));
+            }
 
             return SafeArea(
               child: SingleChildScrollView(

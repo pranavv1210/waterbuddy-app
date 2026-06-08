@@ -3,9 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
 
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
@@ -28,10 +27,10 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
   bool _cancelOpen = false;
 
   static const _statuses = [
-    'Searching nearby tankers...',
-    'Finding available drivers...',
-    'Connecting to nearest tanker...',
-    'Matching your request...',
+    'Finding nearby tankers...',
+    'Checking availability...',
+    'Sending request...',
+    'Waiting for response...',
   ];
 
   @override
@@ -118,27 +117,26 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
         backgroundColor: const Color(0xFFF8FAFC),
         body: Stack(
           children: [
-            FlutterMap(
-              options: MapOptions(
-                initialCenter: LatLng(lat, lng),
-                initialZoom: 15,
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: LatLng(lat, lng),
+                zoom: 15,
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.waterbuddy.customer',
-                ),
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(lat, lng),
-                      width: 150,
-                      height: 150,
-                      child: _RadarMarker(animation: _radarController),
-                    ),
-                  ],
-                ),
-              ],
+              myLocationEnabled: false,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              scrollGesturesEnabled: false,
+              zoomGesturesEnabled: false,
+              tiltGesturesEnabled: false,
+              rotateGesturesEnabled: false,
+            ),
+            Center(
+              child: SizedBox(
+                width: 150,
+                height: 150,
+                child: _RadarMarker(animation: _radarController),
+              ),
             ),
             Container(color: Colors.white.withValues(alpha: 0.18)),
             Positioned(

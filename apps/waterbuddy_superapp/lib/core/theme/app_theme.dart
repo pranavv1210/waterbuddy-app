@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static ThemeData light() {
-    const primary = Color(0xFF0EA5E9); // Radiant Sky Blue
-    const accent = Color(0xFF14B8A6); // Glowing Teal
-    const creamBg = Color(0xFFFFFBF3);
-    const ink = Color(0xFF0F172A);
+    const primary = Color(0xFF0099FF); // Primary Blue
+    const accent = Color(0xFF007AFF); // System/Accent Blue
+    const offWhite = Color(0xFFF8FAFC); // Clean Off-white
+    const ink = Color(0xFF0F172A); // Dark Slate text
 
     return ThemeData(
       useMaterial3: true,
@@ -14,10 +14,10 @@ class AppTheme {
         primary: primary,
         secondary: accent,
         surface: Colors.white,
-        surfaceContainerHighest: creamBg,
+        surfaceContainerHighest: Color(0xFFEEF7FF), // Very Light Blue
         onSurface: ink,
       ),
-      scaffoldBackgroundColor: creamBg,
+      scaffoldBackgroundColor: offWhite,
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,

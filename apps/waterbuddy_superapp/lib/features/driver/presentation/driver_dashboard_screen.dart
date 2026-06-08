@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/auth/session_actions.dart';
@@ -218,7 +217,7 @@ class _DriverMapPanel extends StatelessWidget {
     final center = primaryOrder == null
         ? const LatLng(12.9716, 77.5946)
         : LatLng(
-            primaryOrder!.latitude == 0 ? 12.9716 : primaryOrder.latitude,
+            primaryOrder.latitude == 0 ? 12.9716 : primaryOrder.latitude,
             primaryOrder.longitude == 0 ? 77.5946 : primaryOrder.longitude,
           );
 
@@ -228,43 +227,29 @@ class _DriverMapPanel extends StatelessWidget {
         height: 250,
         child: Stack(
           children: [
-            FlutterMap(
-              options: MapOptions(
-                initialCenter: center,
-                initialZoom: activeOrders.isEmpty ? 12.5 : 14,
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.drag | InteractiveFlag.pinchZoom,
-                ),
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: center,
+                zoom: activeOrders.isEmpty ? 12.5 : 14,
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.waterbuddy.driver',
-                ),
-                MarkerLayer(
-                  markers: [
-                    for (final order in activeOrders)
-                      if (order.latitude != 0 || order.longitude != 0)
-                        Marker(
-                          point: LatLng(order.latitude, order.longitude),
-                          width: 42,
-                          height: 42,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: OpsColors.amber,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 3),
-                            ),
-                            child: const Icon(
-                              Icons.water_drop_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                  ],
-                ),
-              ],
+              myLocationEnabled: false,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              markers: {
+                for (final order in activeOrders)
+                  if (order.latitude != 0 || order.longitude != 0)
+                    Marker(
+                      markerId: MarkerId('order_${order.id}'),
+                      position: LatLng(order.latitude, order.longitude),
+                      icon: BitmapDescriptor.defaultMarkerWithHue(
+                          BitmapDescriptor.hueYellow),
+                      infoWindow: InfoWindow(
+                        title: order.tankLabel,
+                        snippet: order.deliveryAddress,
+                      ),
+                    ),
+              },
             ),
             Positioned(
               left: 14,
@@ -390,7 +375,13 @@ class _RunCard extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () => _updateLocationAndStatus(ref, order, next),
+                onPressed: () async {
+                  if (next == 'DELIVERED') {
+                    final pinConfirmed = await _showPinVerificationDialog(context, order.deliveryPin);
+                    if (!pinConfirmed) return;
+                  }
+                  await _updateLocationAndStatus(ref, order, next);
+                },
                 child: Text(_actionLabel(next)),
               ),
             ),
@@ -398,6 +389,83 @@ class _RunCard extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<bool> _showPinVerificationDialog(BuildContext context, String? expectedPin) async {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Colors.white,
+          title: const Text(
+            'Enter Delivery PIN',
+            style: TextStyle(fontWeight: FontWeight.w900, color: OpsColors.ink),
+          ),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Please ask the customer for the 4-digit delivery PIN to complete the run.',
+                  style: TextStyle(color: OpsColors.muted, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  maxLength: 4,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8),
+                  decoration: InputDecoration(
+                    counterText: '',
+                    hintText: 'XXXX',
+                    hintStyle: const TextStyle(letterSpacing: 2),
+                    filled: true,
+                    fillColor: const Color(0xFFF3F4F6),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().length != 4) {
+                      return 'Enter a 4-digit PIN';
+                    }
+                    if (expectedPin != null && value.trim() != expectedPin) {
+                      return 'Incorrect PIN. Try again.';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel', style: TextStyle(color: OpsColors.muted, fontWeight: FontWeight.bold)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState?.validate() ?? false) {
+                  Navigator.pop(context, true);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: OpsColors.amber,
+                foregroundColor: OpsColors.ink,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Verify PIN', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
   }
 
   static String? _nextStatus(String status) {
@@ -476,40 +544,31 @@ class _RunMap extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
-      child: FlutterMap(
-        options: MapOptions(initialCenter: center, initialZoom: 14),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.waterbuddy.customer',
-          ),
-          MarkerLayer(
-            markers: [
-              if (order.latitude != 0 || order.longitude != 0)
-                Marker(
-                  point: LatLng(order.latitude, order.longitude),
-                  width: 44,
-                  height: 44,
-                  child: const Icon(
-                    Icons.location_on_rounded,
-                    color: OpsColors.red,
-                    size: 40,
-                  ),
-                ),
-              if (tracking != null)
-                Marker(
-                  point: LatLng(tracking.lat, tracking.lng),
-                  width: 44,
-                  height: 44,
-                  child: const Icon(
-                    Icons.local_shipping_rounded,
-                    color: OpsColors.blue,
-                    size: 34,
-                  ),
-                ),
-            ],
-          ),
-        ],
+      child: GoogleMap(
+        initialCameraPosition: CameraPosition(
+          target: center,
+          zoom: 14,
+        ),
+        myLocationEnabled: false,
+        myLocationButtonEnabled: false,
+        zoomControlsEnabled: false,
+        mapToolbarEnabled: false,
+        markers: {
+          if (order.latitude != 0 || order.longitude != 0)
+            Marker(
+              markerId: const MarkerId('destination'),
+              position: LatLng(order.latitude, order.longitude),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueRed),
+            ),
+          if (tracking != null)
+            Marker(
+              markerId: const MarkerId('driver_tracking'),
+              position: LatLng(tracking.lat, tracking.lng),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueBlue),
+            ),
+        },
       ),
     );
   }

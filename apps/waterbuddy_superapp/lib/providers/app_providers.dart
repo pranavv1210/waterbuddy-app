@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/widgets.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -412,11 +413,9 @@ final tankCategoriesProvider = StreamProvider<List<TankCategory>>((ref) {
   );
 });
 
-final activeTankCategoriesProvider = StreamProvider<List<TankCategory>>((ref) {
-  return ref.watch(tankCategoriesProvider.stream).map(
-        (categories) =>
-            categories.where((category) => category.active).toList(),
-      );
+final activeTankCategoriesProvider = Provider<List<TankCategory>>((ref) {
+  final categories = ref.watch(tankCategoriesProvider).valueOrNull ?? const [];
+  return categories.where((category) => category.active).toList();
 });
 
 final platformConfigProvider =
@@ -441,6 +440,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: RouteNames.splash,
     redirect: (context, state) {
+      FocusManager.instance.primaryFocus?.unfocus();
       final auth = ref.read(authStateProvider);
       final user = auth.value;
       final role = ref.read(selectedRoleProvider);

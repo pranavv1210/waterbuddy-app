@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,7 +39,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     OpsTab(label: 'Orders', icon: Icons.radar_rounded),
     OpsTab(label: 'Tankers', icon: Icons.water_drop_rounded),
     OpsTab(label: 'Settings', icon: Icons.tune_rounded),
-    OpsTab(label: 'Pricing', icon: Icons.currency_rupee_rounded),
     OpsTab(label: 'Approvals', icon: Icons.verified_user_rounded),
     OpsTab(label: 'Drivers', icon: Icons.badge_rounded),
     OpsTab(label: 'Tank Owners', icon: Icons.local_shipping_rounded),
@@ -122,7 +122,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               const _AdminOrdersView(),
               const _TankCategoriesView(),
               const _AdminSettingsView(),
-              const _PricingView(),
               const _ApprovalsView(),
               const _RoleCollectionView(
                 title: 'Drivers',
@@ -180,37 +179,24 @@ class _AdminShell extends StatelessWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        titleSpacing: 0,
         foregroundColor: OpsColors.ink,
-        title: Row(
+        leading: Builder(
+          builder: (context) => IconButton(
+            tooltip: 'Menu',
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        title: const Row(
           children: [
-            const _AdminLogo(),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'WATERBUDDY',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: OpsColors.ink,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  Text(
-                    'Admin - $title',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: OpsColors.muted,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+            _AdminLogo(),
+            SizedBox(width: 12),
+            Text(
+              'WaterBuddy Admin',
+              style: TextStyle(
+                color: OpsColors.ink,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
               ),
             ),
           ],
@@ -218,7 +204,7 @@ class _AdminShell extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: 'Notifications',
-            onPressed: () => onDrawerSelected(10),
+            onPressed: () => onDrawerSelected(9),
             icon: const Icon(Icons.notifications_none_rounded),
           ),
         ],
@@ -265,27 +251,11 @@ class _AdminShell extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   children: [
                     _DrawerItem(
-                      icon: Icons.currency_rupee_rounded,
-                      label: 'Pricing',
+                      icon: Icons.people_alt_rounded,
+                      label: 'Consumers',
                       onTap: () {
                         Navigator.pop(context);
-                        onDrawerSelected(4);
-                      },
-                    ),
-                    _DrawerItem(
-                      icon: Icons.verified_user_rounded,
-                      label: 'User Approvals',
-                      onTap: () {
-                        Navigator.pop(context);
-                        onDrawerSelected(5);
-                      },
-                    ),
-                    _DrawerItem(
-                      icon: Icons.badge_rounded,
-                      label: 'Drivers',
-                      onTap: () {
-                        Navigator.pop(context);
-                        onDrawerSelected(6);
+                        onDrawerSelected(7);
                       },
                     ),
                     _DrawerItem(
@@ -293,23 +263,15 @@ class _AdminShell extends StatelessWidget {
                       label: 'Tank Owners',
                       onTap: () {
                         Navigator.pop(context);
-                        onDrawerSelected(7);
+                        onDrawerSelected(6);
                       },
                     ),
                     _DrawerItem(
-                      icon: Icons.people_alt_rounded,
-                      label: 'Consumers',
+                      icon: Icons.badge_rounded,
+                      label: 'Drivers',
                       onTap: () {
                         Navigator.pop(context);
-                        onDrawerSelected(8);
-                      },
-                    ),
-                    _DrawerItem(
-                      icon: Icons.payments_rounded,
-                      label: 'Payments',
-                      onTap: () {
-                        Navigator.pop(context);
-                        onDrawerSelected(9);
+                        onDrawerSelected(5);
                       },
                     ),
                     _DrawerItem(
@@ -317,7 +279,7 @@ class _AdminShell extends StatelessWidget {
                       label: 'Notifications',
                       onTap: () {
                         Navigator.pop(context);
-                        onDrawerSelected(10);
+                        onDrawerSelected(9);
                       },
                     ),
                     _DrawerItem(
@@ -325,31 +287,15 @@ class _AdminShell extends StatelessWidget {
                       label: 'Support',
                       onTap: () {
                         Navigator.pop(context);
-                        onDrawerSelected(11);
+                        onDrawerSelected(10);
                       },
                     ),
                     _DrawerItem(
                       icon: Icons.analytics_rounded,
-                      label: 'Analytics',
+                      label: 'Reports',
                       onTap: () {
                         Navigator.pop(context);
                         onDrawerSelected(0);
-                      },
-                    ),
-                    _DrawerItem(
-                      icon: Icons.tune_rounded,
-                      label: 'Service Config',
-                      onTap: () {
-                        Navigator.pop(context);
-                        onDrawerSelected(3);
-                      },
-                    ),
-                    _DrawerItem(
-                      icon: Icons.admin_panel_settings_rounded,
-                      label: 'Profile',
-                      onTap: () {
-                        Navigator.pop(context);
-                        onDrawerSelected(12);
                       },
                     ),
                   ],
@@ -582,7 +528,7 @@ class _AdminOverview extends ConsumerWidget {
         _PendingApprovalsSummary(
           sellers: sellers,
           drivers: drivers,
-          onOpenApprovals: () => onNavigate(5),
+          onOpenApprovals: () => onNavigate(4),
         ),
         const SizedBox(height: 24),
         const _AdminHeader(
@@ -599,12 +545,12 @@ class _AdminOverview extends ConsumerWidget {
               label: const Text('Add Tank Category'),
             ),
             OutlinedButton.icon(
-              onPressed: () => onNavigate(5),
+              onPressed: () => onNavigate(4),
               icon: const Icon(Icons.verified_user_rounded),
               label: const Text('Approve Tankers'),
             ),
             OutlinedButton.icon(
-              onPressed: () => onNavigate(10),
+              onPressed: () => onNavigate(9),
               icon: const Icon(Icons.campaign_rounded),
               label: const Text('Broadcast Notice'),
             ),
@@ -1151,19 +1097,19 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
                       _IconChoice(
                         selected: _iconKey == 'drop',
                         icon: Icons.water_drop_rounded,
-                        label: 'Drop',
+                        label: 'Water Drop',
                         onTap: () => setState(() => _iconKey = 'drop'),
                       ),
                       _IconChoice(
                         selected: _iconKey == 'tanker',
                         icon: Icons.local_shipping_rounded,
-                        label: 'Tanker',
+                        label: 'Water Tanker',
                         onTap: () => setState(() => _iconKey = 'tanker'),
                       ),
                       _IconChoice(
                         selected: _iconKey == 'water',
                         icon: Icons.waves_rounded,
-                        label: 'Water',
+                        label: 'Premium Water',
                         onTap: () => setState(() => _iconKey = 'water'),
                       ),
                     ],
@@ -1264,41 +1210,38 @@ class _IconChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChoiceChip(
-      selected: selected,
-      showCheckmark: false,
-      avatar:
-          Icon(icon, size: 18, color: selected ? Colors.white : OpsColors.blue),
-      label: Text(label),
-      onSelected: (_) => onTap(),
-      selectedColor: OpsColors.blue,
-      labelStyle: TextStyle(
-        color: selected ? Colors.white : OpsColors.ink,
-        fontWeight: FontWeight.w800,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? OpsColors.blue : const Color(0xFFF1F5F9), // slate 100
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? OpsColors.blue : const Color(0xFFE2E8F0), // slate 200
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: selected ? Colors.white : OpsColors.blue,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? Colors.white : OpsColors.ink,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
       ),
-    );
-  }
-}
-
-class _PricingView extends ConsumerWidget {
-  const _PricingView();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final config = ref.watch(platformConfigProvider);
-    return config.when(
-      data: (snapshot) => _PlatformConfigEditor(
-        title: 'Pricing',
-        subtitle: 'Simple MVP controls. Tank prices are managed in Tankers.',
-        fields: const [
-          _ConfigFieldSpec('deliveryCharge', 'Delivery charge', 'num'),
-          _ConfigFieldSpec('cancellationCharge', 'Cancellation charge', 'num'),
-          _ConfigFieldSpec('codEnabled', 'COD enabled', 'bool'),
-        ],
-        data: snapshot.data() ?? const {},
-      ),
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(child: Text(error.toString())),
     );
   }
 }
@@ -1312,14 +1255,15 @@ class _AdminSettingsView extends ConsumerWidget {
     return config.when(
       data: (snapshot) => _PlatformConfigEditor(
         title: 'Settings',
-        subtitle: 'Core service controls for daily operations.',
+        subtitle: 'Core service controls for daily operations and pricing.',
         fields: const [
           _ConfigFieldSpec('bookingsEnabled', 'Bookings enabled', 'bool'),
-          _ConfigFieldSpec('maintenanceMode', 'Maintenance mode', 'bool'),
-          _ConfigFieldSpec('dispatchRadiusKm', 'Dispatch radius km', 'num'),
-          _ConfigFieldSpec('serviceCity', 'Service city', 'text'),
-          _ConfigFieldSpec('supportEmail', 'Support email', 'text'),
+          _ConfigFieldSpec('dispatchRadiusKm', 'Dispatch radius', 'num'),
           _ConfigFieldSpec('supportNumber', 'Support number', 'text'),
+          _ConfigFieldSpec('supportEmail', 'Support email', 'text'),
+          _ConfigFieldSpec('cancellationCharge', 'Cancellation fee', 'num'),
+          _ConfigFieldSpec('deliveryCharge', 'Delivery fee', 'num'),
+          _ConfigFieldSpec('codEnabled', 'COD enabled', 'bool'),
         ],
         data: snapshot.data() ?? const {},
       ),
@@ -1360,7 +1304,7 @@ class _PlatformConfigEditorState extends State<_PlatformConfigEditor> {
   @override
   void didUpdateWidget(covariant _PlatformConfigEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.data != widget.data) _syncFromData();
+    if (!mapEquals(oldWidget.data, widget.data)) _syncFromData();
   }
 
   void _syncFromData() {
@@ -1369,9 +1313,11 @@ class _PlatformConfigEditorState extends State<_PlatformConfigEditor> {
         _switches[field.key] =
             widget.data[field.key] as bool? ?? _defaultBool(field.key);
       } else {
-        _controllers[field.key] ??= TextEditingController();
-        _controllers[field.key]!.text =
-            (widget.data[field.key] ?? _defaultValue(field.key)).toString();
+        final controller = _controllers[field.key] ??= TextEditingController();
+        final newValue = (widget.data[field.key] ?? _defaultValue(field.key)).toString();
+        if (controller.text != newValue) {
+          controller.text = newValue;
+        }
       }
     }
   }
@@ -1388,6 +1334,8 @@ class _PlatformConfigEditorState extends State<_PlatformConfigEditor> {
       'dispatchRadiusKm' => 10,
       'serviceCity' => 'Bengaluru',
       'supportEmail' => 'waterbuddyapp.wb@gmail.com',
+      'deliveryCharge' => 100,
+      'cancellationCharge' => 50,
       _ => '',
     };
   }

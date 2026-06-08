@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../models/order.dart' as app_order;
@@ -34,6 +35,7 @@ class OrderService {
     required Map<String, dynamic> location,
     required String paymentType,
   }) async {
+    final pin = (1000 + Random().nextInt(9000)).toString();
     final docRef = await _firestore.collection('orders').add({
       'customerId': customerId,
       'customerName': customerName,
@@ -47,6 +49,7 @@ class OrderService {
       'status': 'SEARCHING',
       'paymentType': paymentType,
       'paymentStatus': 'PENDING',
+      'deliveryPin': pin,
       'sellerId': null,
       'driverId': null,
       'assignedAt': null,

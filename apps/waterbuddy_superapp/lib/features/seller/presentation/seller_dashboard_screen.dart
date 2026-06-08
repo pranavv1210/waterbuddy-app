@@ -1,9 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
 
 import '../../../core/auth/session_actions.dart';
 import '../../../models/order.dart' as app_order;
@@ -270,65 +269,33 @@ class _SellerMapPanel extends StatelessWidget {
         height: 230,
         child: Stack(
           children: [
-            FlutterMap(
-              options: MapOptions(
-                initialCenter: center,
-                initialZoom: 13.5,
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
-                ),
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: center,
+                zoom: 13.5,
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.waterbuddy.superapp',
+              myLocationEnabled: false,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              markers: {
+                Marker(
+                  markerId: const MarkerId('fleet_center'),
+                  position: center,
+                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+                  infoWindow: const InfoWindow(title: 'My Fleet Location'),
                 ),
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: center,
-                      width: 44,
-                      height: 44,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: OpsColors.blue,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 4),
-                          boxShadow: [
-                            BoxShadow(
-                              color: OpsColors.blue.withValues(alpha: 0.28),
-                              blurRadius: 18,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.local_shipping_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
+                for (final order in orderMarkers)
+                  Marker(
+                    markerId: MarkerId('order_${order.id}'),
+                    position: LatLng(order.latitude, order.longitude),
+                    icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+                    infoWindow: InfoWindow(
+                      title: order.tankLabel,
+                      snippet: order.deliveryAddress,
                     ),
-                    for (final order in orderMarkers)
-                      Marker(
-                        point: LatLng(order.latitude, order.longitude),
-                        width: 34,
-                        height: 34,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: OpsColors.green,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
-                          ),
-                          child: const Icon(
-                            Icons.water_drop_rounded,
-                            color: Colors.white,
-                            size: 17,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
+                  ),
+              },
             ),
             Positioned(
               left: 14,

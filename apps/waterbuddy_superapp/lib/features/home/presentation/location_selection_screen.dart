@@ -1,30 +1,28 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 
+import '../../../core/services/location/google_maps_service.dart';
 import '../../orders/providers/order_providers.dart';
 
 class _AddressSuggestion {
   const _AddressSuggestion({
+    required this.placeId,
     required this.placeName,
     required this.secondaryAddress,
-    required this.latitude,
-    required this.longitude,
+    required this.description,
   });
 
+  final String placeId;
   final String placeName;
   final String secondaryAddress;
-  final double latitude;
-  final double longitude;
+  final String description;
 
-  String get fullAddress =>
-      secondaryAddress.isEmpty ? placeName : '$placeName, $secondaryAddress';
+  String get fullAddress => description;
 }
 
 class LocationSelectionScreen extends ConsumerStatefulWidget {
@@ -40,6 +38,7 @@ class LocationSelectionScreen extends ConsumerStatefulWidget {
 class _LocationSelectionScreenState
     extends ConsumerState<LocationSelectionScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final GoogleMapsService _googleMapsService = GoogleMapsService();
   bool _submitting = false;
   bool _loadingSuggestions = false;
   Timer? _debounce;
@@ -70,46 +69,18 @@ class _LocationSelectionScreenState
   Future<void> _fetchSuggestions(String query) async {
     setState(() => _loadingSuggestions = true);
     try {
-      final uri = Uri.https('nominatim.openstreetmap.org', '/search', {
-        'q': '$query, Bengaluru, Karnataka, India',
-        'format': 'jsonv2',
-        'addressdetails': '1',
-        'limit': '6',
-        'countrycodes': 'in',
-      });
-      final response = await http.get(uri, headers: {
-        'User-Agent': 'WaterBuddyApp/1.0 address search',
-      }).timeout(const Duration(seconds: 4));
-      if (response.statusCode != 200) return;
-      final items = (jsonDecode(response.body) as List<dynamic>)
-          .whereType<Map<String, dynamic>>()
-          .map((item) {
-            final display = (item['display_name'] ?? '').toString();
-            final address = item['address'] as Map<String, dynamic>? ?? {};
-            final name =
-                (item['name'] ?? address['amenity'] ?? address['road'] ?? query)
-                    .toString();
-            final lat = double.tryParse((item['lat'] ?? '').toString());
-            final lng = double.tryParse((item['lon'] ?? '').toString());
-            if (lat == null || lng == null) return null;
-            final parts = display
-                .split(',')
-                .map((part) => part.trim())
-                .where((part) => part.isNotEmpty && part != name)
-                .take(3)
-                .join(', ');
-            return _AddressSuggestion(
-              placeName: name,
-              secondaryAddress: parts,
-              latitude: lat,
-              longitude: lng,
-            );
-          })
-          .whereType<_AddressSuggestion>()
-          .toList();
-
+      final googleSuggestions = await _googleMapsService.getSuggestions(query);
       if (!mounted || _searchController.text.trim() != query) return;
-      setState(() => _suggestions = items);
+      setState(() {
+        _suggestions = googleSuggestions
+            .map((s) => _AddressSuggestion(
+                  placeId: s.placeId,
+                  placeName: s.mainText,
+                  secondaryAddress: s.secondaryText,
+                  description: s.description,
+                ))
+            .toList();
+      });
     } catch (_) {
       if (!mounted) return;
       setState(() => _suggestions = const []);
@@ -149,15 +120,36 @@ class _LocationSelectionScreenState
     if (mounted) context.pop(result);
   }
 
-  void _selectSuggestion(_AddressSuggestion suggestion) {
-    context.pop({
-      'address': suggestion.fullAddress,
-      'location': {
-        'latitude': suggestion.latitude,
-        'longitude': suggestion.longitude,
-        'address': suggestion.fullAddress,
-      },
-    });
+  Future<void> _selectSuggestion(_AddressSuggestion suggestion) async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+    try {
+      final coords = await _googleMapsService.getPlaceDetails(suggestion.placeId);
+      if (coords != null && mounted) {
+        context.pop({
+          'address': suggestion.fullAddress,
+          'location': {
+            'latitude': coords.latitude,
+            'longitude': coords.longitude,
+            'address': suggestion.fullAddress,
+          },
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to resolve coordinates for this location.')),
+          );
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error resolving location details.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   Future<void> _useCurrentLocation() async {
@@ -191,7 +183,7 @@ class _LocationSelectionScreenState
             p.street,
             p.subLocality,
             p.locality,
-          ].where((part) => part != null && part!.trim().isNotEmpty).join(', ');
+          ].where((part) => part != null && part.trim().isNotEmpty).join(', ');
         }
       } catch (_) {}
       if (!mounted) return;
@@ -341,7 +333,7 @@ class _LocationSelectionScreenState
                     Expanded(
                       child: TextField(
                         controller: _searchController,
-                        autofocus: true,
+                        autofocus: false,
                         textInputAction: TextInputAction.search,
                         onChanged: _onQueryChanged,
                         onSubmitted: _submitAddress,

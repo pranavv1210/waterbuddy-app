@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../routes/route_names.dart';
+import '../../../models/order.dart' as app_order;
 import '../models/assigned_order_tracking.dart';
 import '../providers/tracking_providers.dart';
 
@@ -103,9 +103,14 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       );
     }
 
+    final orderId = trackingState.orderId;
+    final order = orderId != null
+        ? ref.watch(orderStreamProvider(orderId)).valueOrNull
+        : null;
+
     final body = uiState.when(
       data: (state) =>
-          _TrackingScreenBody(state: state, trackingState: trackingState),
+          _TrackingScreenBody(state: state, trackingState: trackingState, order: order),
       error: (err, __) => Scaffold(
         body: Center(
           child: Column(
@@ -136,17 +141,44 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 }
 
 class _TrackingScreenBody extends StatefulWidget {
-  const _TrackingScreenBody({required this.state, required this.trackingState});
+  const _TrackingScreenBody({
+    required this.state,
+    required this.trackingState,
+    required this.order,
+  });
 
   final AssignedOrderTracking state;
   final TrackingState trackingState;
+  final app_order.Order? order;
 
   @override
   State<_TrackingScreenBody> createState() => _TrackingScreenBodyState();
 }
 
 class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
-  final MapController _mapController = MapController();
+  GoogleMapController? _googleMapController;
+  BitmapDescriptor? _tankerIcon;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTankerIcon();
+  }
+
+  void _loadTankerIcon() {
+    BitmapDescriptor.asset(
+      const ImageConfiguration(size: Size(32, 32)),
+      'assets/ui/tanker.png',
+    ).then((icon) {
+      if (mounted) {
+        setState(() {
+          _tankerIcon = icon;
+        });
+      }
+    }).catchError((e) {
+      debugPrint('Error loading tanker asset: $e');
+    });
+  }
 
   @override
   void didUpdateWidget(_TrackingScreenBody oldWidget) {
@@ -159,7 +191,9 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
         (oldTracking?.lat != newTracking.lat ||
             oldTracking?.lng != newTracking.lng)) {
       // Smoothly pan map to new location
-      _mapController.move(LatLng(newTracking.lat, newTracking.lng), 15.0);
+      _googleMapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(LatLng(newTracking.lat, newTracking.lng), 15.0),
+      );
     }
   }
 
@@ -177,10 +211,23 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
   @override
   Widget build(BuildContext context) {
     const primaryColor = Color(0xFF0F172A);
-    const accentColor = Color(0xFF38BDF8);
+    const accentColor = Color(0xFF0099FF);
 
     final statusTitle = _getStatusTitle(widget.trackingState.orderStatus);
     final statusSubtitle = _getStatusSubtitle(widget.trackingState.orderStatus);
+
+    LatLng? consumerLatLng;
+    if (widget.order != null) {
+      consumerLatLng = LatLng(widget.order!.latitude, widget.order!.longitude);
+    }
+
+    LatLng? driverLatLng;
+    if (widget.trackingState.tracking != null) {
+      driverLatLng = LatLng(widget.trackingState.tracking!.lat, widget.trackingState.tracking!.lng);
+    }
+
+    // Determine initial camera target
+    final cameraTarget = driverLatLng ?? consumerLatLng ?? const LatLng(12.9716, 77.5946);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -188,54 +235,48 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
         children: [
           // Real Map
           Positioned.fill(
-            child: widget.trackingState.tracking != null
-                ? FlutterMap(
-                    mapController: _mapController,
-                    options: MapOptions(
-                      initialCenter: LatLng(widget.trackingState.tracking!.lat,
-                          widget.trackingState.tracking!.lng),
-                      initialZoom: 15.0,
-                    ),
-                    children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.waterbuddy.customer',
-                      ),
-                      TweenAnimationBuilder<double>(
-                        tween: Tween<double>(begin: 0, end: 1),
-                        duration: const Duration(seconds: 2),
-                        key: ValueKey(
-                            '${widget.trackingState.tracking!.lat}_${widget.trackingState.tracking!.lng}'),
-                        builder: (context, value, child) {
-                          // Simple interpolation, assuming we don't have access to old widget in builder
-                          // It's better to just build the MarkerLayer
-                          return MarkerLayer(
-                            markers: [
-                              Marker(
-                                point: LatLng(
-                                    widget.trackingState.tracking!.lat,
-                                    widget.trackingState.tracking!.lng),
-                                width: 60,
-                                height: 60,
-                                child: const Icon(
-                                  Icons.local_shipping_rounded,
-                                  color: Color(0xFF38BDF8),
-                                  size: 40,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  )
-                : Container(
-                    color: const Color(0xFFE2E8F0),
-                    child: const Center(
-                      child: CircularProgressIndicator(),
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: cameraTarget,
+                zoom: 15.0,
+              ),
+              onMapCreated: (controller) {
+                _googleMapController = controller;
+              },
+              myLocationEnabled: false,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              markers: {
+                if (consumerLatLng != null)
+                  Marker(
+                    markerId: const MarkerId('consumer_location'),
+                    position: consumerLatLng,
+                    icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+                    infoWindow: const InfoWindow(title: 'Your Location'),
+                  ),
+                if (driverLatLng != null)
+                  Marker(
+                    markerId: const MarkerId('driver_location'),
+                    position: driverLatLng,
+                    icon: _tankerIcon ??
+                        BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
+                    infoWindow: InfoWindow(
+                      title: widget.state.driver.name,
+                      snippet: widget.state.vehicle.plateLabel,
                     ),
                   ),
+              },
+              polylines: {
+                if (consumerLatLng != null && driverLatLng != null)
+                  Polyline(
+                    polylineId: const PolylineId('route'),
+                    points: [consumerLatLng, driverLatLng],
+                    color: const Color(0xFF007AFF), // Blue route
+                    width: 5,
+                  ),
+              },
+            ),
           ),
 
           // Header with Back Button
@@ -254,7 +295,7 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.4),
+                    Colors.black.withOpacity(0.4),
                     Colors.transparent
                   ],
                 ),
@@ -271,7 +312,7 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                   ),
                   const SizedBox(width: 16),
                   const Text(
-                    'Order Status',
+                    'Track Live Delivery',
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -293,7 +334,7 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                     const BorderRadius.vertical(top: Radius.circular(40)),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryColor.withValues(alpha: 0.15),
+                    color: primaryColor.withOpacity(0.15),
                     blurRadius: 30,
                     offset: const Offset(0, -10),
                   ),
@@ -348,7 +389,7 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF0F9FF),
+                                color: const Color(0xFFEEF7FF),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: const Icon(Icons.water_drop_rounded,
@@ -357,7 +398,66 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                           ],
                         ),
 
-                        const SizedBox(height: 24),
+                        // Share PIN Card
+                        if (widget.order?.deliveryPin != null) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEEF7FF), // Light Water Blue
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFFDCEFFF)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Provide Delivery PIN to Driver',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF007AFF),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Share this PIN once tanker arrives',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF64748B),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: const Color(0xFF4DA6FF)),
+                                  ),
+                                  child: Text(
+                                    widget.order!.deliveryPin!,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                      color: Color(0xFF007AFF),
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+
+                        const SizedBox(height: 20),
 
                         // Driver & Vehicle Card
                         Container(
@@ -535,12 +635,16 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
 
   String _getStatusTitle(String status) {
     switch (status) {
+      case 'ACCEPTED':
       case 'ASSIGNED':
+      case 'DRIVER_ASSIGNED':
         return 'Partner Assigned';
       case 'ON_THE_WAY':
-        return 'Tanker on the way';
+        return 'Tanker is on the way';
+      case 'ARRIVED':
+        return 'Tanker has arrived';
       case 'DELIVERED':
-        return 'Order Delivered';
+        return 'Water Delivered';
       case 'CANCELLED':
         return 'Order Cancelled';
       default:
@@ -550,10 +654,14 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
 
   String _getStatusSubtitle(String status) {
     switch (status) {
+      case 'ACCEPTED':
       case 'ASSIGNED':
+      case 'DRIVER_ASSIGNED':
         return 'The driver is preparing your delivery';
       case 'ON_THE_WAY':
         return 'Heading towards your location now';
+      case 'ARRIVED':
+        return 'Please share delivery PIN with the driver';
       case 'DELIVERED':
         return 'Thank you for using WaterBuddy!';
       case 'CANCELLED':
@@ -594,7 +702,7 @@ class _InfoChip extends StatelessWidget {
               style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 14,
-                  color: Color(0xFF0F2B5B)),
+                  color: Color(0xFF0F172A)),
             ),
             Text(
               title,

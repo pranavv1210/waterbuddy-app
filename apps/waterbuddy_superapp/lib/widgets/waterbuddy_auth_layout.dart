@@ -132,28 +132,16 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
     context.go(route);
   }
 
-  List<Color> _getRoleColors(AppRole role) {
+  Color _getRoleColor(AppRole role) {
     switch (role) {
       case AppRole.consumer:
-        return [
-          const Color(0xFF0EA5E9), // Radiant Sky Blue
-          const Color(0xFF0F766E), // Muted Teal
-        ];
+        return const Color(0xFF007AFF); // Sky/Water Blue
       case AppRole.seller:
-        return [
-          const Color(0xFF14B8A6), // Teal Glow
-          const Color(0xFF0891B2), // Rich Cyan
-        ];
+        return const Color(0xFF0ea5e9); // Owner Cyan
       case AppRole.driver:
-        return [
-          const Color(0xFF6366F1), // Violet
-          const Color(0xFF3B82F6), // Blue
-        ];
+        return const Color(0xFF10b981); // Driver Green
       case AppRole.admin:
-        return [
-          const Color(0xFFEC4899), // Pink
-          const Color(0xFF4F46E5), // Royal Indigo
-        ];
+        return const Color(0xFF6366f1); // Indigo
     }
   }
 
@@ -161,48 +149,41 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
   Widget build(BuildContext context) {
     final switchOptions =
         AppRole.values.where((r) => r != widget.activeRole).toList();
-    final gradientColors = _getRoleColors(widget.activeRole);
-    final darkBg = const Color(0xFF090D16); // Obsidian deep dark background
+    final roleColor = _getRoleColor(widget.activeRole);
     final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
     final keyboardOpen = keyboardHeight > 0;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: darkBg,
+      backgroundColor: const Color(0xFFF8FAFC), // Off-white clean background
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Stack(
           children: [
-            // Ambient glowing background orbs
+            // Soft Light Ambient Background Shapes
             Positioned(
-              top: -120,
-              left: -120,
+              top: -100,
+              left: -100,
               child: Container(
                 width: 320,
                 height: 320,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: gradientColors[0].withOpacity(0.28),
+                  color: roleColor.withOpacity(0.06),
                 ),
               ),
             ),
             Positioned(
-              bottom: -80,
-              right: -100,
+              bottom: -60,
+              right: -80,
               child: Container(
                 width: 280,
                 height: 280,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: gradientColors[1].withOpacity(0.25),
+                  color: const Color(0xFFEEF7FF).withOpacity(0.7),
                 ),
-              ),
-            ),
-            Positioned.fill(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 85, sigmaY: 85),
-                child: Container(color: Colors.transparent),
               ),
             ),
             SafeArea(
@@ -222,128 +203,136 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                           constraints: const BoxConstraints(maxWidth: 500),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 16),
+                                horizontal: 24, vertical: 16),
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                // Role Selector Tabs (Uber style, clean pill)
                                 AnimatedSize(
                                   duration: const Duration(milliseconds: 220),
                                   curve: Curves.easeOutCubic,
                                   child: keyboardOpen
                                       ? const SizedBox.shrink()
                                       : Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 8, horizontal: 8),
+                                          padding: const EdgeInsets.all(4),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.04),
+                                            color: const Color(0xFFF1F5F9), // slate 100
                                             borderRadius:
-                                                BorderRadius.circular(20),
+                                                BorderRadius.circular(16),
                                             border: Border.all(
-                                                color: Colors.white.withOpacity(0.08)),
+                                                color: const Color(0xFFE2E8F0)), // slate 200
                                           ),
                                           child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceEvenly,
-                                            children: switchOptions.map((role) {
-                                              String label = '';
-                                              switch (role) {
-                                                case AppRole.consumer:
-                                                  label = 'Consumer';
-                                                  break;
-                                                case AppRole.seller:
-                                                  label = 'Owner';
-                                                  break;
-                                                case AppRole.driver:
-                                                  label = 'Driver';
-                                                  break;
-                                                case AppRole.admin:
-                                                  label = 'Admin';
-                                                  break;
-                                              }
-
-                                              return Expanded(
-                                                child: Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(horizontal: 4),
-                                                  child: OutlinedButton(
-                                                    onPressed: () =>
-                                                        _switchRole(role),
-                                                    style: OutlinedButton
-                                                        .styleFrom(
-                                                      foregroundColor:
-                                                          Colors.white.withOpacity(0.8),
-                                                      side: BorderSide(
-                                                          color: Colors.white.withOpacity(0.12),
-                                                          width: 1),
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          vertical: 10),
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(14),
+                                            children: [
+                                              // Display active role first
+                                              Expanded(
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black.withOpacity(0.05),
+                                                        blurRadius: 4,
+                                                        offset: const Offset(0, 2),
                                                       ),
-                                                    ),
+                                                    ],
+                                                  ),
+                                                  child: Center(
                                                     child: Text(
-                                                      label,
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.bold,
+                                                      widget.activeRole.name.toUpperCase(),
+                                                      style: TextStyle(
+                                                        color: roleColor,
+                                                        fontWeight: FontWeight.w800,
+                                                        fontSize: 11,
+                                                        letterSpacing: 1,
                                                       ),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
                                                     ),
                                                   ),
                                                 ),
-                                              );
-                                            }).toList(),
+                                              ),
+                                              ...switchOptions.map((role) {
+                                                String label = '';
+                                                switch (role) {
+                                                  case AppRole.consumer:
+                                                    label = 'Consumer';
+                                                    break;
+                                                  case AppRole.seller:
+                                                    label = 'Owner';
+                                                    break;
+                                                  case AppRole.driver:
+                                                    label = 'Driver';
+                                                    break;
+                                                  case AppRole.admin:
+                                                    label = 'Admin';
+                                                    break;
+                                                }
+
+                                                return Expanded(
+                                                  child: GestureDetector(
+                                                    onTap: () => _switchRole(role),
+                                                    behavior: HitTestBehavior.opaque,
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                                      child: Center(
+                                                        child: Text(
+                                                          label,
+                                                          style: const TextStyle(
+                                                            color: Color(0xFF64748B), // Slate 500
+                                                            fontWeight: FontWeight.bold,
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              }).toList(),
+                                            ],
                                           ),
                                         ),
                                 ),
-                                SizedBox(height: keyboardOpen ? 12 : 40),
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 220),
-                                  curve: Curves.easeOutCubic,
-                                  width: keyboardOpen ? 48 : 88,
-                                  height: keyboardOpen ? 48 : 88,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.white.withOpacity(0.04),
-                                    border: Border.all(
-                                        color: Colors.white.withOpacity(0.12),
-                                        width: 1.5),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: gradientColors[0].withOpacity(0.15),
-                                        blurRadius: 20,
-                                        spreadRadius: 2,
+                                SizedBox(height: keyboardOpen ? 12 : 36),
+                                // App Branding / Logo
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFEEF7FF),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: const Color(0xFFDCEFFF),
+                                            width: 2),
                                       ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Icon(Icons.water_drop_rounded,
-                                        color: gradientColors[0],
-                                        size: keyboardOpen ? 24 : 44),
-                                  ),
+                                      child: const Icon(
+                                        Icons.water_drop_rounded,
+                                        color: Color(0xFF007AFF),
+                                        size: 26,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'WaterBuddy',
+                                      style: TextStyle(
+                                        color: Color(0xFF0F172A), // Slate 900
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: -0.5,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                SizedBox(height: keyboardOpen ? 8 : 16),
-                                Text(
-                                  'WATERBUDDY',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: keyboardOpen ? 18 : 24,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.5,
-                                  ),
-                                ),
-                                SizedBox(height: keyboardOpen ? 16 : 40),
+                                SizedBox(height: keyboardOpen ? 16 : 32),
+                                // Title and Subtitle
                                 Text(
                                   widget.title,
                                   style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: keyboardOpen ? 18 : 22,
+                                      color: const Color(0xFF0F172A), // Slate 900
+                                      fontSize: keyboardOpen ? 18 : 24,
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: -0.5),
                                   textAlign: TextAlign.center,
@@ -353,16 +342,17 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                                   const SizedBox(height: 8),
                                   Text(
                                     widget.subtitle,
-                                    style: TextStyle(
-                                        color: Colors.white.withOpacity(0.5),
-                                        fontSize: 13,
+                                    style: const TextStyle(
+                                        color: Color(0xFF64748B), // Slate 500
+                                        fontSize: 14,
                                         fontWeight: FontWeight.w500),
                                     textAlign: TextAlign.center,
                                   ),
                                 ],
-                                SizedBox(height: keyboardOpen ? 14 : 28),
+                                SizedBox(height: keyboardOpen ? 16 : 28),
+                                // Child screen contents
                                 widget.child,
-                                SizedBox(height: keyboardOpen ? 16 : 24),
+                                const SizedBox(height: 24),
                               ],
                             ),
                           ),
@@ -373,6 +363,7 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                 ),
               ),
             ),
+            // Toast Notification Overlay
             if (_showToast)
               Positioned(
                 top: 50,
@@ -386,13 +377,11 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                       padding: const EdgeInsets.symmetric(
                           vertical: 14, horizontal: 20),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [const Color(0xFF10B981), const Color(0xFF059669)],
-                        ),
+                        color: const Color(0xFF0F172A), // Slate 900
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withOpacity(0.12),
                               blurRadius: 16,
                               offset: const Offset(0, 6)),
                         ],
@@ -402,7 +391,7 @@ class _WaterBuddyAuthLayoutState extends ConsumerState<WaterBuddyAuthLayout>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.check_circle_rounded,
-                              color: Colors.white, size: 20),
+                              color: Color(0xFF10B981), size: 20),
                           const SizedBox(width: 10),
                           Text(_toastMessage,
                               style: const TextStyle(

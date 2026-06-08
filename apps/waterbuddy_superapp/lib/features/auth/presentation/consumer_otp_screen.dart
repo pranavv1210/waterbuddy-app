@@ -17,7 +17,8 @@ class ConsumerOtpScreen extends ConsumerStatefulWidget {
 
 class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
     with SingleTickerProviderStateMixin {
-  final _otp = TextEditingController(text: '123456');
+  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   late final AnimationController _animController;
   late final Animation<double> _fadeAnimation;
@@ -34,6 +35,15 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
     _fadeAnimation =
         CurvedAnimation(parent: _animController, curve: Curves.easeInOut);
     _startTimer();
+
+    // Populate mock OTP 123456 by default for easier development
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final mock = '123456';
+      for (int i = 0; i < mock.length; i++) {
+        _controllers[i].text = mock[i];
+      }
+      _focusNodes[5].requestFocus();
+    });
   }
 
   void _startTimer() {
@@ -68,9 +78,61 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
   @override
   void dispose() {
     _timer?.cancel();
-    _otp.dispose();
+    for (var c in _controllers) {
+      c.dispose();
+    }
+    for (var f in _focusNodes) {
+      f.dispose();
+    }
     _animController.dispose();
     super.dispose();
+  }
+
+  String get _otpCode => _controllers.map((c) => c.text).join();
+
+  Future<void> _submitOtp(String phoneNumber, String fullName, String email) async {
+    final code = _otpCode;
+    if (code.length < 6) return;
+
+    final ok = await ref
+        .read(authControllerProvider.notifier)
+        .verifyOtp(
+          code,
+          role: AppRole.consumer,
+          fullName: fullName,
+          email: email,
+          phoneNumber: phoneNumber,
+        );
+    if (!mounted) return;
+    if (ok) {
+      if (phoneNumber == '9876543210') {
+        unawaited(ref
+            .read(authServiceProvider)
+            .seedTemporaryRoleData(role: AppRole.consumer)
+            .catchError((_) {}));
+      }
+      context.go(RouteNames.consumerHome);
+    }
+  }
+
+  void _onOtpBoxChanged(int index, String value) {
+    if (value.isNotEmpty) {
+      if (index < 5) {
+        _focusNodes[index + 1].requestFocus();
+      } else {
+        _focusNodes[index].unfocus();
+        final extra =
+            GoRouterState.of(context).extra as Map<String, dynamic>? ?? const {};
+        final phoneNumber = (extra['phone'] as String?) ?? '';
+        final fullName = (extra['fullName'] as String?) ?? '';
+        final email = (extra['email'] as String?) ?? '';
+        _submitOtp(phoneNumber, fullName, email);
+      }
+    } else {
+      if (index > 0) {
+        _focusNodes[index - 1].requestFocus();
+      }
+    }
   }
 
   @override
@@ -98,13 +160,8 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
         subtitle: 'Enter the 6-digit code sent to $phoneNumber',
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-            ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -112,100 +169,113 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
                   children: [
                     IconButton(
                       icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white, size: 18),
+                          color: Color(0xFF0F172A), size: 18),
                       onPressed: () => context.canPop()
                           ? context.pop()
                           : context.go(RouteNames.authConsumer),
                     ),
                     const Text('OTP Verification',
                         style: TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF0F172A),
                             fontSize: 18,
                             fontWeight: FontWeight.bold)),
                   ],
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(RouteNames.authConsumer);
+                    }
+                  },
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.edit_rounded, size: 14, color: Color(0xFF007AFF)),
+                      SizedBox(width: 4),
+                      Text(
+                        'Change phone number',
+                        style: TextStyle(
+                          color: Color(0xFF007AFF),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0EA5E9).withValues(alpha: 0.1),
+                    color: const Color(0xFFEEF7FF),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: const Color(0xFF0EA5E9).withValues(alpha: 0.3)),
+                    border: Border.all(color: const Color(0xFFDCEFFF)),
                   ),
                   child: const Text(
                     'Development OTP: 123456',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFF007AFF),
                         fontSize: 13,
                         fontWeight: FontWeight.w700),
                     textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _otp,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      letterSpacing: 8,
-                      fontWeight: FontWeight.w600),
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    hintText: '------',
-                    counterText: '',
-                    hintStyle: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        letterSpacing: 8),
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.04),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.15)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.15)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFF38BDF8)),
-                    ),
-                  ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(6, (index) {
+                    return SizedBox(
+                      width: 40,
+                      height: 52,
+                      child: TextField(
+                        controller: _controllers[index],
+                        focusNode: _focusNodes[index],
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        maxLength: 1,
+                        style: const TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        decoration: InputDecoration(
+                          counterText: '',
+                          filled: true,
+                          fillColor: const Color(0xFFF1F5F9), // Slate 100
+                          contentPadding: EdgeInsets.zero,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFF007AFF), width: 2),
+                          ),
+                        ),
+                        onChanged: (val) => _onOtpBoxChanged(index, val),
+                      ),
+                    );
+                  }),
                 ),
                 const SizedBox(height: 24),
                 FilledButton(
                   onPressed: authState.isLoading
                       ? null
-                      : () async {
-                          final ok = await ref
-                              .read(authControllerProvider.notifier)
-                              .verifyOtp(
-                                _otp.text.trim(),
-                                role: AppRole.consumer,
-                                fullName: fullName,
-                                email: email,
-                                phoneNumber: phoneNumber,
-                              );
-                          if (ok && context.mounted) {
-                            if (phoneNumber == '9876543210') {
-                              unawaited(ref
-                                  .read(authServiceProvider)
-                                  .seedTemporaryRoleData(role: AppRole.consumer)
-                                  .catchError((_) {}));
-                            }
-                            context.go(RouteNames.consumerHome);
-                          }
-                        },
+                      : () => _submitOtp(phoneNumber, fullName, email),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: const Color(0xFF0EA5E9),
+                    backgroundColor: const Color(0xFF007AFF),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
                   ),
                   child: authState.isLoading
                       ? const SizedBox(
@@ -221,10 +291,10 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       'Didn\'t receive code? ',
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: Color(0xFF64748B),
                           fontSize: 14),
                     ),
                     TextButton(
@@ -232,7 +302,7 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
                           ? _resendOtp
                           : null,
                       style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF38BDF8),
+                        foregroundColor: const Color(0xFF007AFF),
                         padding: EdgeInsets.zero,
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -244,8 +314,8 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: _countdown > 0
-                              ? Colors.white.withValues(alpha: 0.4)
-                              : const Color(0xFF38BDF8),
+                              ? const Color(0xFF94A3B8) // Slate 400
+                              : const Color(0xFF007AFF),
                         ),
                       ),
                     ),

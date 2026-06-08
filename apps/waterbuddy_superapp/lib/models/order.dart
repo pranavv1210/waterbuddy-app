@@ -19,6 +19,7 @@ class Order {
     this.startedAt,
     this.deliveredAt,
     this.tracking,
+    this.deliveryPin,
     this.createdAt,
   });
 
@@ -44,6 +45,7 @@ class Order {
       tracking: data['tracking'] != null
           ? TrackingData.fromMap(data['tracking'] as Map<String, dynamic>)
           : null,
+      deliveryPin: data['deliveryPin'] as String?,
       createdAt: data['createdAt'] as Timestamp?,
     );
   }
@@ -65,6 +67,7 @@ class Order {
   final Timestamp? startedAt;
   final Timestamp? deliveredAt;
   final TrackingData? tracking;
+  final String? deliveryPin;
   final Timestamp? createdAt;
 
   String? get deliveryAddress => location['address'] as String?;

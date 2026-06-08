@@ -6,6 +6,10 @@
         android:label="WaterBuddy"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Google Maps API Key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBDH8TLcO_vfDQ2wl_72bj09UT06PDPsbo" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

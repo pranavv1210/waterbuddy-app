@@ -34,9 +34,16 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+          border: Border.all(color: const Color(0xFFE2E8F0)), // Slate 200
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -45,13 +52,13 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white, size: 18),
+                      color: Color(0xFF0F172A), size: 18),
                   onPressed: () => context.pop(),
                 ),
                 const Text(
                   'Welcome Back',
                   style: TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFF0F172A),
                       fontSize: 18,
                       fontWeight: FontWeight.bold),
                 ),
@@ -71,13 +78,13 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
                 child: const Text(
                   'Forgot password?',
                   style: TextStyle(
-                    color: Color(0xFF67E8F9),
-                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             FilledButton(
               onPressed: authState.isLoading
                   ? null
@@ -99,9 +106,11 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
                     },
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: const Color(0xFF2563EB),
+                backgroundColor: const Color(0xFF10B981),
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
               ),
               child: authState.isLoading
                   ? const SizedBox(
@@ -132,27 +141,27 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.white),
+        style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w600),
         validator: requiredField
             ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null
             : null,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-          prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.5)),
+          labelStyle: const TextStyle(color: Color(0xFF64748B)),
+          prefixIcon: Icon(icon, color: const Color(0xFF64748B)),
           filled: true,
-          fillColor: Colors.white.withValues(alpha: 0.04),
+          fillColor: const Color(0xFFF1F5F9), // Slate 100
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF3B82F6)),
+            borderSide: const BorderSide(color: Color(0xFF10B981), width: 2),
           ),
         ),
       ),

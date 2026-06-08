@@ -35,58 +35,20 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
 
     return WaterBuddyAuthLayout(
       activeRole: AppRole.consumer,
-      title: 'Consumer Login',
-      subtitle: 'Enter your mobile number to login',
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.12)),
-        ),
+      title: 'Water Delivered To Your Doorstep',
+      subtitle: '',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white, size: 18),
-                  onPressed: () => context.pop(),
-                ),
-                const Text(
-                  'Welcome Back',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             _buildTextField(
                 controller: _phone,
-                label: 'Mobile Number',
+                label: 'Phone Number',
                 icon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: authState.isLoading
-                    ? null
-                    : () => context.push(
-                          '${RouteNames.passwordReset}?role=consumer',
-                        ),
-                child: const Text(
-                  'Forgot password?',
-                  style: TextStyle(
-                    color: Color(0xFF67E8F9),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             FilledButton(
               onPressed: authState.isLoading
                   ? null
@@ -98,7 +60,8 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
                             _phone.text.trim(),
                             role: AppRole.consumer,
                           );
-                      if (ok && mounted) {
+                      if (!mounted) return;
+                      if (ok) {
                         context.push(
                           RouteNames.authConsumerOtp,
                           extra: {
@@ -109,9 +72,11 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
                     },
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: const Color(0xFF0EA5E9),
+                backgroundColor: const Color(0xFF007AFF),
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
               ),
               child: authState.isLoading
                   ? const SizedBox(
@@ -119,24 +84,24 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
                       width: 20,
                       child: CircularProgressIndicator(
                           color: Colors.white, strokeWidth: 2))
-                  : const Text('Log In',
+                  : const Text('Continue',
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
+                const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text('OR',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.4), fontSize: 11)),
+                          color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.bold)),
                 ),
-                Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
+                const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             OutlinedButton.icon(
               onPressed: authState.isLoading
                   ? null
@@ -158,15 +123,40 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
                     },
               icon: Image.network(
                   'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
-                  height: 18),
+                  height: 18,
+                  errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata_rounded, color: Colors.blue),
+              ),
               label: const Text('Continue with Google',
-                  style: TextStyle(color: Colors.white, fontSize: 14)),
+                  style: TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w700)),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                side: BorderSide(color: Colors.white.withOpacity(0.15)),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Don't have an account? ",
+                  style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                ),
+                TextButton(
+                  onPressed: () => context.push(RouteNames.authConsumerSignup),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF007AFF),
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    'Sign Up',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
             ),
             if (authState.errorMessage != null) ...[
               const SizedBox(height: 16),
@@ -189,24 +179,24 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w600),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.5)),
+        labelStyle: const TextStyle(color: Color(0xFF64748B)),
+        prefixIcon: Icon(icon, color: const Color(0xFF64748B)),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.04),
+        fillColor: const Color(0xFFF1F5F9), // Slate 100
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF38BDF8)),
+          borderSide: const BorderSide(color: Color(0xFF007AFF), width: 2),
         ),
       ),
     );

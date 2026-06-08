@@ -38,31 +38,13 @@ class _ConsumerSignupScreenState extends ConsumerState<ConsumerSignupScreen> {
 
     return WaterBuddyAuthLayout(
       activeRole: AppRole.consumer,
-      title: 'Consumer Sign Up',
-      subtitle: 'Create your consumer profile',
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.12)),
-        ),
+      title: 'Create Account',
+      subtitle: 'Enter details to get water delivered to your doorstep',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
-                  onPressed: () => context.pop(),
-                ),
-                const Text(
-                  'Create Account',
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
             _buildTextField(controller: _name, label: 'Full Name', icon: Icons.person_outline),
             const SizedBox(height: 14),
             _buildTextField(controller: _email, label: 'Email ID', icon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
@@ -78,7 +60,8 @@ class _ConsumerSignupScreenState extends ConsumerState<ConsumerSignupScreen> {
                             _phone.text.trim(),
                             role: AppRole.consumer,
                           );
-                      if (ok && mounted) {
+                      if (!mounted) return;
+                      if (ok) {
                         context.push(
                           RouteNames.authConsumerOtp,
                           extra: {
@@ -91,36 +74,42 @@ class _ConsumerSignupScreenState extends ConsumerState<ConsumerSignupScreen> {
                     },
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: const Color(0xFF0EA5E9),
+                backgroundColor: const Color(0xFF007AFF),
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
               ),
               child: authState.isLoading
                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : const Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
+                const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('OR', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11)),
+                  child: Text('OR', style: TextStyle(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.bold)),
                 ),
-                Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
+                const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             OutlinedButton.icon(
               onPressed: authState.isLoading
                   ? null
                   : () async {
                       await ref.read(authControllerProvider.notifier).signInWithGoogle(role: AppRole.consumer);
                     },
-              icon: Image.network('https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg', height: 18),
-              label: const Text('Continue with Google', style: TextStyle(color: Colors.white, fontSize: 14)),
+              icon: Image.network(
+                'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
+                height: 18,
+                errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata_rounded, color: Colors.blue),
+              ),
+              label: const Text('Continue with Google', style: TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w700)),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                side: BorderSide(color: Colors.white.withOpacity(0.15)),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
@@ -143,24 +132,24 @@ class _ConsumerSignupScreenState extends ConsumerState<ConsumerSignupScreen> {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w600),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.5)),
+        labelStyle: const TextStyle(color: Color(0xFF64748B)),
+        prefixIcon: Icon(icon, color: const Color(0xFF64748B)),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.04),
+        fillColor: const Color(0xFFF1F5F9), // Slate 100
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF38BDF8)),
+          borderSide: const BorderSide(color: Color(0xFF007AFF), width: 2),
         ),
       ),
     );

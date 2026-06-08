@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 
 import '../../../models/order.dart';
 import '../../../providers/app_providers.dart';
