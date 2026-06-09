@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +17,9 @@ import '../../../models/order.dart' as app_order;
 import '../../../models/system_settings.dart';
 import '../../../models/tank_category.dart';
 import '../../tracking/providers/searching_providers.dart';
+import '../../../widgets/waterbuddy_toast.dart';
+import '../../../widgets/waterbuddy_bottom_sheet.dart';
+import '../../../widgets/loading_feedback_button.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -87,7 +91,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
   LatLng? _selectedLocation;
   String? _currentAddress;
   bool _isLoadingLocation = false;
-  bool _isBooking = false;
+  LoadingButtonState _bookingButtonState = LoadingButtonState.idle;
   BitmapDescriptor? _tankerIcon;
 
   static const LatLng _defaultLocation = LatLng(12.9716, 77.5946); // Bangalore
@@ -116,7 +120,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
 
   void _moveCamera(LatLng latLng) {
     _googleMapController?.animateCamera(
-      CameraUpdate.newLatLngZoom(latLng, 15),
+      CameraUpdate.newLatLngZoom(latLng, 15.5),
     );
   }
 
@@ -125,7 +129,9 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        setState(() => _isLoadingLocation = false);
+        if (mounted) {
+          WaterBuddyToast.show(context, 'Location services are disabled.', isError: true);
+        }
         return;
       }
 
@@ -133,13 +139,17 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          setState(() => _isLoadingLocation = false);
+          if (mounted) {
+            WaterBuddyToast.show(context, 'Location permission denied.', isError: true);
+          }
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        setState(() => _isLoadingLocation = false);
+        if (mounted) {
+          WaterBuddyToast.show(context, 'Location permissions permanently denied.', isError: true);
+        }
         return;
       }
 
@@ -153,6 +163,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         });
         _moveCamera(latLng);
         await _getAddressFromLatLng(latLng);
+        WaterBuddyToast.show(context, 'Location updated successfully!');
       }
     } catch (e) {
       debugPrint('Error getting location: $e');
@@ -231,12 +242,9 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     
     // UI Style details
     const scaffoldBg = Color(0xFFF8FAFC); // Off-White
-    const cardBg = Colors.white;
     const inkSlate = Color(0xFF0F172A);
     const textSlateMuted = Color(0xFF64748B);
-    const primaryBlue = Color(0xFF0099FF);
-    const systemBlue = Color(0xFF007AFF);
-    const lightBlueBg = Color(0xFFEEF7FF);
+    const primaryBlue = Color(0xFF0095F6);
 
     return Scaffold(
       backgroundColor: scaffoldBg,
@@ -264,9 +272,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded, color: inkSlate),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('No new notifications')),
-              );
+              WaterBuddyToast.show(context, 'No new notifications');
             },
           ),
           GestureDetector(
@@ -295,248 +301,329 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // 1. GREETING
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _getGreeting(),
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: textSlateMuted,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              _UserGreeting(user: user),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // 2. DELIVERY ADDRESS CARD
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 20),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: cardBg,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.02),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Address Row
-                              Row(
-                                children: [
-                                  const Icon(Icons.location_on_rounded, color: Colors.redAccent, size: 22),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'DELIVERY ADDRESS',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: textSlateMuted,
-                                            letterSpacing: 0.5,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          _currentAddress ?? 'Determining your address...',
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            color: inkSlate,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Map Preview Widget
-                              Container(
-                                height: 160,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(18),
-                                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(17),
-                                  child: GoogleMap(
-                                    initialCameraPosition: CameraPosition(
-                                      target: _selectedLocation ?? _currentLocation ?? _defaultLocation,
-                                      zoom: 15,
-                                    ),
-                                    onMapCreated: (controller) {
-                                      _googleMapController = controller;
-                                    },
-                                    myLocationEnabled: true,
-                                    myLocationButtonEnabled: false,
-                                    zoomControlsEnabled: false,
-                                    mapToolbarEnabled: false,
-                                    compassEnabled: false,
-                                    scrollGesturesEnabled: true,
-                                    zoomGesturesEnabled: true,
-                                    tiltGesturesEnabled: false,
-                                    rotateGesturesEnabled: false,
-                                    onCameraMove: (position) {
-                                      _selectedLocation = position.target;
-                                    },
-                                    onCameraIdle: () async {
-                                      if (_selectedLocation != null) {
-                                        await _getAddressFromLatLng(_selectedLocation!);
-                                      }
-                                    },
-                                    markers: _buildGoogleMarkers(onlineSellers),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-
-                              // Quick Action Buttons
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: _determinePosition,
-                                      icon: _isLoadingLocation
-                                          ? const SizedBox(
-                                              width: 14,
-                                              height: 14,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: systemBlue,
-                                              ),
-                                            )
-                                          : const Icon(Icons.my_location_rounded, size: 16),
-                                      label: const Text('Current Location', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: systemBlue,
-                                        side: const BorderSide(color: lightBlueBg),
-                                        backgroundColor: lightBlueBg,
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: () async {
-                                        final result = await context.push(RouteNames.locationSelection,
-                                            extra: _currentAddress);
-                                        if (result != null && result is Map<String, dynamic> && mounted) {
-                                          if (result.containsKey('location')) {
-                                            final loc = result['location'] as Map<String, dynamic>;
-                                            final lat = loc['latitude'] as double;
-                                            final lng = loc['longitude'] as double;
-                                            final latLng = LatLng(lat, lng);
-                                            setState(() {
-                                              _selectedLocation = latLng;
-                                              _currentAddress = result['address'] as String?;
-                                            });
-                                            _moveCamera(latLng);
-                                          }
-                                        }
-                                      },
-                                      icon: const Icon(Icons.edit_location_alt_outlined, size: 16),
-                                      label: const Text('Change Location', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: inkSlate,
-                                        side: const BorderSide(color: Color(0xFFE2E8F0)),
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // 3. AVAILABLE TANKERS HEADER
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          child: Text(
-                            'Available Tankers',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: inkSlate,
-                              letterSpacing: -0.5,
+                // 1. GREETING HEADER (Compact)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _getGreeting(),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: textSlateMuted,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // 4. AVAILABLE TANKERS LIST
-                        if (widget.tankCategories.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: widget.categoriesLoading
-                                ? const Center(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(24.0),
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  )
-                                : _NoTankCategoriesCard(
-                                    message: widget.systemSettings.serviceAvailable
-                                        ? 'No active water tank categories available currently.'
-                                        : 'Bookings are temporarily disabled by operations.',
-                                  ),
-                          )
-                        else
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            itemCount: widget.tankCategories.length,
-                            itemBuilder: (context, index) {
-                              final category = widget.tankCategories[index];
-                              return _buildTankListItem(category, primaryBlue);
-                            },
+                          const SizedBox(height: 1),
+                          _UserGreeting(user: user),
+                        ],
+                      ),
+                      if (onlineSellers.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.green[200]!, width: 1),
                           ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${onlineSellers.length} Tankers Online',
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // 2. LARGE MAP SECTION WITH OVERLAY GLASS CARD (50-55% of screen)
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
                       ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(23),
+                      child: Stack(
+                        children: [
+                          // The map dominates
+                          GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target: _selectedLocation ?? _currentLocation ?? _defaultLocation,
+                              zoom: 15.5,
+                            ),
+                            onMapCreated: (controller) {
+                              _googleMapController = controller;
+                            },
+                            myLocationEnabled: true,
+                            myLocationButtonEnabled: false,
+                            zoomControlsEnabled: false,
+                            mapToolbarEnabled: false,
+                            compassEnabled: false,
+                            scrollGesturesEnabled: true,
+                            zoomGesturesEnabled: true,
+                            tiltGesturesEnabled: false,
+                            rotateGesturesEnabled: false,
+                            onCameraMove: (position) {
+                              _selectedLocation = position.target;
+                            },
+                            onCameraIdle: () async {
+                              if (_selectedLocation != null) {
+                                await _getAddressFromLatLng(_selectedLocation!);
+                              }
+                            },
+                            markers: _buildGoogleMarkers(onlineSellers),
+                          ),
+
+                          // Floating Glass Address Card
+                          Positioned(
+                            top: 14,
+                            left: 14,
+                            right: 14,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.82),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.03),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red[50],
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.location_on_rounded, color: Colors.redAccent, size: 20),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'DELIVERY ADDRESS',
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.w900,
+                                                color: textSlateMuted,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              _currentAddress ?? 'Pinpoint delivery location...',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                color: inkSlate,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Floating Change Location chip
+                          Positioned(
+                            bottom: 12,
+                            left: 12,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(30),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.85),
+                                    borderRadius: BorderRadius.circular(30),
+                                    border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.2),
+                                  ),
+                                  child: TextButton.icon(
+                                    onPressed: () async {
+                                      final result = await context.push(RouteNames.locationSelection,
+                                          extra: _currentAddress);
+                                      if (result != null && result is Map<String, dynamic> && mounted) {
+                                        if (result.containsKey('location')) {
+                                          final loc = result['location'] as Map<String, dynamic>;
+                                          final lat = loc['latitude'] as double;
+                                          final lng = loc['longitude'] as double;
+                                          final latLng = LatLng(lat, lng);
+                                          setState(() {
+                                            _selectedLocation = latLng;
+                                            _currentAddress = result['address'] as String?;
+                                          });
+                                          _moveCamera(latLng);
+                                          WaterBuddyToast.show(context, 'Address updated!');
+                                        }
+                                      }
+                                    },
+                                    icon: const Icon(Icons.edit_location_alt_rounded, size: 14, color: primaryBlue),
+                                    label: const Text(
+                                      'Change Address',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w900,
+                                        color: inkSlate,
+                                      ),
+                                    ),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                      minimumSize: Size.zero,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Floating Current Location button
+                          Positioned(
+                            bottom: 12,
+                            right: 12,
+                            child: ClipOval(
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                                child: Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.85),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.2),
+                                  ),
+                                  child: IconButton(
+                                    padding: EdgeInsets.zero,
+                                    icon: _isLoadingLocation
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(strokeWidth: 2, color: primaryBlue),
+                                          )
+                                        : const Icon(Icons.my_location_rounded, size: 18, color: primaryBlue),
+                                    onPressed: _determinePosition,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
 
-                // 5. BOOK NOW BUTTON CONTAINER (PADDED BOTTOM BAR)
+                // 3. AVAILABLE TANKERS Horizontal Flow
+                const SizedBox(height: 16),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'Select Water Tanker',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: inkSlate,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                if (widget.tankCategories.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: widget.categoriesLoading
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(24.0),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : _NoTankCategoriesCard(
+                            message: widget.systemSettings.serviceAvailable
+                                ? 'No active water tank categories available currently.'
+                                : 'Bookings are temporarily disabled by operations.',
+                          ),
+                  )
+                else
+                  SizedBox(
+                    height: 124,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: widget.tankCategories.length,
+                      itemBuilder: (context, index) {
+                        final category = widget.tankCategories[index];
+                        return _buildHorizontalTankCard(category, primaryBlue);
+                      },
+                    ),
+                  ),
+
+                const SizedBox(height: 16),
+
+                // 4. BOOK NOW BOTTOM BAR WITH ANIMA-CTA
                 Container(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.white,
-                    border: Border(top: BorderSide(color: const Color(0xFFE2E8F0), width: 1)),
+                    border: Border(top: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
                   ),
-                  child: _buildBookButton(primaryBlue),
+                  child: LoadingFeedbackButton(
+                    onPressed: _bookingButtonState == LoadingButtonState.idle ? _submitOrder : null,
+                    label: 'Book Water Now',
+                    loadingLabel: 'Contacting Tankers...',
+                    successLabel: 'Order Booked successfully!',
+                    buttonState: _bookingButtonState,
+                    backgroundColor: primaryBlue,
+                  ),
                 ),
               ],
             ),
@@ -546,7 +633,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
     );
   }
 
-  Widget _buildTankListItem(TankCategory category, Color primary) {
+  Widget _buildHorizontalTankCard(TankCategory category, Color primary) {
     final isSelected = widget.selectedTankId == category.id;
     const inkSlate = Color(0xFF0F172A);
     const textSlateMuted = Color(0xFF64748B);
@@ -557,90 +644,134 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
       onTap: () => widget.onTankSelected(category.id),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        width: 175,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isSelected ? selectedBlueBg : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isSelected ? selectedBlueBorder : const Color(0xFFE2E8F0),
-            width: 1.8,
+            width: isSelected ? 2.0 : 1.2,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: selectedBlueBorder.withOpacity(0.12),
-                    blurRadius: 10,
+                    color: selectedBlueBorder.withOpacity(0.08),
+                    blurRadius: 8,
                     offset: const Offset(0, 4),
                   )
                 ]
               : [],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isSelected ? selectedBlueBorder : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(
-                _tankIcon(category.iconKey),
-                color: isSelected ? Colors.white : selectedBlueBorder,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    category.displayName,
-                    style: const TextStyle(
-                      color: inkSlate,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${_formatLitres(category.litres)} Litres',
-                    style: const TextStyle(
-                      color: textSlateMuted,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? selectedBlueBorder : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    _tankIcon(category.iconKey),
+                    color: isSelected ? Colors.white : selectedBlueBorder,
+                    size: 18,
+                  ),
+                ),
                 Text(
                   '₹${category.effectivePrice}',
                   style: const TextStyle(
                     color: inkSlate,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                if (isSelected)
-                  const Text(
-                    'Selected',
-                    style: TextStyle(
-                      color: selectedBlueBorder,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                    ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  category.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: inkSlate,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
                   ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  '${_formatLitres(category.litres)} Litres',
+                  style: const TextStyle(
+                    color: textSlateMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _submitOrder() async {
+    setState(() => _bookingButtonState = LoadingButtonState.loading);
+    try {
+      final orderController = ref.read(orderCreationControllerProvider.notifier);
+      if (!widget.systemSettings.serviceAvailable) {
+        WaterBuddyToast.show(context, 'Water booking is currently disabled by operations.', isError: true);
+        setState(() => _bookingButtonState = LoadingButtonState.idle);
+        return;
+      }
+      if (widget.tankCategories.isEmpty) {
+        WaterBuddyToast.show(context, 'No active tank categories available.', isError: true);
+        setState(() => _bookingButtonState = LoadingButtonState.idle);
+        return;
+      }
+      final selectedOption = widget.tankCategories.firstWhere(
+        (t) => t.id == widget.selectedTankId,
+        orElse: () => widget.tankCategories.first,
+      );
+
+      final orderId = await orderController.createOrder(
+        tankCategory: selectedOption,
+        location: {
+          'latitude': _selectedLocation?.latitude ?? _currentLocation?.latitude ?? _defaultLocation.latitude,
+          'longitude': _selectedLocation?.longitude ?? _currentLocation?.longitude ?? _defaultLocation.longitude,
+          'address': _currentAddress ?? 'Selected Location',
+        },
+        paymentType: widget.systemSettings.codEnabled ? 'COD' : 'ONLINE',
+      );
+
+      if (orderId != null && mounted) {
+        ref.read(searchingControllerProvider.notifier).startWatchingOrder(orderId);
+        setState(() => _bookingButtonState = LoadingButtonState.success);
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (mounted) {
+          context.go('${RouteNames.searching}?orderId=$orderId');
+        }
+      } else {
+        setState(() => _bookingButtonState = LoadingButtonState.idle);
+        if (mounted) {
+          WaterBuddyToast.show(context, 'Unable to place booking.', isError: true);
+        }
+      }
+    } catch (e) {
+      setState(() => _bookingButtonState = LoadingButtonState.idle);
+      if (mounted) {
+        WaterBuddyToast.show(context, 'An error occurred: $e', isError: true);
+      }
+    }
   }
 
   IconData _tankIcon(String iconKey) {
@@ -667,88 +798,9 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
         );
   }
 
-  Widget _buildBookButton(Color primary) {
-    return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: FilledButton(
-        onPressed: _isBooking
-            ? null
-            : () async {
-                setState(() => _isBooking = true);
-                try {
-                  final orderController =
-                      ref.read(orderCreationControllerProvider.notifier);
-                  if (!widget.systemSettings.serviceAvailable) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Water booking is currently disabled by operations.'),
-                      ),
-                    );
-                    return;
-                  }
-                  if (widget.tankCategories.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('No active tank categories available.'),
-                      ),
-                    );
-                    return;
-                  }
-                  final selectedOption = widget.tankCategories.firstWhere(
-                    (t) => t.id == widget.selectedTankId,
-                    orElse: () => widget.tankCategories.first,
-                  );
-
-                  final orderId = await orderController.createOrder(
-                    tankCategory: selectedOption,
-                    location: {
-                      'latitude': _selectedLocation?.latitude ?? _currentLocation?.latitude ?? _defaultLocation.latitude,
-                      'longitude': _selectedLocation?.longitude ?? _currentLocation?.longitude ?? _defaultLocation.longitude,
-                      'address': _currentAddress ?? 'Selected Location',
-                    },
-                    paymentType:
-                        widget.systemSettings.codEnabled ? 'COD' : 'ONLINE',
-                  );
-
-                  if (orderId != null && mounted) {
-                    ref
-                        .read(searchingControllerProvider.notifier)
-                        .startWatchingOrder(orderId);
-                    context.go('${RouteNames.searching}?orderId=$orderId');
-                  }
-                } finally {
-                  if (mounted) setState(() => _isBooking = false);
-                }
-              },
-        style: FilledButton.styleFrom(
-          backgroundColor: primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _isBooking ? 'Contacting Tankers...' : 'Book Water Now',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward_rounded, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildDrawer(User? user) {
     const inkSlate = Color(0xFF0F172A);
-    const primaryBlue = Color(0xFF0099FF);
+    const primaryBlue = Color(0xFF0095F6);
     return Drawer(
       backgroundColor: Colors.white,
       child: ListView(
@@ -816,9 +868,7 @@ class _HomeScreenBodyState extends ConsumerState<_HomeScreenBody> {
               final support = settings?.supportNumber.isNotEmpty == true
                   ? settings!.supportNumber
                   : settings?.supportEmail ?? 'waterbuddyapp.wb@gmail.com';
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Support Contact: $support')),
-              );
+              WaterBuddyToast.show(context, 'Support Contact: $support');
             },
           ),
           ListTile(

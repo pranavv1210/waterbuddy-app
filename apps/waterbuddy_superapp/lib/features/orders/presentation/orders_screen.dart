@@ -13,7 +13,7 @@ class OrdersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(orderHistoryProvider);
-    const appBg = Color(0xFFFFFBF3);
+    const appBg = Color(0xFFF8FAFC);
 
     return Scaffold(
       backgroundColor: appBg,

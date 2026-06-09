@@ -10,6 +10,8 @@ import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/document_upload_field.dart';
 import '../../../widgets/waterbuddy_auth_layout.dart';
+import '../../../widgets/loading_feedback_button.dart';
+import '../../../widgets/waterbuddy_toast.dart';
 
 class SellerSignupScreen extends ConsumerStatefulWidget {
   const SellerSignupScreen({super.key});
@@ -38,10 +40,9 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
   final _rcUrl = TextEditingController();
   final _photoUrl = TextEditingController();
 
-  bool _loading = false;
+  LoadingButtonState _btnState = LoadingButtonState.idle;
   bool _drivesSelf = true;
   bool _assignDrivers = false;
-  String? _error;
 
   @override
   void dispose() {
@@ -188,31 +189,14 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
                   keyboardType: TextInputType.emailAddress),
               _field(_password, 'Password', Icons.lock_outline, obscure: true),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _loading ? null : _submit,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFF0095F6),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                child: _loading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : const Text('Register Tanker',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
+              LoadingFeedbackButton(
+                onPressed: _submit,
+                label: 'Register Tanker',
+                loadingLabel: 'Registering...',
+                successLabel: 'Registered Successfully!',
+                buttonState: _btnState,
+                backgroundColor: const Color(0xFF0095F6),
               ),
-              if (_error != null) ...[
-                const SizedBox(height: 16),
-                Text(_error!,
-                    style:
-                        const TextStyle(color: Colors.redAccent, fontSize: 13),
-                    textAlign: TextAlign.center),
-              ],
             ],
           ),
         ),
@@ -275,13 +259,12 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_drivesSelf && !_assignDrivers) {
-      setState(() => _error = 'Select how this tanker will be driven.');
+      WaterBuddyToast.show(context, 'Select how this tanker will be driven.', isError: true);
       return;
     }
 
     setState(() {
-      _loading = true;
-      _error = null;
+      _btnState = LoadingButtonState.loading;
     });
 
     try {
@@ -291,14 +274,21 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
           email: _email.text.trim(), password: _password.text.trim());
       unawaited(_syncSellerProfile(auth).catchError((_) {}));
 
+      setState(() => _btnState = LoadingButtonState.success);
+      await Future.delayed(const Duration(milliseconds: 600));
+
       if (!mounted) return;
       context.go(RouteNames.sellerWaiting);
     } on AuthFailure catch (e) {
-      setState(() => _error = e.message);
+      setState(() => _btnState = LoadingButtonState.idle);
+      if (mounted) {
+        WaterBuddyToast.show(context, e.message, isError: true);
+      }
     } catch (_) {
-      setState(() => _error = 'Unable to complete action.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
+      setState(() => _btnState = LoadingButtonState.idle);
+      if (mounted) {
+        WaterBuddyToast.show(context, 'Unable to complete action.', isError: true);
+      }
     }
   }
 

@@ -9,6 +9,9 @@ import '../../../models/tank_category.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/operations_ui.dart';
+import '../../../widgets/waterbuddy_toast.dart';
+import '../../../widgets/waterbuddy_bottom_sheet.dart';
+import '../../../widgets/loading_feedback_button.dart';
 
 String _approvalStatus(Map<String, dynamic> data) {
   final raw = (data['verificationStatus'] ??
@@ -433,10 +436,25 @@ class _AdminOverview extends ConsumerWidget {
               return createdAt is Timestamp &&
                   createdAt.toDate().isAfter(startOfDay);
             }).length;
+
+            final completedOrdersToday = docs.where((doc) {
+              final createdAt = doc.data()['createdAt'];
+              final status = (doc.data()['status'] ?? '').toString();
+              return createdAt is Timestamp &&
+                  createdAt.toDate().isAfter(startOfDay) &&
+                  status == 'DELIVERED';
+            }).toList();
+
+            final revenueToday = completedOrdersToday.fold<num>(0, (sum, doc) {
+              final amt = doc.data()['amount'] ?? doc.data()['price'] ?? 0;
+              return sum + (amt is num ? amt : 0);
+            });
+
             final activeDeliveries = docs.where((doc) {
               final status = (doc.data()['status'] ?? '').toString();
               return status != 'DELIVERED' && status != 'CANCELLED';
             }).length;
+
             final recentActive = docs
                 .where((doc) {
                   final status = (doc.data()['status'] ?? '').toString();
@@ -444,6 +462,25 @@ class _AdminOverview extends ConsumerWidget {
                 })
                 .take(5)
                 .toList();
+
+            // Build dynamic data for last 7 days chart
+            final last7Days = List.generate(7, (index) {
+              final date = DateTime.now().subtract(Duration(days: 6 - index));
+              final startOfDate = DateTime(date.year, date.month, date.day);
+              final endOfDate = startOfDate.add(const Duration(days: 1));
+              final count = docs.where((doc) {
+                final createdAt = doc.data()['createdAt'];
+                if (createdAt is Timestamp) {
+                  final dt = createdAt.toDate();
+                  return dt.isAfter(startOfDate) && dt.isBefore(endOfDate);
+                }
+                return false;
+              }).length;
+              
+              final weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+              final dayLabel = weekdayNames[date.weekday - 1];
+              return _BarData(label: dayLabel, value: count);
+            });
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,6 +498,16 @@ class _AdminOverview extends ConsumerWidget {
                             title: 'Total orders today',
                             value: '$ordersToday',
                             icon: Icons.receipt_long_rounded,
+                            color: const Color(0xFF0095F6),
+                          ),
+                        ),
+                        SizedBox(
+                          width: width,
+                          child: _PlainMetric(
+                            title: 'Daily Revenue',
+                            value: '₹${revenueToday.toInt()}',
+                            icon: Icons.payments_rounded,
+                            color: Colors.green,
                           ),
                         ),
                         SizedBox(
@@ -469,6 +516,7 @@ class _AdminOverview extends ConsumerWidget {
                             title: 'Active deliveries',
                             value: '$activeDeliveries',
                             icon: Icons.radar_rounded,
+                            color: Colors.orange,
                           ),
                         ),
                         SizedBox(
@@ -478,6 +526,7 @@ class _AdminOverview extends ConsumerWidget {
                             icon: Icons.local_shipping_rounded,
                             async: sellers,
                             countWhere: _isOnlineRecord,
+                            color: Colors.lightBlue,
                           ),
                         ),
                         SizedBox(
@@ -487,12 +536,16 @@ class _AdminOverview extends ConsumerWidget {
                             icon: Icons.badge_rounded,
                             async: drivers,
                             countWhere: _isOnlineRecord,
+                            color: Colors.purple,
                           ),
                         ),
                       ],
                     );
                   },
                 ),
+                const SizedBox(height: 24),
+                // Weekly Order Volume custom chart
+                _WeeklyOrderChart(data: last7Days),
                 const SizedBox(height: 24),
                 const _AdminHeader(
                   title: 'Live orders',
@@ -517,7 +570,12 @@ class _AdminOverview extends ConsumerWidget {
               ],
             );
           },
-          loading: () => const LinearProgressIndicator(minHeight: 2),
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+          ),
           error: (error, _) => Text(error.toString()),
         ),
         const SizedBox(height: 24),
@@ -580,19 +638,29 @@ class _PlainMetric extends StatelessWidget {
     required this.title,
     required this.value,
     required this.icon,
+    this.color,
   });
 
   final String title;
   final String value;
   final IconData icon;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = color ?? OpsColors.green;
     return OpsCard(
       child: Row(
         children: [
-          Icon(icon, color: OpsColors.green),
-          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: activeColor.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: activeColor, size: 20),
+          ),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -601,7 +669,7 @@ class _PlainMetric extends StatelessWidget {
                   value,
                   style: const TextStyle(
                     color: OpsColors.ink,
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -611,6 +679,7 @@ class _PlainMetric extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: OpsColors.muted,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -629,21 +698,31 @@ class _CollectionMetric extends StatelessWidget {
     required this.icon,
     required this.async,
     required this.countWhere,
+    this.color,
   });
 
   final String title;
   final IconData icon;
   final AsyncValue<QuerySnapshot<Map<String, dynamic>>> async;
   final bool Function(QueryDocumentSnapshot<Map<String, dynamic>>) countWhere;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     final count = async.value?.docs.where(countWhere).length;
+    final activeColor = color ?? OpsColors.green;
     return OpsCard(
       child: Row(
         children: [
-          Icon(icon, color: OpsColors.green),
-          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: activeColor.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: activeColor, size: 20),
+          ),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -652,7 +731,7 @@ class _CollectionMetric extends StatelessWidget {
                   count == null ? '-' : '$count',
                   style: const TextStyle(
                     color: OpsColors.ink,
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -662,11 +741,85 @@ class _CollectionMetric extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: OpsColors.muted,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BarData {
+  const _BarData({required this.label, required this.value});
+  final String label;
+  final int value;
+}
+
+class _WeeklyOrderChart extends StatelessWidget {
+  const _WeeklyOrderChart({required this.data});
+  final List<_BarData> data;
+
+  @override
+  Widget build(BuildContext context) {
+    final maxVal = data.fold<int>(1, (max, item) => item.value > max ? item.value : max);
+
+    return OpsCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Order Volume (Last 7 Days)',
+            style: TextStyle(
+              color: OpsColors.ink,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: data.map((item) {
+              final pct = maxVal > 0 ? item.value / maxVal : 0.0;
+              final barHeight = 8.0 + (pct * 92.0); // range from 8px to 100px
+
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    '${item.value}',
+                    style: const TextStyle(
+                      color: OpsColors.ink,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    width: 22,
+                    height: barHeight,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0095F6),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    item.label,
+                    style: const TextStyle(
+                      color: OpsColors.muted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -868,23 +1021,61 @@ class _TankCategoryAdminCard extends StatelessWidget {
     BuildContext context,
     TankCategory category,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showWaterBuddyBottomSheet<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete tank category?'),
-        content: Text(
-          '${category.displayName} will stop appearing for customers.',
+      child: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Delete Tank Category?',
+              style: TextStyle(
+                color: Color(0xFF0F172A),
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '${category.displayName} will stop appearing for customers. This action cannot be undone.',
+              style: const TextStyle(color: Color(0xFF64748B), fontSize: 14, height: 1.4),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF0F172A),
+                      side: const BorderSide(color: Color(0xFFE2E8F0)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
       ),
     );
     if (confirmed != true) return;
@@ -892,6 +1083,9 @@ class _TankCategoryAdminCard extends StatelessWidget {
         .collection('tank_categories')
         .doc(category.id)
         .delete();
+    if (context.mounted) {
+      WaterBuddyToast.show(context, 'Tank category deleted successfully!');
+    }
   }
 }
 
@@ -961,7 +1155,7 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
   late final TextEditingController _price;
   late bool _active;
   late String _iconKey;
-  bool _saving = false;
+  LoadingButtonState _saveButtonState = LoadingButtonState.idle;
 
   @override
   void initState() {
@@ -994,7 +1188,7 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _saving = true);
+    setState(() => _saveButtonState = LoadingButtonState.loading);
     try {
       final category = widget.category;
       final tankId = category?.id ?? _newId();
@@ -1026,17 +1220,16 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
         if (category == null) 'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tank category saved')),
-      );
-      Navigator.pop(context);
-    } catch (error) {
+      setState(() => _saveButtonState = LoadingButtonState.success);
+      await Future.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save tank category: $error')),
-      );
-    } finally {
-      if (mounted) setState(() => _saving = false);
+      Navigator.pop(context);
+      WaterBuddyToast.show(context, 'Tank category saved successfully!');
+    } catch (error) {
+      if (mounted) {
+        setState(() => _saveButtonState = LoadingButtonState.idle);
+        WaterBuddyToast.show(context, 'Failed to save tank category: $error', isError: true);
+      }
     }
   }
 
@@ -1128,15 +1321,13 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
                     onChanged: (value) => setState(() => _active = value),
                   ),
                   const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: _saving ? null : _save,
-                    child: _saving
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Save Category'),
+                  LoadingFeedbackButton(
+                    onPressed: _save,
+                    label: 'Save Category',
+                    loadingLabel: 'Saving Category...',
+                    successLabel: 'Category Created Successfully',
+                    buttonState: _saveButtonState,
+                    backgroundColor: const Color(0xFF0095F6),
                   ),
                 ],
               ),

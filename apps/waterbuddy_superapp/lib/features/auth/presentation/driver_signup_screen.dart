@@ -7,6 +7,9 @@ import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/document_upload_field.dart';
 import '../../../widgets/waterbuddy_auth_layout.dart';
+import '../../../widgets/loading_feedback_button.dart';
+import '../../../widgets/waterbuddy_toast.dart';
+import '../../../features/auth/auth_controller.dart';
 
 class DriverSignupScreen extends ConsumerStatefulWidget {
   const DriverSignupScreen({super.key});
@@ -55,6 +58,14 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      if (next.errorMessage != null && next.errorMessage!.isNotEmpty) {
+        WaterBuddyToast.show(context, next.errorMessage!, isError: true);
+      }
+    });
+
+    final btnState = authState.isLoading ? LoadingButtonState.loading : LoadingButtonState.idle;
 
     return WaterBuddyAuthLayout(
       activeRole: AppRole.driver,
@@ -133,53 +144,40 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
               _field(_mobile, 'Mobile Number', Icons.phone_outlined,
                   keyboardType: TextInputType.phone),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: authState.isLoading
-                    ? null
-                    : () async {
-                        if (!_formKey.currentState!.validate()) return;
-                        if (_mobile.text.trim().isEmpty) return;
+              LoadingFeedbackButton(
+                onPressed: () async {
+                  if (!_formKey.currentState!.validate()) return;
+                  if (_mobile.text.trim().isEmpty) return;
 
-                        final ok = await ref
-                            .read(authControllerProvider.notifier)
-                            .sendOtp(_mobile.text.trim(), role: AppRole.driver);
-                        if (!ok || !context.mounted) return;
+                  final ok = await ref
+                      .read(authControllerProvider.notifier)
+                      .sendOtp(_mobile.text.trim(), role: AppRole.driver);
+                  if (!ok || !context.mounted) return;
 
-                        context.push(
-                          RouteNames.authDriverOtp,
-                          extra: {
-                            'fullName': _fullName.text.trim(),
-                            'phoneNumber': _mobile.text.trim(),
-                            'email': _email.text.trim(),
-                            'licenseNumber': _licenseNumber.text.trim(),
-                            'aadhaarNumber': _aadhaar.text.trim(),
-                            'panNumber': _pan.text.trim(),
-                            'driverPhotoUrl': _driverPhoto.text.trim(),
-                            'licenseUploadUrl': _licenseUpload.text.trim(),
-                            'aadhaarUploadUrl': _aadhaarUpload.text.trim(),
-                            'panUploadUrl': _panUpload.text.trim(),
-                            'address': _address.text.trim(),
-                            'emergencyContact': _emergency.text.trim(),
-                            'isSignUp': true,
-                          },
-                        );
-                      },
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFF0095F6),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                child: authState.isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2),
-                      )
-                    : const Text('Continue to OTP',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
+                  context.push(
+                    RouteNames.authDriverOtp,
+                    extra: {
+                      'fullName': _fullName.text.trim(),
+                      'phoneNumber': _mobile.text.trim(),
+                      'email': _email.text.trim(),
+                      'licenseNumber': _licenseNumber.text.trim(),
+                      'aadhaarNumber': _aadhaar.text.trim(),
+                      'panNumber': _pan.text.trim(),
+                      'driverPhotoUrl': _driverPhoto.text.trim(),
+                      'licenseUploadUrl': _licenseUpload.text.trim(),
+                      'aadhaarUploadUrl': _aadhaarUpload.text.trim(),
+                      'panUploadUrl': _panUpload.text.trim(),
+                      'address': _address.text.trim(),
+                      'emergencyContact': _emergency.text.trim(),
+                      'isSignUp': true,
+                    },
+                  );
+                },
+                label: 'Continue to OTP',
+                loadingLabel: 'Sending OTP...',
+                successLabel: 'OTP Sent!',
+                buttonState: btnState,
+                backgroundColor: const Color(0xFF0095F6),
               ),
             ],
           ),

@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+
+import 'waterbuddy_bottom_sheet.dart';
+import 'waterbuddy_toast.dart';
 
 class DocumentUploadField extends StatefulWidget {
   final TextEditingController controller;
@@ -78,94 +82,81 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
             _success = true;
             widget.controller.text = mockUrl;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.greenAccent),
-                  const SizedBox(width: 8),
-                  Text('${widget.label} uploaded successfully!'),
-                ],
-              ),
-              backgroundColor: const Color(0xFF1E293B),
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2),
-            ),
-          );
+          WaterBuddyToast.show(context, '${widget.label} uploaded successfully!');
         }
       }
     });
   }
 
   void _openUploadBottomSheet() {
-    showModalBottomSheet(
+    showWaterBuddyBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E293B),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        color: Colors.white,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Upload ${widget.label}',
+                  style: const TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Select a source to scan or attach your document. Supported formats: PDF, PNG, JPG, JPEG, DOCX.',
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 13, height: 1.4),
+            ),
+            const SizedBox(height: 20),
+            _buildBottomSheetOption(
+              icon: Icons.camera_alt_rounded,
+              title: 'Capture with Camera',
+              subtitle: 'Scan physical document or take photo live',
+              color: const Color(0xFF8B5CF6),
+              onTap: () {
+                Navigator.pop(context);
+                _openCameraScanner();
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildBottomSheetOption(
+              icon: Icons.photo_library_rounded,
+              title: 'Choose from Gallery',
+              subtitle: 'Pick high-quality scan from photo albums',
+              color: const Color(0xFF38BDF8),
+              onTap: () {
+                Navigator.pop(context);
+                _openGalleryPicker();
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildBottomSheetOption(
+              icon: Icons.picture_as_pdf_rounded,
+              title: 'Select PDF or Document',
+              subtitle: 'Browse phone files for PDF or Word docs',
+              color: const Color(0xFF10B981),
+              onTap: () {
+                Navigator.pop(context);
+                _openFileBrowser();
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Upload ${widget.label}',
-                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white60),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Select a source to scan or attach your document. Supported formats: PDF, PNG, JPG, JPEG, DOCX.',
-                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13),
-              ),
-              const SizedBox(height: 24),
-              _buildBottomSheetOption(
-                icon: Icons.camera_alt_rounded,
-                title: 'Capture with Camera',
-                subtitle: 'Scan physical document or take photo live',
-                color: const Color(0xFF8B5CF6),
-                onTap: () {
-                  Navigator.pop(context);
-                  _openCameraScanner();
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildBottomSheetOption(
-                icon: Icons.photo_library_rounded,
-                title: 'Choose from Gallery',
-                subtitle: 'Pick high-quality scan from photo albums',
-                color: const Color(0xFF38BDF8),
-                onTap: () {
-                  Navigator.pop(context);
-                  _openGalleryPicker();
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildBottomSheetOption(
-                icon: Icons.picture_as_pdf_rounded,
-                title: 'Select PDF or Document',
-                subtitle: 'Browse phone files for PDF or Word docs',
-                color: const Color(0xFF10B981),
-                onTap: () {
-                  Navigator.pop(context);
-                  _openFileBrowser();
-                },
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -182,9 +173,9 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.06)),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
         child: Row(
           children: [
@@ -201,228 +192,141 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12)),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                  ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
           ],
         ),
       ),
     );
   }
 
-  // Simulated live camera viewfinder
+  // Simulated live camera viewfinder with 100% light/scaffold theme
   void _openCameraScanner() {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Scaffold(
-              backgroundColor: Colors.black,
-              body: Stack(
-                children: [
-                  // Viewfinder Screen
-                  Positioned.fill(
-                    child: Container(
-                      color: Colors.grey[900],
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.document_scanner_rounded, size: 80, color: widget.themeColor.withOpacity(0.2)),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Simulating Camera Viewfinder...',
-                            style: TextStyle(color: Colors.white30, fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Scanning Crop Marks and Laser
-                  Center(
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 0.85,
-                      height: MediaQuery.of(context).size.height * 0.5,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: widget.themeColor, width: 2),
-                        borderRadius: BorderRadius.circular(20),
-                        color: Colors.transparent,
-                      ),
-                      child: Stack(
-                        children: [
-                          // Pulse effect
-                          Positioned.fill(
-                            child: AnimatedOpacity(
-                              opacity: 0.1,
-                              duration: const Duration(seconds: 1),
-                              child: Container(color: widget.themeColor),
-                            ),
-                          ),
-                          // Frame guides
-                          Align(
-                            alignment: Alignment.center,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Text(
-                                'Align ${widget.label} Inside Frame',
-                                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Controls Overlay
-                  Positioned(
-                    top: 40,
-                    left: 20,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-
-                  Positioned(
-                    bottom: 60,
-                    left: 0,
-                    right: 0,
-                    child: Column(
-                      children: [
-                        const Text(
-                          'HOLD STILL • SCANNING',
-                          style: TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5),
-                        ),
-                        const SizedBox(height: 20),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pop(context);
-                            // Simulated capturing photo
-                            final randomNum = Random().nextInt(9000) + 1000;
-                            final name = "${widget.label.toLowerCase().replaceAll(' ', '_')}_scan_$randomNum.jpg";
-                            final size = "1.${Random().nextInt(9) + 1} MB";
-                            // High-quality mock unsplash URL that works in app and web
-                            final mockUrl = widget.isPhoto 
-                                ? "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500" // Person photo
-                                : "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500"; // Document/Verification photo
-                            _simulateUpload(name, size, mockUrl);
-                          },
-                          child: Container(
-                            height: 80,
-                            width: 80,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 4),
-                            ),
-                            padding: const EdgeInsets.all(6),
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  // Simulated gorgeous gallery templates
-  void _openGalleryPicker() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF1E293B),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        return Scaffold(
+          backgroundColor: const Color(0xFF0F172A), // Keep scanning dark for simulator camera immersion
+          body: Stack(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Select ${widget.label} from Gallery',
-                    style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+              // Viewfinder Screen
+              Positioned.fill(
+                child: Container(
+                  color: const Color(0xFF0F172A),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.document_scanner_rounded, size: 80, color: widget.themeColor.withOpacity(0.2)),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Simulating Camera Viewfinder...',
+                        style: TextStyle(color: Colors.white30, fontSize: 13),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white60),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+                ),
               ),
-              const SizedBox(height: 16),
-              // Horizontal grid of mock document cards
-              SizedBox(
-                height: 120,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
+
+              // Scanning Crop Marks and Laser
+              Center(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.85,
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: widget.themeColor, width: 2),
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.transparent,
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Container(
+                          color: widget.themeColor.withOpacity(0.04),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.center,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(
+                            'Align ${widget.label} Inside Frame',
+                            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Controls Overlay
+              Positioned(
+                top: 40,
+                left: 20,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+
+              Positioned(
+                bottom: 60,
+                left: 0,
+                right: 0,
+                child: Column(
                   children: [
-                    _buildTemplateCard(
-                      label: 'Recent Scan 1',
-                      ext: 'PNG',
-                      size: '1.2 MB',
-                      icon: Icons.image_rounded,
-                      color: Colors.amber,
+                    const Text(
+                      'HOLD STILL • SCANNING',
+                      style: TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5),
                     ),
-                    _buildTemplateCard(
-                      label: 'Scan_Copy.jpg',
-                      ext: 'JPG',
-                      size: '890 KB',
-                      icon: Icons.filter_hdr_rounded,
-                      color: Colors.lightBlue,
-                    ),
-                    _buildTemplateCard(
-                      label: 'Official_Doc.pdf',
-                      ext: 'PDF',
-                      size: '2.8 MB',
-                      icon: Icons.picture_as_pdf_rounded,
-                      color: Colors.redAccent,
+                    const SizedBox(height: 20),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        final randomNum = Random().nextInt(9000) + 1000;
+                        final name = "${widget.label.toLowerCase().replaceAll(' ', '_')}_scan_$randomNum.jpg";
+                        final size = "1.${Random().nextInt(9) + 1} MB";
+                        final mockUrl = widget.isPhoto 
+                            ? "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500"
+                            : "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500";
+                        _simulateUpload(name, size, mockUrl);
+                      },
+                      child: Container(
+                        height: 80,
+                        width: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 4),
+                        ),
+                        padding: const EdgeInsets.all(6),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-              OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // Trigger direct simulation
-                  final randomNum = Random().nextInt(9000) + 1000;
-                  _simulateUpload(
-                    "${widget.label.toLowerCase().replaceAll(' ', '_')}_gallery_$randomNum.png",
-                    "2.1 MB",
-                    "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=500",
-                  );
-                },
-                icon: const Icon(Icons.folder_open_rounded),
-                label: const Text('Browse Other Device Files...'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: BorderSide(color: Colors.white.withOpacity(0.12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-              ),
             ],
           ),
         );
@@ -430,64 +334,139 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
     );
   }
 
-  // Simulated file browser templates
-  void _openFileBrowser() {
-    showModalBottomSheet(
+  void _openGalleryPicker() {
+    showWaterBuddyBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E293B),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Select ${widget.label} from Gallery',
+                  style: const TextStyle(color: Color(0xFF0F172A), fontSize: 17, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 120,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
                 children: [
-                  Text(
-                    'Select Document File',
-                    style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+                  _buildTemplateCard(
+                    label: 'Recent Scan 1',
+                    ext: 'PNG',
+                    size: '1.2 MB',
+                    icon: Icons.image_rounded,
+                    color: Colors.amber,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white60),
-                    onPressed: () => Navigator.pop(context),
+                  _buildTemplateCard(
+                    label: 'Scan_Copy.jpg',
+                    ext: 'JPG',
+                    size: '890 KB',
+                    icon: Icons.filter_hdr_rounded,
+                    color: Colors.lightBlue,
+                  ),
+                  _buildTemplateCard(
+                    label: 'Official_Doc.pdf',
+                    ext: 'PDF',
+                    size: '2.8 MB',
+                    icon: Icons.picture_as_pdf_rounded,
+                    color: Colors.redAccent,
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              // Document Files List
-              _buildFileListOption('Aadhaar_Card_Digital.pdf', '1.4 MB', Colors.redAccent),
-              const SizedBox(height: 8),
-              _buildFileListOption('Driving_License_Copy.pdf', '980 KB', Colors.redAccent),
-              const SizedBox(height: 8),
-              _buildFileListOption('Vehicle_RC_Official.docx', '3.1 MB', Colors.blue),
-              const SizedBox(height: 20),
-              OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _simulateUpload(
-                    "${widget.label.toLowerCase().replaceAll(' ', '_')}_browse.pdf",
-                    "1.6 MB",
-                    "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500",
-                  );
-                },
-                icon: const Icon(Icons.file_copy_rounded),
-                label: const Text('Select Custom File...'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: BorderSide(color: Colors.white.withOpacity(0.12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
+            ),
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                final randomNum = Random().nextInt(9000) + 1000;
+                _simulateUpload(
+                  "${widget.label.toLowerCase().replaceAll(' ', '_')}_gallery_$randomNum.png",
+                  "2.1 MB",
+                  "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=500",
+                );
+              },
+              icon: const Icon(Icons.folder_open_rounded),
+              label: const Text('Browse Other Device Files...', style: TextStyle(fontWeight: FontWeight.bold)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF0F172A),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-            ],
-          ),
-        );
-      },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openFileBrowser() {
+    showWaterBuddyBottomSheet(
+      context: context,
+      child: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Select Document File',
+                  style: TextStyle(color: Color(0xFF0F172A), fontSize: 17, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildFileListOption('Aadhaar_Card_Digital.pdf', '1.4 MB', Colors.redAccent),
+            const SizedBox(height: 8),
+            _buildFileListOption('Driving_License_Copy.pdf', '980 KB', Colors.redAccent),
+            const SizedBox(height: 8),
+            _buildFileListOption('Vehicle_RC_Official.docx', '3.1 MB', Colors.blue),
+            const SizedBox(height: 20),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _simulateUpload(
+                  "${widget.label.toLowerCase().replaceAll(' ', '_')}_browse.pdf",
+                  "1.6 MB",
+                  "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500",
+                );
+              },
+              icon: const Icon(Icons.file_copy_rounded),
+              label: const Text('Select Custom File...', style: TextStyle(fontWeight: FontWeight.bold)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF0F172A),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
     );
   }
 
@@ -501,9 +480,9 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.02),
+          color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
         child: Row(
           children: [
@@ -513,12 +492,12 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                  Text(size, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11)),
+                  Text(name, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(size, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_downward_rounded, color: Colors.white30, size: 18),
+            const Icon(Icons.arrow_downward_rounded, color: Color(0xFF94A3B8), size: 18),
           ],
         ),
       ),
@@ -541,9 +520,9 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
         width: 110,
         margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -566,12 +545,12 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: Color(0xFF0F172A), fontSize: 11, fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                Text(size, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 9)),
+                Text(size, style: const TextStyle(color: Color(0xFF64748B), fontSize: 9)),
               ],
             ),
           ],
@@ -582,6 +561,9 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
 
   @override
   Widget build(BuildContext context) {
+    const inkSlate = Color(0xFF0F172A);
+    const textSlateMuted = Color(0xFF64748B);
+
     return FormField<String>(
       validator: (_) {
         if (widget.validator != null) {
@@ -598,25 +580,25 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
               GestureDetector(
                 onTap: _uploading ? null : _openUploadBottomSheet,
                 child: Container(
-                  height: 100,
+                  height: 96,
                   decoration: BoxDecoration(
                     color: _success
                         ? widget.themeColor.withOpacity(0.04)
-                        : Colors.white.withOpacity(0.03),
+                        : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
                       color: _success
-                          ? widget.themeColor.withOpacity(0.6)
+                          ? widget.themeColor
                           : formFieldState.hasError
-                              ? Colors.redAccent.withOpacity(0.5)
-                              : Colors.white.withOpacity(0.1),
-                      width: _success ? 1.5 : 1,
+                              ? Colors.redAccent.withOpacity(0.6)
+                              : const Color(0xFFE2E8F0),
+                      width: _success ? 1.8 : 1.2,
                     ),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
                     children: [
-                      // Status Icon
+                      // Status Icon container
                       Container(
                         width: 48,
                         height: 48,
@@ -624,8 +606,8 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                           color: _success
                               ? widget.themeColor.withOpacity(0.12)
                               : _uploading
-                                  ? widget.themeColor.withOpacity(0.05)
-                                  : Colors.white.withOpacity(0.04),
+                                  ? widget.themeColor.withOpacity(0.06)
+                                  : const Color(0xFFE2E8F0),
                           shape: BoxShape.circle,
                         ),
                         child: _uploading
@@ -643,12 +625,12 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                                     : widget.isPhoto
                                         ? Icons.add_a_photo_rounded
                                         : Icons.cloud_upload_outlined,
-                                color: _success ? widget.themeColor : Colors.white60,
+                                color: _success ? widget.themeColor : textSlateMuted,
                                 size: 22,
                               ),
                       ),
                       const SizedBox(width: 16),
-                      // Text Description
+                      // Text Description (Ink slate instead of white!)
                       Expanded(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -661,7 +643,7 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                                       ? "Uploading ${_fileName ?? ''}..."
                                       : "Upload ${widget.label}",
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: inkSlate,
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -676,10 +658,9 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                                           ? "Capture photo or choose image"
                                           : "Supports PDF, images & docs",
                               style: TextStyle(
-                                color: _success
-                                    ? widget.themeColor
-                                    : Colors.white.withOpacity(0.4),
+                                color: _success ? widget.themeColor : textSlateMuted,
                                 fontSize: 12,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -692,7 +673,7 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                           onPressed: _reset,
                         )
                       else if (!_uploading)
-                        const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white30, size: 14),
+                        const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 14),
                     ],
                   ),
                 ),

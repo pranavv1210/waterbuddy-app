@@ -4,7 +4,7 @@ class OpsColors {
   static const ink = Color(0xFF0F172A);
   static const muted = Color(0xFF64748B);
   static const line = Color(0xFFE2E8F0);
-  static const surface = Color(0xFFFFFBF3);
+  static const surface = Color(0xFFF8FAFC);
   static const cardBg = Colors.white;
   static const blue = Color(0xFF0EA5E9);
   static const green = Color(0xFF14B8A6);

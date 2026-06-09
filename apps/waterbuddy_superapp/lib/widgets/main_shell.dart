@@ -22,7 +22,7 @@ class MainShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mediaQuery = MediaQuery.of(context);
     final isDesktop = mediaQuery.size.width > 800;
-    const appBg = Color(0xFFFFFBF3);
+    const appBg = Color(0xFFF8FAFC);
 
     return PopScope(
       canPop: _currentIndex == 0,

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +12,9 @@ import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/operations_ui.dart';
 import '../../orders/providers/order_providers.dart';
+import '../../../widgets/waterbuddy_toast.dart';
+import '../../../widgets/waterbuddy_bottom_sheet.dart';
+import '../../../widgets/loading_feedback_button.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -18,7 +22,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).value;
-    final orders = ref.watch(orderHistoryProvider);
+    final ordersAsync = ref.watch(orderHistoryProvider);
     final settings = ref.watch(systemSettingsProvider).valueOrNull;
     final supportEmail = settings?.supportEmail.isNotEmpty == true
         ? settings!.supportEmail
@@ -26,7 +30,7 @@ class ProfileScreen extends ConsumerWidget {
     final supportSubtitle = settings?.supportNumber.isNotEmpty == true
         ? '${settings!.supportNumber} • $supportEmail'
         : supportEmail;
-    const appBg = Color(0xFFFFFBF3);
+    const appBg = Color(0xFFF8FAFC); // Off-White instead of soft beige
 
     if (user == null) {
       return const Scaffold(
@@ -50,9 +54,9 @@ class ProfileScreen extends ConsumerWidget {
           onPressed: () => context.go(RouteNames.home),
         ),
         title: const Text(
-          'Profile',
+          'My Profile',
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: FontWeight.w900,
             color: OpsColors.ink,
           ),
@@ -61,7 +65,21 @@ class ProfileScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
-          OpsCard(
+          // 1. TOP PROFILE CARD
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
             child: Row(
               children: [
                 Container(
@@ -71,38 +89,46 @@ class ProfileScreen extends ConsumerWidget {
                     color: Color(0xFF0095F6),
                   ),
                   child: CircleAvatar(
-                    radius: 30,
+                    radius: 36,
                     backgroundColor: const Color(0xFFE0F2FE),
                     backgroundImage: user.photoURL == null
                         ? null
                         : NetworkImage(user.photoURL!),
                     child: user.photoURL == null
                         ? const Icon(Icons.person_rounded,
-                            size: 28, color: OpsColors.blue)
+                            size: 36, color: Color(0xFF0095F6))
                         : null,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 20),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        user.displayName ?? 'WaterBuddy User',
-                        style: const TextStyle(
-                          color: OpsColors.ink,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.3,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              user.displayName ?? 'WaterBuddy User',
+                              style: const TextStyle(
+                                color: OpsColors.ink,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.3,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.verified_rounded, color: Colors.green, size: 18),
+                        ],
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
-                        user.email ??
-                            user.phoneNumber ??
-                            'Contact not recorded',
-                        style: TextStyle(
-                          color: OpsColors.muted,
+                        user.email ?? user.phoneNumber ?? 'No contact info',
+                        style: const TextStyle(
+                          color: Color(0xFF64748B),
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
@@ -111,17 +137,16 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: OpsColors.blue.withOpacity(0.10),
+                          color: const Color(0xFF0095F6).withOpacity(0.10),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: const Text(
-                          'Consumer',
+                          'Consumer Account',
                           style: TextStyle(
-                            color: OpsColors.blue,
-                            fontSize: 11,
+                            color: Color(0xFF0095F6),
+                            fontSize: 10,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -132,19 +157,83 @@ class ProfileScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          orders.when(
-            data: (list) => OpsCard(
-              child: _ProfileMetric(
-                label: 'Orders placed',
-                value: '${list.length}',
-                icon: Icons.receipt_long_rounded,
+          
+          const SizedBox(height: 20),
+          
+          // 2. STATISTICS GRID (Replaced old receiving receipt count with modern visual metrics)
+          const Text(
+            'WaterBuddy Stats',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              color: OpsColors.ink,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          ordersAsync.when(
+            data: (list) {
+              final completed = list.where((o) => o.status == 'DELIVERED').toList();
+              final totalSpent = completed.fold<num>(0, (sum, o) => sum + o.amount);
+              final totalLitres = completed.fold<num>(0, (sum, o) => sum + o.tankSize);
+
+              return GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.45,
+                children: [
+                  _buildStatCard(
+                    icon: Icons.local_shipping_rounded,
+                    color: const Color(0xFF0095F6),
+                    value: '${completed.length}',
+                    label: 'Bookings Completed',
+                  ),
+                  _buildStatCard(
+                    icon: Icons.payments_rounded,
+                    color: Colors.green,
+                    value: '₹${totalSpent.toInt()}',
+                    label: 'Total Spent',
+                  ),
+                  _buildStatCard(
+                    icon: Icons.water_drop_rounded,
+                    color: Colors.lightBlue,
+                    value: '${_formatLitres(totalLitres.toInt())}L',
+                    label: 'Water Ordered',
+                  ),
+                  _buildStatCard(
+                    icon: Icons.home_work_rounded,
+                    color: Colors.purple,
+                    value: 'Active',
+                    label: 'Standard Account',
+                  ),
+                ],
+              );
+            },
+            loading: () => const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24.0),
+                child: CircularProgressIndicator(strokeWidth: 2.5),
               ),
             ),
-            loading: () => const LinearProgressIndicator(minHeight: 2),
             error: (_, __) => const SizedBox.shrink(),
           ),
+
           const SizedBox(height: 24),
+
+          // 3. SETTINGS ACTIONS
+          const Text(
+            'Account Preferences',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              color: OpsColors.ink,
+            ),
+          ),
+          const SizedBox(height: 10),
+
           _ProfileAction(
             icon: Icons.history_rounded,
             title: 'Order history',
@@ -161,11 +250,11 @@ class ProfileScreen extends ConsumerWidget {
             icon: Icons.edit_rounded,
             title: 'Edit profile',
             subtitle: 'Manage your name and contact details',
-            onTap: () => _showEditProfileDialog(context, user),
+            onTap: () => _showEditProfileBottomSheet(context, user),
           ),
           _ProfileAction(
             icon: Icons.support_agent_rounded,
-            title: 'Support',
+            title: 'Support & Help',
             subtitle: supportSubtitle,
             onTap: () {
               launchUrl(Uri(
@@ -188,84 +277,198 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required Color color,
+    required String value,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 18),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Color(0xFF0F172A),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatLitres(int litres) {
+    return litres.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (match) => '${match[1]},',
+        );
+  }
 }
 
-class _ProfileMetric extends StatelessWidget {
-  const _ProfileMetric({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
+class _EditProfileSheet extends StatefulWidget {
+  const _EditProfileSheet({required this.user});
+  final User user;
 
-  final String label;
-  final String value;
-  final IconData icon;
+  @override
+  State<_EditProfileSheet> createState() => _EditProfileSheetState();
+}
+
+class _EditProfileSheetState extends State<_EditProfileSheet> {
+  late final TextEditingController _nameController;
+  LoadingButtonState _saveState = LoadingButtonState.idle;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.user.displayName ?? 'WaterBuddy User');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveProfile() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) return;
+
+    setState(() => _saveState = LoadingButtonState.loading);
+    try {
+      await widget.user.updateDisplayName(name);
+      await FirebaseFirestore.instance.collection('users').doc(widget.user.uid).set({
+        'name': name,
+        'displayName': name,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      setState(() => _saveState = LoadingButtonState.success);
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      setState(() => _saveState = LoadingButtonState.idle);
+      if (mounted) {
+        WaterBuddyToast.show(context, 'Unable to update profile: $e', isError: true);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, color: OpsColors.blue),
-        const SizedBox(width: 12),
-        Text(
-          value,
-          style: const TextStyle(
-            color: OpsColors.ink,
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Edit Profile',
+                style: TextStyle(
+                  color: Color(0xFF0F172A),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                onPressed: () => Navigator.pop(context, false),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: OpsColors.muted,
-            fontWeight: FontWeight.bold,
+          const SizedBox(height: 12),
+          TextField(
+            controller: _nameController,
+            textInputAction: TextInputAction.done,
+            autofocus: true,
+            style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold),
+            decoration: InputDecoration(
+              labelText: 'Full name',
+              labelStyle: const TextStyle(color: Color(0xFF64748B)),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFF0095F6), width: 1.8),
+              ),
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 24),
+          LoadingFeedbackButton(
+            onPressed: _saveProfile,
+            label: 'Save Changes',
+            loadingLabel: 'Saving Profile...',
+            successLabel: 'Profile Saved!',
+            buttonState: _saveState,
+            backgroundColor: const Color(0xFF0095F6),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 }
 
-Future<void> _showEditProfileDialog(BuildContext context, User user) async {
-  final nameController =
-      TextEditingController(text: user.displayName ?? 'WaterBuddy User');
-  final saved = await showDialog<bool>(
+Future<void> _showEditProfileBottomSheet(BuildContext context, User user) async {
+  final updated = await showWaterBuddyBottomSheet<bool>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Edit profile'),
-      content: TextField(
-        controller: nameController,
-        textInputAction: TextInputAction.done,
-        decoration: const InputDecoration(labelText: 'Full name'),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Save'),
-        ),
-      ],
-    ),
+    child: _EditProfileSheet(user: user),
   );
-  final name = nameController.text.trim();
-  nameController.dispose();
-  if (saved != true || !context.mounted) return;
-  if (name.isEmpty) return;
-  await user.updateDisplayName(name);
-  await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-    'name': name,
-    'displayName': name,
-    'updatedAt': FieldValue.serverTimestamp(),
-  }, SetOptions(merge: true));
-  if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Profile updated')),
-  );
+  if (updated == true && context.mounted) {
+    WaterBuddyToast.show(context, 'Profile updated successfully!');
+  }
 }
 
 class _ProfileAction extends StatelessWidget {

@@ -77,7 +77,7 @@ class _AppSettingsScreenState extends ConsumerState<AppSettingsScreen> {
     final supportSubtitle = settings?.supportNumber.isNotEmpty == true
         ? '${settings!.supportNumber} • $supportEmail'
         : supportEmail;
-    const bg = Color(0xFFFFFBF3);
+    const bg = Color(0xFFF8FAFC);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
