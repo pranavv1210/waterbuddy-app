@@ -38,88 +38,73 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
       activeRole: AppRole.seller,
       title: 'Tanker Owner Login',
       subtitle: 'Enter your credentials to login',
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE2E8F0)), // Slate 200
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        color: Color(0xFF0F172A), size: 18),
-                    onPressed: () => context.pop(),
-                  ),
-                  const Text(
-                    'Welcome Back',
-                    style: TextStyle(
-                        color: Color(0xFF0F172A),
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _field(_email, 'Email Address', Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress),
-              _field(_password, 'Password', Icons.lock_outline, obscure: true),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: _loading ? null : _forgotPassword,
-                  child: const Text(
-                    'Forgot password?',
-                    style: TextStyle(
-                      color: Color(0xFF0EA5E9),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                      color: Color(0xFF111827), size: 18),
+                  onPressed: () => context.pop(),
                 ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: _loading ? null : _submit,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFF0EA5E9),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                  elevation: 0,
+                const Text(
+                  'Welcome Back',
+                  style: TextStyle(
+                      color: Color(0xFF111827),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
                 ),
-                child: _loading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : const Text('Log In',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 16),
-                Text(_error!,
-                    style:
-                        const TextStyle(color: Colors.redAccent, fontSize: 13),
-                    textAlign: TextAlign.center),
               ],
+            ),
+            const SizedBox(height: 20),
+            _field(_email, 'Email Address', Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress),
+            _field(_password, 'Password', Icons.lock_outline, obscure: true),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _loading ? null : _forgotPassword,
+                child: const Text(
+                  'Forgot password?',
+                  style: TextStyle(
+                    color: Color(0xFF0095F6),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: _loading ? null : _submit,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: const Color(0xFF0095F6),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              child: _loading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2))
+                  : const Text('Log In',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 16),
+              Text(_error!,
+                  style:
+                      const TextStyle(color: Colors.redAccent, fontSize: 13),
+                  textAlign: TextAlign.center),
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -139,27 +124,27 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
         controller: controller,
         obscureText: obscure,
         keyboardType: keyboardType,
-        style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w600),
+        style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w600),
         validator: requiredField
             ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null
             : null,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: Color(0xFF64748B)),
-          prefixIcon: Icon(icon, color: const Color(0xFF64748B)),
+          labelStyle: const TextStyle(color: Color(0xFF374151)),
+          prefixIcon: Icon(icon, color: const Color(0xFF6B7280)),
           filled: true,
-          fillColor: const Color(0xFFF1F5F9), // Slate 100
+          fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF0EA5E9), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF0095F6), width: 2),
           ),
         ),
       ),

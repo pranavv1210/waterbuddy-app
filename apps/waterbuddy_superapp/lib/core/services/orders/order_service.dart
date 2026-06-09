@@ -198,7 +198,7 @@ class OrderService {
   }) async {
     await _firestore.runTransaction((transaction) async {
       final orderRef = _firestore.collection('orders').doc(orderId);
-      final settingsRef = _firestore.collection('system_settings').doc('app');
+      final settingsRef = _firestore.collection('system_settings').doc('config');
       final snapshot = await transaction.get(orderRef);
       final settingsSnapshot = await transaction.get(settingsRef);
       if (!snapshot.exists) throw Exception('Order does not exist');

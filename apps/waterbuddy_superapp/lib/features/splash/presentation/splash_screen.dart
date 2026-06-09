@@ -14,39 +14,14 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _logoScale;
-  late Animation<double> _logoFade;
-
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   bool _minDurationPassed = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
-    _logoFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0, 0.6, curve: Curves.easeOut),
-      ),
-    );
-    _logoScale = Tween<double>(begin: 0.85, end: 1).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0, 0.8, curve: Curves.elasticOut),
-      ),
-    );
-
-    _controller.forward();
-
-    // Keep the branded splash perceptible without blocking a ready app.
-    Future.delayed(const Duration(milliseconds: 700), () {
+    // Keep splash visible for 1 second minimum
+    Future.delayed(const Duration(milliseconds: 1000), () {
       if (mounted) {
         setState(() {
           _minDurationPassed = true;
@@ -60,37 +35,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!_minDurationPassed) return;
 
     final authState = ref.read(authStateProvider);
-    if (authState.isLoading) return; // Still waiting for firebase
+    if (authState.isLoading) return; // Wait until auth state is resolved
 
-    // Auth resolved and min duration passed
-    final user = ref.read(authStateProvider).value;
+    final user = authState.value;
     if (user == null) {
       context.go(RouteNames.roleSelection);
       return;
     }
-    final selectedRole = ref.read(selectedRoleProvider);
-    switch (selectedRole) {
-      case null:
-        context.go(RouteNames.roleSelection);
-        break;
-      case var role:
-        switch (role) {
-          case _:
-            // Let router redirect handle exact dashboard + verification guard.
-            context.go(RouteNames.roleSelection);
-        }
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+    // Redirect logic in appRouterProvider will route the user based on role if logged in
+    context.go(RouteNames.roleSelection);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Listen to auth state changes to navigate when ready
+    // Listen to auth state to navigate when loaded
     ref.listen(authStateProvider, (previous, next) {
       if (!next.isLoading) {
         _checkAndNavigate();
@@ -98,82 +56,56 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     });
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light.copyWith(
+      value: SystemUiOverlayStyle.dark.copyWith(
         statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
       ),
-      child: Scaffold(
-        backgroundColor: const Color(0xFF0F172A),
-        body: Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF0F172A),
-                Color(0xFF020617),
+      child: const Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // LOGO
+                Icon(
+                  Icons.water_drop_rounded,
+                  color: Color(0xFF0095F6),
+                  size: 72,
+                ),
+                SizedBox(height: 16),
+                // WaterBuddy
+                Text(
+                  'WaterBuddy',
+                  style: TextStyle(
+                    color: Color(0xFF111827),
+                    fontSize: 36,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                SizedBox(height: 8),
+                // Subtitle
+                Text(
+                  'Pure Water Delivered Fast',
+                  style: TextStyle(
+                    color: Color(0xFF6B7280),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 48),
+                // Loading...
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0095F6)),
+                  ),
+                ),
               ],
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (_, __) => FadeTransition(
-                  opacity: _logoFade,
-                  child: ScaleTransition(
-                    scale: _logoScale,
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.05),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          width: 2,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.water_drop_rounded,
-                        color: Color(0xFF38BDF8),
-                        size: 80,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (_, __) => FadeTransition(
-                  opacity: _logoFade,
-                  child: const Column(
-                    children: [
-                      Text(
-                        'WaterBuddy',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 42,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Pure hydration, delivered.',
-                        style: TextStyle(
-                          color: Color(0xFF94A3B8),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
       ),

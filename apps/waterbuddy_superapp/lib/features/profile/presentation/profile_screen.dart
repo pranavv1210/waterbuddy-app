@@ -66,11 +66,9 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF0EA5E9), Color(0xFF14B8A6)],
-                    ),
+                    color: Color(0xFF0095F6),
                   ),
                   child: CircleAvatar(
                     radius: 30,

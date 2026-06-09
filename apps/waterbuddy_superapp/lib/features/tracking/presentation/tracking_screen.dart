@@ -290,31 +290,21 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                   left: 16,
                   right: 16,
                   bottom: 10),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.4),
-                    Colors.transparent
-                  ],
-                ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded,
-                          color: primaryColor),
-                      onPressed: () => context.go(RouteNames.home),
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827)),
+                    onPressed: () => context.go(RouteNames.home),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 8),
                   const Text(
                     'Track Live Delivery',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFF111827),
                         fontSize: 20,
                         fontWeight: FontWeight.w800),
                   ),

@@ -7,7 +7,6 @@ class TankCategory {
     required this.litres,
     required this.basePrice,
     required this.surgeMultiplier,
-    required this.estimatedDeliveryTime,
     required this.iconKey,
     required this.active,
     required this.displayOrder,
@@ -28,8 +27,6 @@ class TankCategory {
       litres: (data['litres'] as num?)?.toInt() ?? 0,
       basePrice: (data['price'] ?? data['basePrice'] as num?) ?? 0,
       surgeMultiplier: (data['surgeMultiplier'] as num?)?.toDouble() ?? 1,
-      estimatedDeliveryTime:
-          (data['estimatedDeliveryTime'] ?? 'Express').toString(),
       iconKey: _normalizeIconType(
         (data['iconType'] ?? data['iconKey'] ?? 'drop').toString(),
       ),
@@ -48,7 +45,6 @@ class TankCategory {
   final int litres;
   final num basePrice;
   final double surgeMultiplier;
-  final String estimatedDeliveryTime;
   final String iconKey;
   final bool active;
   final int displayOrder;

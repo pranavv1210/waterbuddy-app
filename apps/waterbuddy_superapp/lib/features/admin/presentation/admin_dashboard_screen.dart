@@ -1367,7 +1367,7 @@ class _PlatformConfigEditorState extends State<_PlatformConfigEditor> {
       final firestore = FirebaseFirestore.instance;
       await firestore
           .collection('system_settings')
-          .doc('app')
+          .doc('config')
           .set(patch, SetOptions(merge: true));
       await firestore
           .collection('configs')

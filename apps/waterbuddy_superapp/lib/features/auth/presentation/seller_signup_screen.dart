@@ -73,13 +73,8 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
       activeRole: AppRole.seller,
       title: 'Tanker Owner Registration',
       subtitle: 'Create your tanker profile',
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Form(
           key: _formKey,
           child: Column(
@@ -89,13 +84,13 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white, size: 18),
+                        color: Color(0xFF111827), size: 18),
                     onPressed: () => context.pop(),
                   ),
                   const Text(
                     'Create Tanker Account',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFF111827),
                         fontSize: 18,
                         fontWeight: FontWeight.bold),
                   ),
@@ -124,35 +119,35 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
               DocumentUploadField(
                 controller: _licenseUrl,
                 label: 'Driver License Document',
-                themeColor: const Color(0xFF06B6D4),
+                themeColor: const Color(0xFF0095F6),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _aadhaarUrl,
                 label: 'Aadhaar Card Document',
-                themeColor: const Color(0xFF06B6D4),
+                themeColor: const Color(0xFF0095F6),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _panUrl,
                 label: 'PAN Card Document',
-                themeColor: const Color(0xFF06B6D4),
+                themeColor: const Color(0xFF0095F6),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _rcUrl,
                 label: 'Vehicle RC Document',
-                themeColor: const Color(0xFF06B6D4),
+                themeColor: const Color(0xFF0095F6),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _photoUrl,
                 label: 'Tanker Photos',
-                themeColor: const Color(0xFF06B6D4),
+                themeColor: const Color(0xFF0095F6),
                 isPhoto: true,
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
@@ -164,12 +159,12 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
                 onChanged: (value) =>
                     setState(() => _drivesSelf = value ?? false),
                 contentPadding: EdgeInsets.zero,
-                activeColor: const Color(0xFF06B6D4),
+                activeColor: const Color(0xFF0095F6),
                 checkColor: Colors.white,
                 title: const Text(
                   'I drive myself',
                   style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w700),
+                      color: Color(0xFF111827), fontWeight: FontWeight.w700),
                 ),
                 controlAffinity: ListTileControlAffinity.leading,
               ),
@@ -178,12 +173,12 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
                 onChanged: (value) =>
                     setState(() => _assignDrivers = value ?? false),
                 contentPadding: EdgeInsets.zero,
-                activeColor: const Color(0xFF06B6D4),
+                activeColor: const Color(0xFF0095F6),
                 checkColor: Colors.white,
                 title: const Text(
                   'I assign drivers',
                   style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w700),
+                      color: Color(0xFF111827), fontWeight: FontWeight.w700),
                 ),
                 controlAffinity: ListTileControlAffinity.leading,
               ),
@@ -197,7 +192,7 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
                 onPressed: _loading ? null : _submit,
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFF0891B2),
+                  backgroundColor: const Color(0xFF0095F6),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
                 ),
@@ -231,7 +226,7 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
       child: Text(
         title,
         style: const TextStyle(
-            color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+            color: Color(0xFF111827), fontSize: 15, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -250,27 +245,27 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
         controller: controller,
         obscureText: obscure,
         keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.white),
+        style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w600),
         validator: requiredField
             ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null
             : null,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-          prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.5)),
+          labelStyle: const TextStyle(color: Color(0xFF6B7280)),
+          prefixIcon: Icon(icon, color: const Color(0xFF6B7280)),
           filled: true,
-          fillColor: Colors.white.withValues(alpha: 0.04),
+          fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+            borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+            borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF06B6D4)),
+            borderSide: const BorderSide(color: Color(0xFF0095F6), width: 2),
           ),
         ),
       ),
@@ -342,3 +337,4 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
     );
   }
 }
+

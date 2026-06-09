@@ -148,8 +148,9 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
       subtitle: _subtitle,
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 260),
-        child: _card(
+        child: Padding(
           key: ValueKey(_step),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: _stepBody(context),
         ),
       ),
@@ -163,19 +164,6 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
       2 => 'Create a new secure password',
       _ => 'Password updated successfully',
     };
-  }
-
-  Widget _card({required Key key, required Widget child}) {
-    return Container(
-      key: key,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.13)),
-      ),
-      child: child,
-    );
   }
 
   Widget _stepBody(BuildContext context) {
@@ -192,7 +180,7 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
           children: [
             IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                  color: Colors.white, size: 18),
+                  color: Color(0xFF111827), size: 18),
               onPressed: () {
                 if (_step == 0 || _step == 3) {
                   context.go(_loginRoute);
@@ -207,7 +195,7 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFF111827),
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
                 ),
@@ -226,7 +214,7 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
             _error!,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: Color(0xFFFCA5A5),
+              color: Colors.redAccent,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
@@ -259,62 +247,66 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFF0EA5E9).withValues(alpha: 0.14),
+            color: const Color(0xFFEEF7FF),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF0EA5E9)),
+            border: Border.all(color: const Color(0xFFDCEFFF)),
           ),
           child: const Text(
             'Development OTP: 123456',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white,
+              color: Color(0xFF0095F6),
               fontWeight: FontWeight.w900,
             ),
           ),
         ),
         const SizedBox(height: 18),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: List.generate(6, (index) {
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(right: index == 5 ? 0 : 8),
-                child: TextField(
-                  controller: _otpControllers[index],
-                  focusNode: _otpNodes[index],
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(1),
-                  ],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                  ),
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.05),
-                    counterText: '',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.14)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFF38BDF8)),
-                    ),
-                  ),
-                  onChanged: (value) {
-                    if (value.isNotEmpty && index < 5) {
-                      _otpNodes[index + 1].requestFocus();
-                    }
-                    if (value.isEmpty && index > 0) {
-                      _otpNodes[index - 1].requestFocus();
-                    }
-                  },
+            return SizedBox(
+              width: 40,
+              height: 52,
+              child: TextField(
+                controller: _otpControllers[index],
+                focusNode: _otpNodes[index],
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(1),
+                ],
+                style: const TextStyle(
+                  color: Color(0xFF111827),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
                 ),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  counterText: '',
+                  contentPadding: EdgeInsets.zero,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFF0095F6), width: 2),
+                  ),
+                ),
+                onChanged: (value) {
+                  if (value.isNotEmpty && index < 5) {
+                    _otpNodes[index + 1].requestFocus();
+                  }
+                  if (value.isEmpty && index > 0) {
+                    _otpNodes[index - 1].requestFocus();
+                  }
+                },
               ),
             );
           }),
@@ -325,14 +317,16 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
             TextButton(
               onPressed: () => setState(() => _step = 0),
               child: const Text('Edit mobile',
-                  style: TextStyle(color: Color(0xFF67E8F9))),
+                  style: TextStyle(color: Color(0xFF0095F6))),
             ),
             const Spacer(),
             TextButton(
               onPressed: _seconds == 0 ? _startTimer : null,
               child: Text(
                 _seconds == 0 ? 'Resend OTP' : 'Resend in ${_seconds}s',
-                style: const TextStyle(color: Color(0xFF67E8F9)),
+                style: TextStyle(
+                  color: _seconds == 0 ? const Color(0xFF0095F6) : const Color(0xFF9CA3AF),
+                ),
               ),
             ),
           ],
@@ -389,7 +383,7 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
           'Use your new password the next time this account asks for one.',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.white70,
+            color: Color(0xFF6B7280),
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -414,24 +408,24 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscure,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w600),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.55)),
-        prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.55)),
+        labelStyle: const TextStyle(color: Color(0xFF6B7280)),
+        prefixIcon: Icon(icon, color: const Color(0xFF6B7280)),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.04),
+        fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF38BDF8)),
+          borderSide: const BorderSide(color: Color(0xFF0095F6), width: 2),
         ),
       ),
     );
@@ -446,7 +440,7 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFF0EA5E9),
+          backgroundColor: const Color(0xFF0095F6),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),

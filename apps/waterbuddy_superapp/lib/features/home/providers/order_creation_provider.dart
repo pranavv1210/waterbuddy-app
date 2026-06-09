@@ -59,7 +59,7 @@ class OrderCreationController extends StateNotifier<OrderCreationState> {
       // Get user details from Firestore
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
       final settingsDoc =
-          await _firestore.collection('system_settings').doc('app').get();
+          await _firestore.collection('system_settings').doc('config').get();
       final settings = settingsDoc.data() ?? const <String, dynamic>{};
       final bookingsEnabled = settings['bookingsEnabled'] as bool? ?? true;
       final maintenanceMode = settings['maintenanceMode'] as bool? ?? false;

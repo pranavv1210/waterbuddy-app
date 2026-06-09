@@ -423,7 +423,7 @@ final platformConfigProvider =
   (ref) => ref
       .watch(firestoreProvider)
       .collection('system_settings')
-      .doc('app')
+      .doc('config')
       .snapshots(),
 );
 
@@ -431,7 +431,7 @@ final systemSettingsProvider = StreamProvider<SystemSettings>((ref) {
   return ref
       .watch(firestoreProvider)
       .collection('system_settings')
-      .doc('app')
+      .doc('config')
       .snapshots()
       .map((doc) => SystemSettings.fromMap(doc.data()));
 });

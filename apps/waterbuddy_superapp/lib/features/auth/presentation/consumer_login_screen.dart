@@ -72,7 +72,7 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
                     },
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: const Color(0xFF007AFF),
+                backgroundColor: const Color(0xFF0095F6),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
@@ -91,14 +91,14 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
             const SizedBox(height: 24),
             Row(
               children: [
-                const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                const Expanded(child: Divider(color: Color(0xFFE5E7EB))),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text('OR',
                       style: TextStyle(
-                          color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.bold)),
+                          color: const Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.bold)),
                 ),
-                const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                const Expanded(child: Divider(color: Color(0xFFE5E7EB))),
               ],
             ),
             const SizedBox(height: 20),
@@ -127,10 +127,10 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
                   errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata_rounded, color: Colors.blue),
               ),
               label: const Text('Continue with Google',
-                  style: TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w700)),
+                  style: TextStyle(color: Color(0xFF111827), fontSize: 14, fontWeight: FontWeight.w700)),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                side: const BorderSide(color: Color(0xFFE2E8F0)),
+                side: const BorderSide(color: Color(0xFFE5E7EB)),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
@@ -141,12 +141,12 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
               children: [
                 const Text(
                   "Don't have an account? ",
-                  style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                  style: TextStyle(color: Color(0xFF6B7280), fontSize: 14),
                 ),
                 TextButton(
                   onPressed: () => context.push(RouteNames.authConsumerSignup),
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF007AFF),
+                    foregroundColor: const Color(0xFF0095F6),
                     padding: EdgeInsets.zero,
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -179,24 +179,24 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w600),
+      style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w600),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF64748B)),
-        prefixIcon: Icon(icon, color: const Color(0xFF64748B)),
+        labelStyle: const TextStyle(color: Color(0xFF374151)),
+        prefixIcon: Icon(icon, color: const Color(0xFF6B7280)),
         filled: true,
-        fillColor: const Color(0xFFF1F5F9), // Slate 100
+        fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF007AFF), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF0095F6), width: 2),
         ),
       ),
     );

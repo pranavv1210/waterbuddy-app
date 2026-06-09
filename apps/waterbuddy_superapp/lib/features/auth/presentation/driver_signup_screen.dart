@@ -60,13 +60,8 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
       activeRole: AppRole.driver,
       title: 'Driver Registration',
       subtitle: 'Create your Driver profile',
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Form(
           key: _formKey,
           child: Column(
@@ -76,13 +71,13 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white, size: 18),
+                        color: Color(0xFF111827), size: 18),
                     onPressed: () => context.pop(),
                   ),
                   const Text(
                     'Create Driver Account',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFF111827),
                         fontSize: 18,
                         fontWeight: FontWeight.bold),
                   ),
@@ -107,7 +102,7 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
               DocumentUploadField(
                 controller: _driverPhoto,
                 label: 'Driver Photo',
-                themeColor: const Color(0xFF3B82F6),
+                themeColor: const Color(0xFF3BA8FF),
                 isPhoto: true,
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
@@ -115,21 +110,21 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
               DocumentUploadField(
                 controller: _licenseUpload,
                 label: 'Driver License Document',
-                themeColor: const Color(0xFF3B82F6),
+                themeColor: const Color(0xFF3BA8FF),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _aadhaarUpload,
                 label: 'Aadhaar Card Document',
-                themeColor: const Color(0xFF3B82F6),
+                themeColor: const Color(0xFF3BA8FF),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               DocumentUploadField(
                 controller: _panUpload,
                 label: 'PAN Card Document',
-                themeColor: const Color(0xFF3B82F6),
+                themeColor: const Color(0xFF3BA8FF),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
@@ -171,7 +166,7 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
                       },
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: const Color(0xFF0095F6),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
                 ),
@@ -199,7 +194,7 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
       child: Text(
         title,
         style: const TextStyle(
-            color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+            color: Color(0xFF111827), fontSize: 15, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -216,27 +211,27 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.white),
+        style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w600),
         validator: requiredField
             ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null
             : null,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-          prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.5)),
+          labelStyle: const TextStyle(color: Color(0xFF6B7280)),
+          prefixIcon: Icon(icon, color: const Color(0xFF6B7280)),
           filled: true,
-          fillColor: Colors.white.withValues(alpha: 0.04),
+          fillColor: Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+            borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+            borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF3B82F6)),
+            borderSide: const BorderSide(color: Color(0xFF0095F6), width: 2),
           ),
         ),
       ),

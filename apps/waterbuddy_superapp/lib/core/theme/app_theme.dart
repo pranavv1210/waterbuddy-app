@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static ThemeData light() {
-    const primary = Color(0xFF0099FF); // Primary Blue
-    const accent = Color(0xFF007AFF); // System/Accent Blue
-    const offWhite = Color(0xFFF8FAFC); // Clean Off-white
-    const ink = Color(0xFF0F172A); // Dark Slate text
+    const primary = Color(0xFF0095F6); // Primary Blue
+    const accent = Color(0xFF3BA8FF); // Secondary Blue
+    const background = Color(0xFFFFFFFF); // Background
+    const offWhite = Color(0xFFF8FAFC); // Secondary Background
+    const ink = Color(0xFF111827); // Text Primary
+    const border = Color(0xFFE5E7EB);
 
     return ThemeData(
       useMaterial3: true,
@@ -13,11 +15,11 @@ class AppTheme {
       colorScheme: const ColorScheme.light(
         primary: primary,
         secondary: accent,
-        surface: Colors.white,
+        surface: background,
         surfaceContainerHighest: Color(0xFFEEF7FF), // Very Light Blue
         onSurface: ink,
       ),
-      scaffoldBackgroundColor: offWhite,
+      scaffoldBackgroundColor: background,
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -43,14 +45,13 @@ class AppTheme {
             letterSpacing: 0.2,
           ),
           minimumSize: const Size.fromHeight(54),
-          elevation: 4,
-          shadowColor: primary.withOpacity(0.3),
+          elevation: 0,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: ink,
-          side: const BorderSide(color: Color(0xFFE2E8F0)),
+          side: const BorderSide(color: border),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -66,11 +67,11 @@ class AppTheme {
         fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: const BorderSide(color: border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: const BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -80,12 +81,12 @@ class AppTheme {
           horizontal: 18,
           vertical: 18,
         ),
-        labelStyle: TextStyle(
-          color: ink.withOpacity(0.6),
+        labelStyle: const TextStyle(
+          color: Color(0xFF374151), // Label #374151
           fontWeight: FontWeight.w500,
         ),
-        hintStyle: TextStyle(
-          color: ink.withOpacity(0.35),
+        hintStyle: const TextStyle(
+          color: Color(0xFF9CA3AF), // Hint #9CA3AF
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -102,8 +103,8 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
         elevation: 6,
       ),
-      dividerTheme: DividerThemeData(
-        color: const Color(0xFFE2E8F0),
+      dividerTheme: const DividerThemeData(
+        color: border,
         thickness: 1,
       ),
     );

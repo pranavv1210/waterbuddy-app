@@ -60,83 +60,80 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen>
         subtitle: 'Secure administrative access',
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.12)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.admin_panel_settings_rounded,
-                        color: Colors.white, size: 24),
-                    SizedBox(width: 8),
-                    Text(
-                      'Admin Authorization',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                    controller: _email,
-                    label: 'Admin Email ID',
-                    icon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress),
-                const SizedBox(height: 12),
-                _buildTextField(
-                    controller: _password,
-                    label: 'Password',
-                    icon: Icons.lock_outline,
-                    obscure: true),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: _loading ? null : _forgotPassword,
-                    child: const Text(
-                      'Forgot password?',
-                      style: TextStyle(
-                        color: Color(0xFF93C5FD),
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: Color(0xFF111827), size: 18),
+                    onPressed: () => context.pop(),
                   ),
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _loading ? null : _loginWithEmail,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: const Color(0xFF1E40AF),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                  const Icon(Icons.admin_panel_settings_rounded,
+                      color: Color(0xFF0095F6), size: 24),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Admin Authorization',
+                    style: TextStyle(
+                        color: Color(0xFF111827),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
                   ),
-                  child: _loading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
-                      : const Text('Access Dashboard',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: 16),
-                  Text(_error!,
-                      style: const TextStyle(
-                          color: Colors.redAccent, fontSize: 13),
-                      textAlign: TextAlign.center),
                 ],
+              ),
+              const SizedBox(height: 20),
+              _buildTextField(
+                  controller: _email,
+                  label: 'Admin Email ID',
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress),
+              const SizedBox(height: 12),
+              _buildTextField(
+                  controller: _password,
+                  label: 'Password',
+                  icon: Icons.lock_outline,
+                  obscure: true),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _loading ? null : _forgotPassword,
+                  child: const Text(
+                    'Forgot password?',
+                    style: TextStyle(
+                      color: Color(0xFF0095F6),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: _loading ? null : _loginWithEmail,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: const Color(0xFF0095F6),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+                child: _loading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    : const Text('Access Dashboard',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 16),
+                Text(_error!,
+                    style: const TextStyle(
+                        color: Colors.redAccent, fontSize: 13),
+                    textAlign: TextAlign.center),
               ],
-            ),
+            ],
           ),
         ),
       ),
@@ -154,24 +151,24 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen>
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscure,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w600),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.5)),
+        labelStyle: const TextStyle(color: Color(0xFF374151)),
+        prefixIcon: Icon(icon, color: const Color(0xFF6B7280)),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.04),
+        fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF38BDF8)),
+          borderSide: const BorderSide(color: Color(0xFF0095F6), width: 2),
         ),
       ),
     );

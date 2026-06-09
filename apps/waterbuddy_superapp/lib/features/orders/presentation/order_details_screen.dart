@@ -223,11 +223,7 @@ class _OrderDetailsBody extends ConsumerWidget {
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-            ),
+            color: Color(0xFF0095F6),
           ),
           child: SafeArea(
             child: Padding(

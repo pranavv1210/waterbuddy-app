@@ -28,7 +28,7 @@ class PaymentController extends StateNotifier<PaymentState> {
     state = state.copyWith(isProcessing: true, clearError: true);
     try {
       final settings =
-          await _firestore.collection('system_settings').doc('app').get();
+          await _firestore.collection('system_settings').doc('config').get();
       if (settings.data()?['codEnabled'] == false) {
         throw Exception('Cash on delivery is currently disabled.');
       }

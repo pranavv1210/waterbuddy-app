@@ -101,13 +101,8 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
         subtitle: 'Enter the 6-digit code sent to $phoneNumber',
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-            ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -115,14 +110,14 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                   children: [
                     IconButton(
                       icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white, size: 18),
+                          color: Color(0xFF111827), size: 18),
                       onPressed: () => context.canPop()
                           ? context.pop()
                           : context.go(RouteNames.authDriver),
                     ),
                     const Text('OTP Verification',
                         style: TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF111827),
                             fontSize: 18,
                             fontWeight: FontWeight.bold)),
                   ],
@@ -131,15 +126,14 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                    color: const Color(0xFFEEF7FF),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: const Color(0xFF3B82F6).withValues(alpha: 0.3)),
+                    border: Border.all(color: const Color(0xFFDCEFFF)),
                   ),
                   child: const Text(
                     'Development OTP: 123456',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFF0095F6),
                         fontSize: 13,
                         fontWeight: FontWeight.w700),
                     textAlign: TextAlign.center,
@@ -151,7 +145,7 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                   keyboardType: TextInputType.number,
                   maxLength: 6,
                   style: const TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFF111827),
                       fontSize: 24,
                       letterSpacing: 8,
                       fontWeight: FontWeight.w600),
@@ -159,24 +153,22 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                   decoration: InputDecoration(
                     hintText: '------',
                     counterText: '',
-                    hintStyle: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.2),
+                    hintStyle: const TextStyle(
+                        color: Color(0xFF9CA3AF),
                         letterSpacing: 8),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.04),
+                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.15)),
+                      borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.15)),
+                      borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFF3B82F6)),
+                      borderSide: const BorderSide(color: Color(0xFF0095F6)),
                     ),
                   ),
                 ),
@@ -240,7 +232,7 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                         },
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: const Color(0xFF2563EB),
+                    backgroundColor: const Color(0xFF0095F6),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
@@ -258,10 +250,10 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       'Didn\'t receive code? ',
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: Color(0xFF6B7280),
                           fontSize: 14),
                     ),
                     TextButton(
@@ -269,7 +261,7 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                           ? _resendOtp
                           : null,
                       style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF3B82F6),
+                        foregroundColor: const Color(0xFF0095F6),
                         padding: EdgeInsets.zero,
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -281,8 +273,8 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: _countdown > 0
-                              ? Colors.white.withValues(alpha: 0.4)
-                              : const Color(0xFF3B82F6),
+                              ? const Color(0xFF9CA3AF)
+                              : const Color(0xFF0095F6),
                         ),
                       ),
                     ),

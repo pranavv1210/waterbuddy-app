@@ -387,12 +387,10 @@ class _EmptyState extends StatelessWidget {
             Container(
               width: 180,
               height: 52,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0EA5E9), Color(0xFF14B8A6)],
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: const Color(0xFF0095F6),
                 ),
-              ),
               child: ElevatedButton.icon(
                 onPressed: () => context.go(RouteNames.home),
                 icon: const Icon(Icons.water_drop_rounded, size: 18),

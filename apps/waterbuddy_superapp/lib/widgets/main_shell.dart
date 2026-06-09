@@ -103,9 +103,7 @@ class _DesktopSidebar extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF38BDF8), Color(0xFF0EA5E9)],
-                  ),
+                  color: const Color(0xFF0095F6),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.water_drop_rounded,

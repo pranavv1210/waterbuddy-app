@@ -275,9 +275,7 @@ class _SearchingStatusCard extends StatelessWidget {
                           ),
                           child: Container(
                             decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Color(0xFF0EA5E9), Color(0xFF14B8A6)],
-                              ),
+                              color: Color(0xFF0095F6),
                             ),
                           ),
                         ),
