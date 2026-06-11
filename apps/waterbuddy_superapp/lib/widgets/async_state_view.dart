@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'premium_ui.dart';
+
 class AsyncStateView extends StatelessWidget {
   const AsyncStateView({
     super.key,
@@ -15,11 +17,34 @@ class AsyncStateView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const WaterBuddyLoader(
+        message: 'Loading latest WaterBuddy data',
+        compact: true,
+      );
     }
 
     if (hasError) {
-      return const Center(child: Text('Unable to load state.'));
+      return const Center(
+        child: GlassPanel(
+          padding: EdgeInsets.all(18),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_rounded, color: WbColors.red),
+              SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  'Unable to load state.',
+                  style: TextStyle(
+                    color: WbColors.ink,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return child;

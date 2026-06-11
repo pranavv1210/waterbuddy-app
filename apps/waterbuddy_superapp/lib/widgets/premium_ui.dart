@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class WbColors {
   const WbColors._();
@@ -15,6 +16,38 @@ class WbColors {
   static const red = Color(0xFFEF4444);
   static const amber = Color(0xFFF59E0B);
   static const surface = Color(0xFFF8FAFC);
+}
+
+class WaterBuddyDesignSystem {
+  const WaterBuddyDesignSystem._();
+
+  static const spacingXs = 6.0;
+  static const spacingSm = 10.0;
+  static const spacingMd = 16.0;
+  static const spacingLg = 22.0;
+  static const spacingXl = 30.0;
+
+  static const radiusSm = 14.0;
+  static const radiusMd = 20.0;
+  static const radiusLg = 28.0;
+  static const radiusPill = 999.0;
+
+  static const fast = Duration(milliseconds: 180);
+  static const medium = Duration(milliseconds: 280);
+  static const slow = Duration(milliseconds: 460);
+
+  static const spring = Curves.easeOutBack;
+  static const ease = Curves.easeOutCubic;
+
+  static List<BoxShadow> premiumShadow([Color color = WbColors.ink]) {
+    return [
+      BoxShadow(
+        color: color.withOpacity(0.10),
+        blurRadius: 28,
+        offset: const Offset(0, 14),
+      ),
+    ];
+  }
 }
 
 class GlassPanel extends StatelessWidget {
@@ -255,6 +288,73 @@ class AbstractWaterBackground extends StatefulWidget {
       _AbstractWaterBackgroundState();
 }
 
+class WaterBuddyLoader extends StatefulWidget {
+  const WaterBuddyLoader({
+    super.key,
+    this.message = 'Loading WaterBuddy',
+    this.compact = false,
+  });
+
+  final String message;
+  final bool compact;
+
+  @override
+  State<WaterBuddyLoader> createState() => _WaterBuddyLoaderState();
+}
+
+class _WaterBuddyLoaderState extends State<WaterBuddyLoader>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = widget.compact ? 74.0 : 118.0;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedPulse(
+            animation: _controller,
+            color: WbColors.blue,
+            icon: Icons.water_drop_rounded,
+            size: size,
+          ),
+          const SizedBox(height: 14),
+          AnimatedSwitcher(
+            duration: WaterBuddyDesignSystem.medium,
+            child: Text(
+              widget.message,
+              key: ValueKey(widget.message),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: WbColors.ink,
+                fontSize: widget.compact ? 13 : 15,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
 class _AbstractWaterBackgroundState extends State<AbstractWaterBackground>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
@@ -344,3 +444,504 @@ class _WaterBackgroundPainter extends CustomPainter {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// WbPremiumTextField – animated, focus-glowing, premium text field
+// ─────────────────────────────────────────────────────────────────────────────
+
+class WbPremiumTextField extends StatefulWidget {
+  const WbPremiumTextField({
+    super.key,
+    required this.controller,
+    required this.label,
+    required this.icon,
+    this.keyboardType,
+    this.obscureText = false,
+    this.validator,
+    this.enabled = true,
+    this.suffixIcon,
+    this.onChanged,
+    this.textInputAction,
+    this.focusNode,
+    this.maxLength,
+    this.accentColor = WbColors.blue,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+  final TextInputType? keyboardType;
+  final bool obscureText;
+  final String? Function(String?)? validator;
+  final bool enabled;
+  final Widget? suffixIcon;
+  final ValueChanged<String>? onChanged;
+  final TextInputAction? textInputAction;
+  final FocusNode? focusNode;
+  final int? maxLength;
+  final Color accentColor;
+
+  @override
+  State<WbPremiumTextField> createState() => _WbPremiumTextFieldState();
+}
+
+class _WbPremiumTextFieldState extends State<WbPremiumTextField>
+    with SingleTickerProviderStateMixin {
+  late final FocusNode _focus;
+  bool _focused = false;
+  bool _obscure = false;
+  late final AnimationController _shakeController;
+  late final Animation<double> _shakeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _obscure = widget.obscureText;
+    _focus = widget.focusNode ?? FocusNode();
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _shakeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
+    );
+    _focus.addListener(() {
+      if (mounted) setState(() => _focused = _focus.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    if (widget.focusNode == null) _focus.dispose();
+    _shakeController.dispose();
+    super.dispose();
+  }
+
+  void shake() {
+    HapticFeedback.lightImpact();
+    _shakeController.forward(from: 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = widget.accentColor;
+
+    return AnimatedBuilder(
+      animation: _shakeAnimation,
+      builder: (context, child) {
+        final offset = math.sin(_shakeAnimation.value * math.pi * 5) * 6;
+        return Transform.translate(
+          offset: Offset(offset * (1 - _shakeAnimation.value), 0),
+          child: child,
+        );
+      },
+      child: AnimatedContainer(
+        duration: WaterBuddyDesignSystem.fast,
+        curve: WaterBuddyDesignSystem.ease,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(WaterBuddyDesignSystem.radiusSm),
+          boxShadow: _focused
+              ? [
+                  BoxShadow(
+                    color: accentColor.withOpacity(0.18),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  )
+                ]
+              : null,
+        ),
+        child: TextFormField(
+          controller: widget.controller,
+          focusNode: _focus,
+          keyboardType: widget.keyboardType,
+          obscureText: _obscure,
+          enabled: widget.enabled,
+          textInputAction: widget.textInputAction,
+          maxLength: widget.maxLength,
+          onChanged: widget.onChanged,
+          validator: widget.validator,
+          style: const TextStyle(
+            color: WbColors.ink,
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+          ),
+          decoration: InputDecoration(
+            labelText: widget.label,
+            counterText: '',
+            labelStyle: TextStyle(
+              color: _focused ? accentColor : WbColors.muted,
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+            ),
+            prefixIcon: Icon(
+              widget.icon,
+              color: _focused ? accentColor : WbColors.muted,
+              size: 20,
+            ),
+            suffixIcon: widget.obscureText
+                ? IconButton(
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded,
+                      color: WbColors.muted,
+                      size: 20,
+                    ),
+                    onPressed: () => setState(() => _obscure = !_obscure),
+                  )
+                : widget.suffixIcon,
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 18,
+            ),
+            border: OutlineInputBorder(
+              borderRadius:
+                  BorderRadius.circular(WaterBuddyDesignSystem.radiusSm),
+              borderSide: const BorderSide(color: WbColors.line),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius:
+                  BorderRadius.circular(WaterBuddyDesignSystem.radiusSm),
+              borderSide: const BorderSide(color: WbColors.line),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius:
+                  BorderRadius.circular(WaterBuddyDesignSystem.radiusSm),
+              borderSide: BorderSide(color: accentColor, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius:
+                  BorderRadius.circular(WaterBuddyDesignSystem.radiusSm),
+              borderSide: const BorderSide(color: WbColors.red, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius:
+                  BorderRadius.circular(WaterBuddyDesignSystem.radiusSm),
+              borderSide: const BorderSide(color: WbColors.red, width: 2),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WbShimmer – shimmer loading placeholder
+// ─────────────────────────────────────────────────────────────────────────────
+
+class WbShimmer extends StatefulWidget {
+  const WbShimmer({
+    super.key,
+    required this.width,
+    required this.height,
+    this.borderRadius = 12,
+  });
+
+  final double width;
+  final double height;
+  final double borderRadius;
+
+  @override
+  State<WbShimmer> createState() => _WbShimmerState();
+}
+
+class _WbShimmerState extends State<WbShimmer>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+    _animation = Tween<double>(begin: -1, end: 2).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, _) {
+        return Container(
+          width: widget.width,
+          height: widget.height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              stops: [
+                (_animation.value - 1).clamp(0.0, 1.0),
+                _animation.value.clamp(0.0, 1.0),
+                (_animation.value + 1).clamp(0.0, 1.0),
+              ],
+              colors: const [
+                Color(0xFFECF0F1),
+                Color(0xFFF8FAFC),
+                Color(0xFFECF0F1),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WbStepIndicator – step progress bar for multi-step forms
+// ─────────────────────────────────────────────────────────────────────────────
+
+class WbStepIndicator extends StatelessWidget {
+  const WbStepIndicator({
+    super.key,
+    required this.currentStep,
+    required this.totalSteps,
+    this.accentColor = WbColors.blue,
+    this.stepLabels,
+  });
+
+  final int currentStep;
+  final int totalSteps;
+  final Color accentColor;
+  final List<String>? stepLabels;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: List.generate(totalSteps, (i) {
+            final done = i < currentStep;
+            final active = i == currentStep;
+            return Expanded(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AnimatedContainer(
+                      duration: WaterBuddyDesignSystem.medium,
+                      curve: WaterBuddyDesignSystem.ease,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: done || active ? accentColor : WbColors.line,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                  if (i < totalSteps - 1) const SizedBox(width: 4),
+                ],
+              ),
+            );
+          }),
+        ),
+        if (stepLabels != null && currentStep < stepLabels!.length) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Step ${currentStep + 1} of $totalSteps — ${stepLabels![currentStep]}',
+            style: const TextStyle(
+              color: WbColors.muted,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WbAnimatedCounter – animated number counter
+// ─────────────────────────────────────────────────────────────────────────────
+
+class WbAnimatedCounter extends StatelessWidget {
+  const WbAnimatedCounter({
+    super.key,
+    required this.value,
+    required this.style,
+    this.duration = const Duration(milliseconds: 800),
+    this.prefix = '',
+    this.suffix = '',
+  });
+
+  final double value;
+  final TextStyle style;
+  final Duration duration;
+  final String prefix;
+  final String suffix;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: value),
+      duration: duration,
+      curve: Curves.easeOutCubic,
+      builder: (context, val, _) {
+        final display = val >= 1000
+            ? '${(val / 1000).toStringAsFixed(1)}K'
+            : val.toInt().toString();
+        return Text('$prefix$display$suffix', style: style);
+      },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WbGradientButton – premium gradient button with loading/success states
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum WbButtonState { idle, loading, success, error }
+
+class WbGradientButton extends StatefulWidget {
+  const WbGradientButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.state = WbButtonState.idle,
+    this.icon,
+    this.loadingLabel = 'Please wait...',
+    this.successLabel = 'Done!',
+    this.gradient,
+    this.height = 56,
+  });
+
+  final String label;
+  final String loadingLabel;
+  final String successLabel;
+  final VoidCallback? onPressed;
+  final WbButtonState state;
+  final IconData? icon;
+  final Gradient? gradient;
+  final double height;
+
+  @override
+  State<WbGradientButton> createState() => _WbGradientButtonState();
+}
+
+class _WbGradientButtonState extends State<WbGradientButton>
+    with SingleTickerProviderStateMixin {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isIdle = widget.state == WbButtonState.idle;
+    final isLoading = widget.state == WbButtonState.loading;
+    final isSuccess = widget.state == WbButtonState.success;
+
+    final gradient = widget.gradient ??
+        const LinearGradient(
+          colors: [Color(0xFF0EA5E9), Color(0xFF0369A1)],
+        );
+
+    String label;
+    Widget child;
+    if (isLoading) {
+      label = widget.loadingLabel;
+      child = Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15)),
+        ],
+      );
+    } else if (isSuccess) {
+      child = Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+          const SizedBox(width: 8),
+          Text(widget.successLabel,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15)),
+        ],
+      );
+    } else {
+      child = Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (widget.icon != null) ...[
+            Icon(widget.icon, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+          ],
+          Text(widget.label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15)),
+        ],
+      );
+    }
+
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: (isIdle && widget.onPressed != null)
+          ? () {
+              HapticFeedback.mediumImpact();
+              widget.onPressed!();
+            }
+          : null,
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        child: AnimatedContainer(
+          duration: WaterBuddyDesignSystem.medium,
+          height: widget.height,
+          decoration: BoxDecoration(
+            gradient: isSuccess
+                ? const LinearGradient(
+                    colors: [Color(0xFF16A34A), Color(0xFF15803D)],
+                  )
+                : isIdle
+                    ? gradient
+                    : LinearGradient(
+                        colors: [
+                          gradient.colors.first.withOpacity(0.6),
+                          gradient.colors.last.withOpacity(0.6),
+                        ],
+                      ),
+            borderRadius: BorderRadius.circular(WaterBuddyDesignSystem.radiusPill),
+            boxShadow: _pressed
+                ? null
+                : [
+                    BoxShadow(
+                      color: WbColors.blue.withOpacity(0.28),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +10,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/operations_ui.dart';
+import '../../../widgets/premium_ui.dart';
 import '../../orders/providers/order_providers.dart';
 import '../../../widgets/waterbuddy_toast.dart';
 import '../../../widgets/waterbuddy_bottom_sheet.dart';
@@ -174,8 +174,8 @@ class ProfileScreen extends ConsumerWidget {
           ordersAsync.when(
             data: (list) {
               final completed = list.where((o) => o.status == 'DELIVERED').toList();
-              final totalSpent = completed.fold<num>(0, (sum, o) => sum + o.amount);
-              final totalLitres = completed.fold<num>(0, (sum, o) => sum + o.tankSize);
+              final totalSpent = completed.fold<num>(0, (acc, o) => acc + o.amount);
+              final totalLitres = completed.fold<num>(0, (acc, o) => acc + o.tankSize);
 
               return GridView.count(
                 shrinkWrap: true,
@@ -187,35 +187,52 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   _buildStatCard(
                     icon: Icons.local_shipping_rounded,
-                    color: const Color(0xFF0095F6),
-                    value: '${completed.length}',
+                    color: WbColors.blue,
+                    value: completed.length.toDouble(),
                     label: 'Bookings Completed',
+                    prefix: '',
+                    suffix: '',
                   ),
                   _buildStatCard(
                     icon: Icons.payments_rounded,
-                    color: Colors.green,
-                    value: '₹${totalSpent.toInt()}',
+                    color: WbColors.green,
+                    value: totalSpent.toDouble(),
                     label: 'Total Spent',
+                    prefix: '₹',
+                    suffix: '',
                   ),
                   _buildStatCard(
                     icon: Icons.water_drop_rounded,
-                    color: Colors.lightBlue,
-                    value: '${_formatLitres(totalLitres.toInt())}L',
+                    color: const Color(0xFF38BDF8),
+                    value: totalLitres.toDouble(),
                     label: 'Water Ordered',
+                    prefix: '',
+                    suffix: 'L',
                   ),
                   _buildStatCard(
                     icon: Icons.home_work_rounded,
-                    color: Colors.purple,
-                    value: 'Active',
+                    color: const Color(0xFFA78BFA),
+                    value: -1,
                     label: 'Standard Account',
+                    staticText: 'Active',
                   ),
                 ],
               );
             },
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24.0),
-                child: CircularProgressIndicator(strokeWidth: 2.5),
+            loading: () => GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.45,
+              children: List.generate(
+                4,
+                (_) => const WbShimmer(
+                  width: double.infinity,
+                  height: 80,
+                  borderRadius: 20,
+                ),
               ),
             ),
             error: (_, __) => const SizedBox.shrink(),
@@ -281,8 +298,11 @@ class ProfileScreen extends ConsumerWidget {
   Widget _buildStatCard({
     required IconData icon,
     required Color color,
-    required String value,
     required String label,
+    double value = 0,
+    String prefix = '',
+    String suffix = '',
+    String? staticText,
   }) {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -290,6 +310,13 @@ class ProfileScreen extends ConsumerWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,7 +326,7 @@ class ProfileScreen extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.12),
                   shape: BoxShape.circle,
@@ -312,19 +339,30 @@ class ProfileScreen extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  color: Color(0xFF0F172A),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 1),
+              staticText != null
+                  ? Text(
+                      staticText,
+                      style: const TextStyle(
+                        color: WbColors.ink,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    )
+                  : WbAnimatedCounter(
+                      value: value,
+                      prefix: prefix,
+                      suffix: suffix,
+                      style: const TextStyle(
+                        color: WbColors.ink,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+              const SizedBox(height: 2),
               Text(
                 label,
                 style: const TextStyle(
-                  color: Color(0xFF64748B),
+                  color: WbColors.muted,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                 ),

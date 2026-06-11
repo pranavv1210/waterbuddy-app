@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../widgets/premium_ui.dart';
+
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../orders/presentation/cancellation_sheet.dart';
@@ -118,19 +120,21 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
         backgroundColor: const Color(0xFFF8FAFC),
         body: Stack(
           children: [
-            GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: LatLng(lat, lng),
-                zoom: 15,
+            Positioned.fill(
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(lat, lng),
+                  zoom: 15,
+                ),
+                myLocationEnabled: false,
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                mapToolbarEnabled: false,
+                scrollGesturesEnabled: true,
+                zoomGesturesEnabled: true,
+                tiltGesturesEnabled: false,
+                rotateGesturesEnabled: false,
               ),
-              myLocationEnabled: false,
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-              scrollGesturesEnabled: false,
-              zoomGesturesEnabled: false,
-              tiltGesturesEnabled: false,
-              rotateGesturesEnabled: false,
             ),
             Center(
               child: SizedBox(
@@ -613,50 +617,64 @@ class _TimeoutView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: WbColors.surface,
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(28),
+            padding: const EdgeInsets.all(32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.timer_off_rounded,
-                    size: 64, color: Color(0xFFEF4444)),
-                const SizedBox(height: 24),
-                const Text(
-                  'No tanker available right now',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Color(0xFF0F172A),
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    color: WbColors.red.withOpacity(0.08),
+                    shape: BoxShape.circle,
                   ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Try again in a few minutes or choose a different delivery address.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Color(0xFF64748B),
-                    fontWeight: FontWeight.w600,
-                  ),
+                  child: const Icon(Icons.timer_off_rounded,
+                      size: 46, color: WbColors.red),
                 ),
                 const SizedBox(height: 28),
+                const Text(
+                  'No tanker available\nright now',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: WbColors.ink,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'All nearby tanker owners are busy.\nTry again in a few minutes.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: WbColors.muted,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
-                  height: 54,
+                  height: 56,
                   child: FilledButton(
                     onPressed: onRetry,
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF0EA5E9),
+                      backgroundColor: WbColors.ink,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(
+                            WaterBuddyDesignSystem.radiusPill),
                       ),
                     ),
                     child: const Text(
                       'Back to Home',
-                      style: TextStyle(fontWeight: FontWeight.w900),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w900, fontSize: 15),
                     ),
                   ),
                 ),

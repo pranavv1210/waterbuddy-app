@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,7 +10,10 @@ import '../../../core/auth/app_role.dart';
 import '../../../core/services/auth/auth_service.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
+import '../../../widgets/loading_feedback_button.dart';
+import '../../../widgets/premium_ui.dart';
 import '../../../widgets/waterbuddy_auth_layout.dart';
+import '../../../widgets/waterbuddy_toast.dart';
 
 class AdminAuthScreen extends ConsumerStatefulWidget {
   const AdminAuthScreen({super.key});
@@ -18,31 +22,16 @@ class AdminAuthScreen extends ConsumerStatefulWidget {
   ConsumerState<AdminAuthScreen> createState() => _AdminAuthScreenState();
 }
 
-class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen>
-    with SingleTickerProviderStateMixin {
+class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  bool _loading = false;
-  String? _error;
-
-  late final AnimationController _animController;
-  late final Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 450))
-      ..forward();
-    _fadeAnimation =
-        CurvedAnimation(parent: _animController, curve: Curves.easeInOut);
-  }
+  LoadingButtonState _btnState = LoadingButtonState.idle;
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
-    _animController.dispose();
     super.dispose();
   }
 
@@ -58,81 +47,88 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen>
         activeRole: AppRole.admin,
         title: 'Admin Login',
         subtitle: 'Secure administrative access',
-        child: FadeTransition(
-          opacity: _fadeAnimation,
+        child: Form(
+          key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        color: Color(0xFF111827), size: 18),
-                    onPressed: () => context.pop(),
-                  ),
-                  const Icon(Icons.admin_panel_settings_rounded,
-                      color: Color(0xFF0095F6), size: 24),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Admin Authorization',
-                    style: TextStyle(
-                        color: Color(0xFF111827),
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
+              // Security badge
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1D4ED8).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: const Color(0xFF1D4ED8).withOpacity(0.18)),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.shield_rounded,
+                        color: Color(0xFF1D4ED8), size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Authorized personnel only',
+                      style: TextStyle(
+                        color: Color(0xFF1D4ED8),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn(delay: 60.ms),
               const SizedBox(height: 20),
-              _buildTextField(
-                  controller: _email,
-                  label: 'Admin Email ID',
-                  icon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress),
-              const SizedBox(height: 12),
-              _buildTextField(
-                  controller: _password,
-                  label: 'Password',
-                  icon: Icons.lock_outline,
-                  obscure: true),
+              WbPremiumTextField(
+                controller: _email,
+                label: 'Admin Email',
+                icon: Icons.email_rounded,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                accentColor: const Color(0xFF1D4ED8),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Enter email' : null,
+              ).animate().fadeIn(delay: 120.ms).slideY(begin: 0.1),
+              const SizedBox(height: 14),
+              WbPremiumTextField(
+                controller: _password,
+                label: 'Password',
+                icon: Icons.lock_rounded,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                accentColor: const Color(0xFF1D4ED8),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Enter password' : null,
+              ).animate().fadeIn(delay: 180.ms).slideY(begin: 0.1),
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: _loading ? null : _forgotPassword,
+                  onPressed: () =>
+                      context.push('${RouteNames.passwordReset}?role=admin'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF1D4ED8),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   child: const Text(
                     'Forgot password?',
-                    style: TextStyle(
-                      color: Color(0xFF0095F6),
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style:
+                        TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _loading ? null : _loginWithEmail,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFF0095F6),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                child: _loading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : const Text('Access Dashboard',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 16),
-                Text(_error!,
-                    style: const TextStyle(
-                        color: Colors.redAccent, fontSize: 13),
-                    textAlign: TextAlign.center),
-              ],
+              ).animate().fadeIn(delay: 220.ms),
+              const SizedBox(height: 8),
+              LoadingFeedbackButton(
+                onPressed: _btnState == LoadingButtonState.idle
+                    ? _loginWithEmail
+                    : null,
+                label: 'Access Dashboard',
+                loadingLabel: 'Authenticating...',
+                successLabel: 'Access Granted!',
+                buttonState: _btnState,
+                backgroundColor: const Color(0xFF1D4ED8),
+              ).animate().fadeIn(delay: 280.ms).slideY(begin: 0.1),
             ],
           ),
         ),
@@ -140,45 +136,10 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen>
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool obscure = false,
-    TextInputType? keyboardType,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscure,
-      style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w600),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF374151)),
-        prefixIcon: Icon(icon, color: const Color(0xFF6B7280)),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF0095F6), width: 2),
-        ),
-      ),
-    );
-  }
-
   Future<void> _loginWithEmail() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _btnState = LoadingButtonState.loading);
+
     try {
       final auth = ref.read(authServiceProvider);
       final emailInput = _email.text.trim();
@@ -197,21 +158,14 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen>
         } else {
           rethrow;
         }
-      } catch (e) {
-        if (e.toString().contains('user-not-found') &&
-            (emailInput.toLowerCase() == 'waterbuddyapp.wb@gmail.com' ||
-                emailInput.toLowerCase() == 'admin@waterbuddy.com')) {
-          credential = await auth.signUpWithEmailPassword(
-              email: emailInput, password: passwordInput);
-        } else {
-          rethrow;
-        }
       }
+
       final user = credential.user;
       if (user == null || !await auth.isAuthorizedAdmin(user)) {
         await auth.signOut();
         throw const AuthFailure('Unauthorized access');
       }
+
       unawaited(auth
           .upsertUserProfile(
             role: AppRole.admin,
@@ -222,18 +176,16 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen>
             isVerified: true,
           )
           .catchError((_) {}));
-      if (!mounted) return;
-      context.go(RouteNames.adminDashboard);
-    } on AuthFailure catch (e) {
-      setState(() => _error = e.message);
-    } catch (_) {
-      setState(() => _error = 'Admin login failed.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
 
-  Future<void> _forgotPassword() async {
-    context.push('${RouteNames.passwordReset}?role=admin');
+      setState(() => _btnState = LoadingButtonState.success);
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) context.go(RouteNames.adminDashboard);
+    } on AuthFailure catch (e) {
+      setState(() => _btnState = LoadingButtonState.idle);
+      if (mounted) WaterBuddyToastService.error(context, e.message);
+    } catch (e) {
+      setState(() => _btnState = LoadingButtonState.idle);
+      if (mounted) WaterBuddyToastService.error(context, 'Login failed: $e');
+    }
   }
 }

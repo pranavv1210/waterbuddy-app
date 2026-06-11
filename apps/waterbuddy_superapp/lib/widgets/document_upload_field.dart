@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
+import 'premium_ui.dart';
 import 'waterbuddy_bottom_sheet.dart';
 import 'waterbuddy_toast.dart';
 
@@ -82,7 +83,10 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
             _success = true;
             widget.controller.text = mockUrl;
           });
-          WaterBuddyToast.show(context, '${widget.label} uploaded successfully!');
+          WaterBuddyToastService.success(
+            context,
+            '${widget.label} uploaded successfully',
+          );
         }
       }
     });
@@ -215,125 +219,140 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
     );
   }
 
-  // Simulated live camera viewfinder with 100% light/scaffold theme
   void _openCameraScanner() {
-    showDialog(
+    showWaterBuddyBottomSheet<void>(
       context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return Scaffold(
-          backgroundColor: const Color(0xFF0F172A), // Keep scanning dark for simulator camera immersion
-          body: Stack(
-            children: [
-              // Viewfinder Screen
-              Positioned.fill(
-                child: Container(
-                  color: const Color(0xFF0F172A),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.document_scanner_rounded, size: 80, color: widget.themeColor.withOpacity(0.2)),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Simulating Camera Viewfinder...',
-                        style: TextStyle(color: Colors.white30, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Scanning Crop Marks and Laser
-              Center(
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.85,
-                  height: MediaQuery.of(context).size.height * 0.5,
+      isDismissible: false,
+      enableDrag: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    border: Border.all(color: widget.themeColor, width: 2),
-                    borderRadius: BorderRadius.circular(20),
-                    color: Colors.transparent,
+                    color: widget.themeColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: Container(
-                          color: widget.themeColor.withOpacity(0.04),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.center,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Text(
-                            'Align ${widget.label} Inside Frame',
-                            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: Icon(
+                    Icons.document_scanner_rounded,
+                    color: widget.themeColor,
                   ),
                 ),
-              ),
-
-              // Controls Overlay
-              Positioned(
-                top: 40,
-                left: 20,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Scan ${widget.label}',
+                    style: const TextStyle(
+                      color: WbColors.ink,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: WbColors.muted),
                   onPressed: () => Navigator.pop(context),
                 ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 310,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(color: WbColors.line),
               ),
-
-              Positioned(
-                bottom: 60,
-                left: 0,
-                right: 0,
-                child: Column(
-                  children: [
-                    const Text(
-                      'HOLD STILL • SCANNING',
-                      style: TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5),
-                    ),
-                    const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                        final randomNum = Random().nextInt(9000) + 1000;
-                        final name = "${widget.label.toLowerCase().replaceAll(' ', '_')}_scan_$randomNum.jpg";
-                        final size = "1.${Random().nextInt(9) + 1} MB";
-                        final mockUrl = widget.isPhoto 
-                            ? "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500"
-                            : "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500";
-                        _simulateUpload(name, size, mockUrl);
-                      },
-                      child: Container(
-                        height: 80,
-                        width: 80,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 4),
-                        ),
-                        padding: const EdgeInsets.all(6),
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                children: [
+                  const Positioned.fill(child: AbstractWaterBackground()),
+                  Center(
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 0.74,
+                      height: 210,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: widget.themeColor, width: 2),
+                        borderRadius: BorderRadius.circular(22),
+                        color: Colors.white.withOpacity(0.42),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Align ${widget.label} inside frame',
+                          style: const TextStyle(
+                            color: WbColors.ink,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ),
-                  ],
+                  ),
+                  Positioned(
+                    left: 42,
+                    right: 42,
+                    top: 154,
+                    child: Container(
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: widget.themeColor.withOpacity(0.75),
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.themeColor.withOpacity(0.30),
+                            blurRadius: 14,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Hold steady while WaterBuddy captures a clear verification document.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: WbColors.muted,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 18),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                final randomNum = Random().nextInt(9000) + 1000;
+                final name =
+                    "${widget.label.toLowerCase().replaceAll(' ', '_')}_scan_$randomNum.jpg";
+                final size = "1.${Random().nextInt(9) + 1} MB";
+                final mockUrl = widget.isPhoto
+                    ? "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500"
+                    : "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500";
+                _simulateUpload(name, size, mockUrl);
+              },
+              icon: const Icon(Icons.camera_alt_rounded),
+              label: const Text('Capture Document'),
+              style: FilledButton.styleFrom(
+                backgroundColor: WbColors.ink,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
                 ),
               ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
-
   void _openGalleryPicker() {
     showWaterBuddyBottomSheet(
       context: context,
@@ -693,3 +712,4 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
     );
   }
 }
+

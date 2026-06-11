@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'premium_ui.dart';
+
 enum LoadingButtonState { idle, loading, success }
 
 class LoadingFeedbackButton extends StatelessWidget {
@@ -52,9 +54,18 @@ class LoadingFeedbackButton extends StatelessWidget {
             SizedBox(
               width: 18,
               height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(textFg),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 900),
+                curve: Curves.easeInOut,
+                builder: (context, value, _) {
+                  return CircularProgressIndicator(
+                    value: value,
+                    strokeWidth: 2.5,
+                    backgroundColor: Colors.white.withOpacity(0.22),
+                    valueColor: AlwaysStoppedAnimation<Color>(textFg),
+                  );
+                },
               ),
             ),
             const SizedBox(width: 12),
@@ -87,7 +98,13 @@ class LoadingFeedbackButton extends StatelessWidget {
       height: height,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        curve: WaterBuddyDesignSystem.ease,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(borderRadius),
+          boxShadow: buttonState == LoadingButtonState.idle
+              ? WaterBuddyDesignSystem.premiumShadow(primaryBg)
+              : null,
+        ),
         child: FilledButton(
           onPressed: buttonState == LoadingButtonState.idle ? onPressed : null,
           style: FilledButton.styleFrom(
