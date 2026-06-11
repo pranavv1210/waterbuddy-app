@@ -27,10 +27,10 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
   bool _cancelOpen = false;
 
   static const _statuses = [
-    'Finding nearby tankers...',
-    'Checking availability...',
-    'Sending request...',
-    'Waiting for response...',
+    'Searching nearby tankers...',
+    'Matching with owners...',
+    'Finding fastest delivery...',
+    'Waiting for owner response...',
   ];
 
   @override
@@ -106,6 +106,7 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
     final address =
         (location?['address'] as String?) ?? 'Water delivery location';
     final tankSize = activeOrder?.tankSize.toInt();
+    final nearbyCount = ref.watch(onlineSellersProvider).valueOrNull?.length ?? 0;
 
     return PopScope(
       canPop: false,
@@ -174,6 +175,7 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
                 statusText: _statuses[_statusIndex],
                 tankSize: tankSize,
                 orderId: searchingState.orderId,
+                nearbyCount: nearbyCount,
                 onCancel: () => _confirmCancel(status),
                 onDetails: searchingState.orderId == null
                     ? null
@@ -414,6 +416,7 @@ class _SearchingBottomPanel extends StatelessWidget {
     required this.statusText,
     required this.tankSize,
     required this.orderId,
+    required this.nearbyCount,
     required this.onCancel,
     required this.onDetails,
   });
@@ -421,6 +424,7 @@ class _SearchingBottomPanel extends StatelessWidget {
   final String statusText;
   final int? tankSize;
   final String? orderId;
+  final int nearbyCount;
   final VoidCallback onCancel;
   final VoidCallback? onDetails;
 
@@ -470,7 +474,7 @@ class _SearchingBottomPanel extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Nearest available tanker partners are being notified in real time.',
+            'Nearest tanker owners are being notified in real time.',
             style: TextStyle(
               color: Color(0xFF64748B),
               fontSize: 14,
@@ -521,6 +525,27 @@ class _SearchingBottomPanel extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0F2FE),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 260),
+                    child: Text(
+                      '$nearbyCount nearby',
+                      key: ValueKey(nearbyCount),
+                      style: const TextStyle(
+                        color: Color(0xFF0369A1),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                   ),
                 ),
                 TextButton(

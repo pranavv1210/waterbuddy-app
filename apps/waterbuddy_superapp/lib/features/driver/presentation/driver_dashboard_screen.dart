@@ -11,6 +11,7 @@ import '../../../models/order.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/operations_ui.dart';
+import '../../../widgets/waterbuddy_bottom_sheet.dart';
 
 class DriverDashboardScreen extends ConsumerStatefulWidget {
   const DriverDashboardScreen({super.key});
@@ -391,80 +392,114 @@ class _RunCard extends ConsumerWidget {
     );
   }
 
-  Future<bool> _showPinVerificationDialog(BuildContext context, String? expectedPin) async {
+  Future<bool> _showPinVerificationDialog(
+    BuildContext context,
+    String? expectedPin,
+  ) async {
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
-    final result = await showDialog<bool>(
+    final result = await showWaterBuddyBottomSheet<bool>(
       context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.white,
-          title: const Text(
-            'Enter Delivery PIN',
-            style: TextStyle(fontWeight: FontWeight.w900, color: OpsColors.ink),
-          ),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Please ask the customer for the 4-digit delivery PIN to complete the run.',
-                  style: TextStyle(color: OpsColors.muted, fontWeight: FontWeight.w500),
+      isDismissible: false,
+      enableDrag: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 2, 22, 24),
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Enter delivery PIN',
+                style: TextStyle(
+                  color: OpsColors.ink,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: controller,
-                  keyboardType: TextInputType.number,
-                  maxLength: 4,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8),
-                  decoration: InputDecoration(
-                    counterText: '',
-                    hintText: 'XXXX',
-                    hintStyle: const TextStyle(letterSpacing: 2),
-                    filled: true,
-                    fillColor: const Color(0xFFF3F4F6),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().length != 4) {
-                      return 'Enter a 4-digit PIN';
-                    }
-                    if (expectedPin != null && value.trim() != expectedPin) {
-                      return 'Incorrect PIN. Try again.';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel', style: TextStyle(color: OpsColors.muted, fontWeight: FontWeight.bold)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (formKey.currentState?.validate() ?? false) {
-                  Navigator.pop(context, true);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: OpsColors.amber,
-                foregroundColor: OpsColors.ink,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Verify PIN', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        );
-      },
+              const SizedBox(height: 8),
+              const Text(
+                'Ask the customer for the 4-digit PIN to complete this delivery.',
+                style: TextStyle(
+                  color: OpsColors.muted,
+                  fontWeight: FontWeight.w600,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 18),
+              TextFormField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                maxLength: 4,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: OpsColors.ink,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 10,
+                ),
+                decoration: InputDecoration(
+                  counterText: '',
+                  hintText: '0000',
+                  hintStyle: TextStyle(
+                    color: OpsColors.muted.withValues(alpha: 0.38),
+                    letterSpacing: 6,
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    borderSide: const BorderSide(color: OpsColors.line),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    borderSide: const BorderSide(color: OpsColors.line),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().length != 4) {
+                    return 'Enter a 4-digit PIN';
+                  }
+                  if (expectedPin != null && value.trim() != expectedPin) {
+                    return 'Incorrect PIN. Try again.';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        if (formKey.currentState?.validate() ?? false) {
+                          Navigator.pop(context, true);
+                        }
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: OpsColors.amber,
+                        foregroundColor: OpsColors.ink,
+                      ),
+                      child: const Text('Verify PIN'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
+    controller.dispose();
     return result ?? false;
   }
 

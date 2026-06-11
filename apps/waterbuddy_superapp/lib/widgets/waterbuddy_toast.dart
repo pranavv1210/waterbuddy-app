@@ -1,11 +1,34 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
+import 'premium_ui.dart';
+
+enum WaterBuddyToastType { success, error, info, warning }
+
+class WaterBuddyToastService {
+  static void success(BuildContext context, String message) {
+    WaterBuddyToast.show(context, message, type: WaterBuddyToastType.success);
+  }
+
+  static void error(BuildContext context, String message) {
+    WaterBuddyToast.show(context, message, type: WaterBuddyToastType.error);
+  }
+
+  static void info(BuildContext context, String message) {
+    WaterBuddyToast.show(context, message, type: WaterBuddyToastType.info);
+  }
+
+  static void warning(BuildContext context, String message) {
+    WaterBuddyToast.show(context, message, type: WaterBuddyToastType.warning);
+  }
+}
+
 class WaterBuddyToast {
   static void show(
     BuildContext context,
     String message, {
     bool isError = false,
+    WaterBuddyToastType? type,
     Duration duration = const Duration(seconds: 3),
   }) {
     final overlayState = Overlay.of(context);
@@ -14,7 +37,7 @@ class WaterBuddyToast {
     overlayEntry = OverlayEntry(
       builder: (context) => _ToastWidget(
         message: message,
-        isError: isError,
+        type: type ?? (isError ? WaterBuddyToastType.error : WaterBuddyToastType.success),
         onDismiss: () {
           try {
             overlayEntry.remove();
@@ -31,13 +54,13 @@ class WaterBuddyToast {
 class _ToastWidget extends StatefulWidget {
   const _ToastWidget({
     required this.message,
-    required this.isError,
+    required this.type,
     required this.onDismiss,
     required this.duration,
   });
 
   final String message;
-  final bool isError;
+  final WaterBuddyToastType type;
   final VoidCallback onDismiss;
   final Duration duration;
 
@@ -93,6 +116,7 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
   Widget build(BuildContext context) {
     final safeArea = MediaQuery.of(context).padding;
     final screenWidth = MediaQuery.of(context).size.width;
+    final colors = _ToastVisuals.forType(widget.type);
 
     return Positioned(
       top: safeArea.top + 16,
@@ -116,14 +140,10 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                       decoration: BoxDecoration(
-                        color: widget.isError
-                            ? const Color(0xFFFEF2F2).withOpacity(0.9)
-                            : const Color(0xFFF0FDF4).withOpacity(0.9),
+                        color: Colors.white.withOpacity(0.88),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: widget.isError
-                              ? const Color(0xFFFCA5A5).withOpacity(0.4)
-                              : const Color(0xFF86EFAC).withOpacity(0.4),
+                          color: colors.color.withOpacity(0.24),
                           width: 1.5,
                         ),
                         boxShadow: [
@@ -139,16 +159,12 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: widget.isError
-                                  ? const Color(0xFFEF4444).withOpacity(0.12)
-                                  : const Color(0xFF22C55E).withOpacity(0.12),
+                              color: colors.color.withOpacity(0.12),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              widget.isError ? Icons.error_rounded : Icons.check_circle_rounded,
-                              color: widget.isError
-                                  ? const Color(0xFFDC2626)
-                                  : const Color(0xFF16A34A),
+                              colors.icon,
+                              color: colors.color,
                               size: 20,
                             ),
                           ),
@@ -157,9 +173,7 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
                             child: Text(
                               widget.message,
                               style: TextStyle(
-                                color: widget.isError
-                                    ? const Color(0xFF7F1D1D)
-                                    : const Color(0xFF14532D),
+                                color: WbColors.ink,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
                                 height: 1.3,
@@ -172,9 +186,7 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
                             },
                             child: Icon(
                               Icons.close_rounded,
-                              color: widget.isError
-                                  ? const Color(0xFF991B1B).withOpacity(0.5)
-                                  : const Color(0xFF166534).withOpacity(0.5),
+                              color: WbColors.muted.withOpacity(0.7),
                               size: 18,
                             ),
                           ),
@@ -189,5 +201,37 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
         ),
       ),
     );
+  }
+}
+
+class _ToastVisuals {
+  const _ToastVisuals({required this.color, required this.icon});
+
+  final Color color;
+  final IconData icon;
+
+  static _ToastVisuals forType(WaterBuddyToastType type) {
+    switch (type) {
+      case WaterBuddyToastType.success:
+        return const _ToastVisuals(
+          color: WbColors.green,
+          icon: Icons.check_circle_rounded,
+        );
+      case WaterBuddyToastType.error:
+        return const _ToastVisuals(
+          color: WbColors.red,
+          icon: Icons.error_rounded,
+        );
+      case WaterBuddyToastType.info:
+        return const _ToastVisuals(
+          color: WbColors.blue,
+          icon: Icons.info_rounded,
+        );
+      case WaterBuddyToastType.warning:
+        return const _ToastVisuals(
+          color: WbColors.amber,
+          icon: Icons.warning_rounded,
+        );
+    }
   }
 }
