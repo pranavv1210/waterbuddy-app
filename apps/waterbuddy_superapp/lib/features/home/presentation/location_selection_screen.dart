@@ -7,6 +7,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/services/location/google_maps_service.dart';
+import '../../../widgets/waterbuddy_bottom_sheet.dart';
+import '../../../widgets/waterbuddy_toast.dart';
 import '../../orders/providers/order_providers.dart';
 
 class _AddressSuggestion {
@@ -124,7 +126,8 @@ class _LocationSelectionScreenState
     if (_submitting) return;
     setState(() => _submitting = true);
     try {
-      final coords = await _googleMapsService.getPlaceDetails(suggestion.placeId);
+      final coords =
+          await _googleMapsService.getPlaceDetails(suggestion.placeId);
       if (coords != null && mounted) {
         context.pop({
           'address': suggestion.fullAddress,
@@ -136,15 +139,17 @@ class _LocationSelectionScreenState
         });
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to resolve coordinates for this location.')),
+          WaterBuddyToastService.error(
+            context,
+            'Failed to resolve coordinates for this location.',
           );
         }
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error resolving location details.')),
+        WaterBuddyToastService.error(
+          context,
+          'Error resolving location details.',
         );
       }
     } finally {
@@ -162,8 +167,9 @@ class _LocationSelectionScreenState
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permission is required.')),
+        WaterBuddyToastService.warning(
+          context,
+          'Location permission is required.',
         );
         return;
       }
@@ -202,17 +208,13 @@ class _LocationSelectionScreenState
 
   void _openSavedAddresses(List<Map<String, dynamic>> locations) {
     if (locations.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No saved delivery addresses yet')),
-      );
+      WaterBuddyToastService.info(context, 'No saved delivery addresses yet');
       return;
     }
 
-    showModalBottomSheet<void>(
+    showWaterBuddyBottomSheet<void>(
       context: context,
-      showDragHandle: true,
-      backgroundColor: Colors.white,
-      builder: (context) => SafeArea(
+      child: SafeArea(
         child: ListView.separated(
           shrinkWrap: true,
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),

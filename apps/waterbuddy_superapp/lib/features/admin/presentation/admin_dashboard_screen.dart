@@ -476,8 +476,16 @@ class _AdminOverview extends ConsumerWidget {
                 }
                 return false;
               }).length;
-              
-              final weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+              final weekdayNames = [
+                'Mon',
+                'Tue',
+                'Wed',
+                'Thu',
+                'Fri',
+                'Sat',
+                'Sun'
+              ];
               final dayLabel = weekdayNames[date.weekday - 1];
               return _BarData(label: dayLabel, value: count);
             });
@@ -766,7 +774,8 @@ class _WeeklyOrderChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxVal = data.fold<int>(1, (max, item) => item.value > max ? item.value : max);
+    final maxVal =
+        data.fold<int>(1, (max, item) => item.value > max ? item.value : max);
 
     return OpsCard(
       child: Column(
@@ -1041,7 +1050,8 @@ class _TankCategoryAdminCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               '${category.displayName} will stop appearing for customers. This action cannot be undone.',
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 14, height: 1.4),
+              style: const TextStyle(
+                  color: Color(0xFF64748B), fontSize: 14, height: 1.4),
             ),
             const SizedBox(height: 24),
             Row(
@@ -1053,9 +1063,11 @@ class _TankCategoryAdminCard extends StatelessWidget {
                       foregroundColor: const Color(0xFF0F172A),
                       side: const BorderSide(color: Color(0xFFE2E8F0)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
                     ),
-                    child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('Cancel',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1066,9 +1078,11 @@ class _TankCategoryAdminCard extends StatelessWidget {
                       backgroundColor: Colors.redAccent,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
                     ),
-                    child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('Delete',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -1154,7 +1168,6 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
   late final TextEditingController _litres;
   late final TextEditingController _price;
   late bool _active;
-  late String _iconKey;
   LoadingButtonState _saveButtonState = LoadingButtonState.idle;
 
   @override
@@ -1165,7 +1178,6 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
     _litres = TextEditingController(text: category?.litres.toString() ?? '');
     _price = TextEditingController(text: category?.basePrice.toString() ?? '');
     _active = category?.active ?? true;
-    _iconKey = category?.iconType ?? 'drop';
   }
 
   @override
@@ -1195,22 +1207,20 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
       final name = _name.text.trim();
       final litres = int.tryParse(_litres.text.trim()) ?? 0;
       final price = num.tryParse(_price.text.trim()) ?? 0;
-      await FirebaseFirestore.instance
-          .collection('tank_categories')
-          .doc(tankId)
-          .set({
+      final docRef =
+          FirebaseFirestore.instance.collection('tank_categories').doc(tankId);
+      await docRef.set({
         'id': tankId,
         'name': name,
         'displayName': name,
         'litres': litres,
         'price': price,
         'basePrice': price,
-        'iconType': _iconKey,
-        'iconKey': _iconKey,
         'isActive': _active,
         'active': _active,
         'surgeMultiplier': category?.surgeMultiplier ?? 1,
-        'displayOrder': category?.displayOrder ?? 999,
+        'displayOrder':
+            category?.displayOrder ?? DateTime.now().millisecondsSinceEpoch,
         'serviceRadius': category?.serviceRadius ?? 5,
         'expressAvailable': category?.expressAvailable ?? true,
         'nightCharge': category?.nightCharge ?? 0,
@@ -1219,16 +1229,23 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
         'updatedAt': FieldValue.serverTimestamp(),
         if (category == null) 'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+      final saved = await docRef.get(const GetOptions(source: Source.server));
+      if (!saved.exists) {
+        throw StateError('Firestore write did not return a saved document.');
+      }
       if (!mounted) return;
       setState(() => _saveButtonState = LoadingButtonState.success);
       await Future.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
       Navigator.pop(context);
-      WaterBuddyToast.show(context, 'Tank category saved successfully!');
+      WaterBuddyToastService.success(context, 'Tank category saved');
     } catch (error) {
       if (mounted) {
         setState(() => _saveButtonState = LoadingButtonState.idle);
-        WaterBuddyToast.show(context, 'Failed to save tank category: $error', isError: true);
+        WaterBuddyToastService.error(
+          context,
+          'Failed to save tank category: $error',
+        );
       }
     }
   }
@@ -1273,39 +1290,6 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
                     label: 'Price',
                     keyboardType: TextInputType.number,
                     textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Icon',
-                    style: TextStyle(
-                      color: OpsColors.muted,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _IconChoice(
-                        selected: _iconKey == 'drop',
-                        icon: Icons.water_drop_rounded,
-                        label: 'Water Drop',
-                        onTap: () => setState(() => _iconKey = 'drop'),
-                      ),
-                      _IconChoice(
-                        selected: _iconKey == 'tanker',
-                        icon: Icons.local_shipping_rounded,
-                        label: 'Water Tanker',
-                        onTap: () => setState(() => _iconKey = 'tanker'),
-                      ),
-                      _IconChoice(
-                        selected: _iconKey == 'water',
-                        icon: Icons.waves_rounded,
-                        label: 'Premium Water',
-                        onTap: () => setState(() => _iconKey = 'water'),
-                      ),
-                    ],
                   ),
                   const SizedBox(height: 10),
                   SwitchListTile(
@@ -1386,57 +1370,6 @@ class _RequiredAdminField extends StatelessWidget {
   }
 }
 
-class _IconChoice extends StatelessWidget {
-  const _IconChoice({
-    required this.selected,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final bool selected;
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? OpsColors.blue : const Color(0xFFF1F5F9), // slate 100
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? OpsColors.blue : const Color(0xFFE2E8F0), // slate 200
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: selected ? Colors.white : OpsColors.blue,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: selected ? Colors.white : OpsColors.ink,
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _AdminSettingsView extends ConsumerWidget {
   const _AdminSettingsView();
 
@@ -1505,7 +1438,8 @@ class _PlatformConfigEditorState extends State<_PlatformConfigEditor> {
             widget.data[field.key] as bool? ?? _defaultBool(field.key);
       } else {
         final controller = _controllers[field.key] ??= TextEditingController();
-        final newValue = (widget.data[field.key] ?? _defaultValue(field.key)).toString();
+        final newValue =
+            (widget.data[field.key] ?? _defaultValue(field.key)).toString();
         if (controller.text != newValue) {
           controller.text = newValue;
         }
@@ -1565,13 +1499,12 @@ class _PlatformConfigEditorState extends State<_PlatformConfigEditor> {
           .doc('platform')
           .set(patch, SetOptions(merge: true));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Configuration saved')),
-      );
+      WaterBuddyToastService.success(context, 'Configuration saved');
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save configuration: $error')),
+      WaterBuddyToastService.error(
+        context,
+        'Failed to save configuration: $error',
       );
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -1875,9 +1808,7 @@ class _NotificationsViewState extends State<_NotificationsView> {
     _title.clear();
     _message.clear();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Notification queued')),
-    );
+    WaterBuddyToastService.success(context, 'Notification queued');
   }
 
   @override

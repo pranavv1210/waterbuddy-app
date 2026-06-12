@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../routes/route_names.dart';
+import '../../../widgets/waterbuddy_toast.dart';
 import '../providers/tracking_providers.dart';
 
 class OrderCompleteScreen extends ConsumerStatefulWidget {
@@ -29,14 +30,13 @@ class _OrderCompleteScreenState extends ConsumerState<OrderCompleteScreen> {
           .update({'rating': _rating});
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Thank you for your feedback!')),
-        );
+        WaterBuddyToastService.success(context, 'Thank you for your feedback');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save rating: $e')),
+        WaterBuddyToastService.error(
+          context,
+          'Failed to save rating: $e',
         );
       }
     } finally {

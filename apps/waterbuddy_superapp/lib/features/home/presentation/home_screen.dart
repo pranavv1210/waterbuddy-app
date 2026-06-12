@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,8 +31,8 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(activeTankCategoriesProvider);
     final categoriesLoading = ref.watch(tankCategoriesProvider).isLoading;
-    final settings =
-        ref.watch(systemSettingsProvider).valueOrNull ?? SystemSettings.defaults();
+    final settings = ref.watch(systemSettingsProvider).valueOrNull ??
+        SystemSettings.defaults();
     final selectedTankId = ref.watch(selectedTankIdProvider) ??
         (categories.isNotEmpty ? categories.first.id : '');
     final activeOrder = ref.watch(activeOrderProvider).value;
@@ -55,7 +54,8 @@ class HomeScreen extends ConsumerWidget {
       selectedTankId: selectedTankId,
       systemSettings: settings,
       activeOrder: activeOrder,
-      onTankSelected: (id) => ref.read(selectedTankIdProvider.notifier).state = id,
+      onTankSelected: (id) =>
+          ref.read(selectedTankIdProvider.notifier).state = id,
     );
   }
 }
@@ -186,7 +186,8 @@ class _HomeMapExperienceState extends ConsumerState<_HomeMapExperience>
         place.postalCode,
       ].where((part) => part != null && part.trim().isNotEmpty).toList();
       setState(() {
-        _address = parts.isEmpty ? 'Pinned delivery location' : parts.join(', ');
+        _address =
+            parts.isEmpty ? 'Pinned delivery location' : parts.join(', ');
       });
     } catch (_) {
       if (mounted) setState(() => _address = 'Pinned delivery location');
@@ -243,7 +244,8 @@ class _HomeMapExperienceState extends ConsumerState<_HomeMapExperience>
   }
 
   Future<void> _openLocationPicker() async {
-    final result = await context.push(RouteNames.locationSelection, extra: _address);
+    final result =
+        await context.push(RouteNames.locationSelection, extra: _address);
     if (!mounted || result is! Map<String, dynamic>) return;
     final location = result['location'] as Map<String, dynamic>?;
     final lat = location?['latitude'] as double?;
@@ -297,25 +299,28 @@ class _HomeMapExperienceState extends ConsumerState<_HomeMapExperience>
         (tank) => tank.id == widget.selectedTankId,
         orElse: () => widget.tankCategories.first,
       );
-      final orderId =
-          await ref.read(orderCreationControllerProvider.notifier).createOrder(
-                tankCategory: category,
-                location: {
-                  'latitude': _destination.latitude,
-                  'longitude': _destination.longitude,
-                  'address': _address,
-                  'sourceLatitude': _source.latitude,
-                  'sourceLongitude': _source.longitude,
-                },
-                paymentType: widget.systemSettings.codEnabled ? 'COD' : 'ONLINE',
-              );
+      final orderId = await ref
+          .read(orderCreationControllerProvider.notifier)
+          .createOrder(
+            tankCategory: category,
+            location: {
+              'latitude': _destination.latitude,
+              'longitude': _destination.longitude,
+              'address': _address,
+              'sourceLatitude': _source.latitude,
+              'sourceLongitude': _source.longitude,
+            },
+            paymentType: widget.systemSettings.codEnabled ? 'COD' : 'ONLINE',
+          );
       if (!mounted) return;
       if (orderId == null) {
         setState(() => _bookingState = LoadingButtonState.idle);
         WaterBuddyToastService.error(context, 'Unable to create booking.');
         return;
       }
-      ref.read(searchingControllerProvider.notifier).startWatchingOrder(orderId);
+      ref
+          .read(searchingControllerProvider.notifier)
+          .startWatchingOrder(orderId);
       setState(() => _bookingState = LoadingButtonState.success);
       WaterBuddyToastService.success(context, 'Booking created');
       await Future.delayed(const Duration(milliseconds: 520));
@@ -494,23 +499,16 @@ class _HomeMapExperienceState extends ConsumerState<_HomeMapExperience>
                     );
                   }),
                   const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _MetricPill(
-                          icon: Icons.local_shipping_rounded,
-                          label: '${sellers.length} nearby',
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Expanded(
-                        child: _MetricPill(
-                          icon: Icons.timer_rounded,
-                          label: '15-30 min',
-                        ),
-                      ),
-                    ],
-                  ),
+                  if (sellers.isEmpty)
+                    const _OperationalNotice(
+                      message:
+                          'No live tanker owners are visible nearby right now. You can still request a booking and WaterBuddy will dispatch it to eligible owners.',
+                    )
+                  else
+                    _OperationalNotice(
+                      message:
+                          '${sellers.length} live tanker owner${sellers.length == 1 ? '' : 's'} visible in your service area.',
+                    ),
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
@@ -585,34 +583,33 @@ class _QuickAddressRow extends StatelessWidget {
   }
 }
 
-class _MetricPill extends StatelessWidget {
-  const _MetricPill({required this.icon, required this.label});
+class _OperationalNotice extends StatelessWidget {
+  const _OperationalNotice({required this.message});
 
-  final IconData icon;
-  final String label;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: WbColors.line),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: WbColors.blue, size: 18),
-          const SizedBox(width: 8),
-          Flexible(
+          const Icon(Icons.radar_rounded, color: WbColors.blue, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
             child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              message,
               style: const TextStyle(
-                color: WbColors.ink,
-                fontWeight: FontWeight.w900,
+                color: WbColors.muted,
+                fontSize: 12,
+                height: 1.25,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
@@ -714,7 +711,6 @@ class _TankerOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final eta = 14 + (tank.displayOrder % 5) * 3;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedScale(
@@ -746,21 +742,6 @@ class _TankerOptionCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: selected ? WbColors.blue : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Icon(
-                      tank.iconKey == 'tanker'
-                          ? Icons.local_shipping_rounded
-                          : Icons.water_drop_rounded,
-                      color: selected ? Colors.white : WbColors.blue,
-                    ),
-                  ),
-                  const Spacer(),
                   Text(
                     'Rs ${tank.effectivePrice}',
                     style: const TextStyle(
@@ -773,7 +754,7 @@ class _TankerOptionCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '${tank.litres}L',
+                '${tank.litres} litres',
                 style: const TextStyle(
                   color: WbColors.ink,
                   fontSize: 21,
@@ -782,7 +763,7 @@ class _TankerOptionCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '${tank.displayName} - ETA $eta min',
+                tank.displayName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(

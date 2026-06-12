@@ -121,7 +121,8 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.verified_rounded, color: Colors.green, size: 18),
+                          const Icon(Icons.verified_rounded,
+                              color: Colors.green, size: 18),
                         ],
                       ),
                       const SizedBox(height: 3),
@@ -137,7 +138,8 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0095F6).withOpacity(0.10),
                           borderRadius: BorderRadius.circular(999),
@@ -157,9 +159,9 @@ class ProfileScreen extends ConsumerWidget {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // 2. STATISTICS GRID (Replaced old receiving receipt count with modern visual metrics)
           const Text(
             'WaterBuddy Stats',
@@ -173,9 +175,12 @@ class ProfileScreen extends ConsumerWidget {
 
           ordersAsync.when(
             data: (list) {
-              final completed = list.where((o) => o.status == 'DELIVERED').toList();
-              final totalSpent = completed.fold<num>(0, (acc, o) => acc + o.amount);
-              final totalLitres = completed.fold<num>(0, (acc, o) => acc + o.tankSize);
+              final completed =
+                  list.where((o) => o.status == 'DELIVERED').toList();
+              final totalSpent =
+                  completed.fold<num>(0, (acc, o) => acc + o.amount);
+              final totalLitres =
+                  completed.fold<num>(0, (acc, o) => acc + o.tankSize);
 
               return GridView.count(
                 shrinkWrap: true,
@@ -373,13 +378,6 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
-
-  String _formatLitres(int litres) {
-    return litres.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (match) => '${match[1]},',
-        );
-  }
 }
 
 class _EditProfileSheet extends StatefulWidget {
@@ -397,7 +395,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.user.displayName ?? 'WaterBuddy User');
+    _nameController = TextEditingController(
+        text: widget.user.displayName ?? 'WaterBuddy User');
   }
 
   @override
@@ -413,7 +412,10 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     setState(() => _saveState = LoadingButtonState.loading);
     try {
       await widget.user.updateDisplayName(name);
-      await FirebaseFirestore.instance.collection('users').doc(widget.user.uid).set({
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.user.uid)
+          .set({
         'name': name,
         'displayName': name,
         'updatedAt': FieldValue.serverTimestamp(),
@@ -427,7 +429,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     } catch (e) {
       setState(() => _saveState = LoadingButtonState.idle);
       if (mounted) {
-        WaterBuddyToast.show(context, 'Unable to update profile: $e', isError: true);
+        WaterBuddyToast.show(context, 'Unable to update profile: $e',
+            isError: true);
       }
     }
   }
@@ -463,7 +466,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
             controller: _nameController,
             textInputAction: TextInputAction.done,
             autofocus: true,
-            style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                color: Color(0xFF0F172A), fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               labelText: 'Full name',
               labelStyle: const TextStyle(color: Color(0xFF64748B)),
@@ -479,7 +483,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFF0095F6), width: 1.8),
+                borderSide:
+                    const BorderSide(color: Color(0xFF0095F6), width: 1.8),
               ),
             ),
           ),
@@ -499,7 +504,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   }
 }
 
-Future<void> _showEditProfileBottomSheet(BuildContext context, User user) async {
+Future<void> _showEditProfileBottomSheet(
+    BuildContext context, User user) async {
   final updated = await showWaterBuddyBottomSheet<bool>(
     context: context,
     child: _EditProfileSheet(user: user),

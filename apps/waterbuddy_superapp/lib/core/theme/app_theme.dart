@@ -5,7 +5,6 @@ class AppTheme {
     const primary = Color(0xFF0095F6); // Primary Blue
     const accent = Color(0xFF3BA8FF); // Secondary Blue
     const background = Color(0xFFFFFFFF); // Background
-    const offWhite = Color(0xFFF8FAFC); // Secondary Background
     const ink = Color(0xFF111827); // Text Primary
     const border = Color(0xFFE5E7EB);
 
