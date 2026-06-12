@@ -19,7 +19,6 @@ class _WaterBuddySuperAppState extends ConsumerState<WaterBuddySuperApp> {
   void initState() {
     super.initState();
 
-    // Handle notification taps → navigate to relevant screen
     FcmService.onNotificationTap((data) {
       final router = ref.read(appRouterProvider);
       final screen = data['screen'] as String? ?? '';
@@ -52,11 +51,22 @@ class _WaterBuddySuperAppState extends ConsumerState<WaterBuddySuperApp> {
       theme: AppTheme.light(),
       routerConfig: router,
       builder: (context, child) {
-        return GestureDetector(
-          onTap: () {
-            FocusManager.instance.primaryFocus?.unfocus();
-          },
-          child: child ?? const Scaffold(body: Center(child: CircularProgressIndicator())),
+        // Global SafeArea wrapper - ensures NOTHING renders under status bar, notch, or dynamic island
+        return SafeArea(
+          top: true,
+          bottom: true,
+          child: GestureDetector(
+            onTap: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+            },
+            child: MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                // Respect system bottom insets globally
+                padding: MediaQuery.of(context).padding,
+              ),
+              child: child ?? const Scaffold(body: Center(child: CircularProgressIndicator())),
+            ),
+          ),
         );
       },
     );

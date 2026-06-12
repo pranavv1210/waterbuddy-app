@@ -335,13 +335,14 @@ class _OtpBoxState extends State<_OtpBox> {
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
-      width: 46,
-      height: 58,
+      curve: Curves.easeOutCubic,
+      width: 48,
+      height: 60,
       decoration: BoxDecoration(
-        color: _focused ? WbColors.blue.withOpacity(0.06) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: _focused ? const Color(0xFFEEF7FF) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: _focused ? WbColors.blue : WbColors.line,
+          color: _focused ? WbColors.blue : const Color(0xFFE5E7EB),
           width: _focused ? 2 : 1.5,
         ),
         boxShadow: _focused
@@ -354,24 +355,32 @@ class _OtpBoxState extends State<_OtpBox> {
               ]
             : null,
       ),
-      child: TextField(
-        controller: widget.controller,
-        focusNode: widget.focusNode,
-        keyboardType: TextInputType.number,
-        textAlign: TextAlign.center,
-        maxLength: 1,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        style: const TextStyle(
-          color: WbColors.ink,
-          fontSize: 22,
-          fontWeight: FontWeight.w900,
+      child: Center(
+        child: TextField(
+          controller: widget.controller,
+          focusNode: widget.focusNode,
+          keyboardType: TextInputType.number,
+          textAlign: TextAlign.center,
+          maxLength: 1,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          style: const TextStyle(
+            color: WbColors.ink,
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            height: 1.3,
+          ),
+          decoration: const InputDecoration(
+            counterText: '',
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            errorBorder: InputBorder.none,
+            disabledBorder: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+            isDense: true,
+          ),
+          onChanged: widget.onChanged,
         ),
-        decoration: const InputDecoration(
-          counterText: '',
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.zero,
-        ),
-        onChanged: widget.onChanged,
       ),
     );
   }

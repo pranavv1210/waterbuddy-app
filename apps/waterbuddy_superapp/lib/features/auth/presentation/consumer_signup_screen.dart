@@ -9,7 +9,6 @@ import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/loading_feedback_button.dart';
 import '../../../widgets/premium_ui.dart';
-import '../../../widgets/waterbuddy_auth_layout.dart';
 import '../../../widgets/waterbuddy_toast.dart';
 
 class ConsumerSignupScreen extends ConsumerStatefulWidget {
@@ -80,130 +79,226 @@ class _ConsumerSignupScreenState extends ConsumerState<ConsumerSignupScreen> {
       if (next.isVerified && mounted) context.go(RouteNames.consumerHome);
     });
 
-    return WaterBuddyAuthLayout(
-      activeRole: AppRole.consumer,
-      title: 'Create Account',
-      subtitle: 'Get water delivered to your doorstep',
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            WbPremiumTextField(
-              controller: _name,
-              label: 'Full Name',
-              icon: Icons.person_rounded,
-              textInputAction: TextInputAction.next,
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
-            ).animate().fadeIn(delay: 80.ms).slideY(begin: 0.1),
-            const SizedBox(height: 14),
-            WbPremiumTextField(
-              controller: _email,
-              label: 'Email Address (optional)',
-              icon: Icons.email_rounded,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-            ).animate().fadeIn(delay: 140.ms).slideY(begin: 0.1),
-            const SizedBox(height: 14),
-            WbPremiumTextField(
-              controller: _phone,
-              label: 'Mobile Number',
-              icon: Icons.phone_rounded,
-              keyboardType: TextInputType.phone,
-              textInputAction: TextInputAction.done,
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Enter phone number';
-                if (v.trim().length < 10) return 'Enter valid 10-digit number';
-                return null;
-              },
-            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
-            const SizedBox(height: 22),
-            LoadingFeedbackButton(
-              onPressed: _btnState == LoadingButtonState.idle ? _sendOtp : null,
-              label: 'Sign Up',
-              loadingLabel: 'Sending OTP...',
-              successLabel: 'OTP Sent!',
-              buttonState: _btnState,
-              backgroundColor: WbColors.ink,
-            ).animate().fadeIn(delay: 260.ms).slideY(begin: 0.1),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                const Expanded(child: Divider(color: WbColors.line)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    'OR',
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom - 40,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Back button
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Color(0xFF08111F),
+                        size: 18,
+                      ),
+                    ),
+                  ).animate().fadeIn(duration: 300.ms).slideX(begin: -0.1),
+
+                  const SizedBox(height: 32),
+
+                  // Header
+                  const Text(
+                    'Create account',
                     style: TextStyle(
-                        color: WbColors.muted,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800),
-                  ),
-                ),
-                const Expanded(child: Divider(color: WbColors.line)),
-              ],
-            ).animate().fadeIn(delay: 300.ms),
-            const SizedBox(height: 16),
-            _GoogleSignupButton(
-              loading: authState.isLoading,
-              onTap: () async {
-                setState(() => _btnState = LoadingButtonState.loading);
-                try {
-                  await ref
-                      .read(authControllerProvider.notifier)
-                      .signInWithGoogle(role: AppRole.consumer);
-                } finally {
-                  if (mounted) {
-                    setState(() => _btnState = LoadingButtonState.idle);
-                  }
-                }
-              },
-            ).animate().fadeIn(delay: 340.ms),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Already have an account? ',
-                  style: TextStyle(
-                      color: WbColors.muted,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600),
-                ),
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: const Text(
-                    'Log In',
-                    style: TextStyle(
-                      color: WbColors.blue,
-                      fontSize: 14,
+                      color: Color(0xFF08111F),
+                      fontSize: 32,
                       fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
+                  ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.08),
+                  
+                  const SizedBox(height: 8),
+                  
+                  const Text(
+                    'Fill in your details to get started',
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                    ),
+                  ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.08),
+
+                  const SizedBox(height: 32),
+
+                  // Signup form
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        WbPremiumTextField(
+                          controller: _name,
+                          label: 'Full Name',
+                          icon: Icons.person_rounded,
+                          textInputAction: TextInputAction.next,
+                          validator: (v) =>
+                              (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
+                        ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.08),
+                        
+                        const SizedBox(height: 16),
+                        
+                        WbPremiumTextField(
+                          controller: _email,
+                          label: 'Email (optional)',
+                          icon: Icons.email_rounded,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                        ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.08),
+                        
+                        const SizedBox(height: 16),
+                        
+                        WbPremiumTextField(
+                          controller: _phone,
+                          label: 'Phone Number',
+                          icon: Icons.phone_rounded,
+                          keyboardType: TextInputType.phone,
+                          textInputAction: TextInputAction.done,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'Enter your phone number';
+                            if (v.trim().length < 10) return 'Enter a valid 10-digit number';
+                            return null;
+                          },
+                        ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.08),
+                        
+                        const SizedBox(height: 28),
+                        
+                        LoadingFeedbackButton(
+                          onPressed: _btnState == LoadingButtonState.idle ? _sendOtp : null,
+                          label: 'Create Account',
+                          loadingLabel: 'Sending OTP...',
+                          successLabel: 'OTP Sent!',
+                          buttonState: _btnState,
+                          backgroundColor: const Color(0xFF0EA5E9),
+                          borderRadius: 18,
+                        ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.08),
+
+                        if (authState.errorMessage != null) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF2F2),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: const Color(0xFFFECACA)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444), size: 20),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    authState.errorMessage!,
+                                    style: const TextStyle(
+                                      color: Color(0xFFEF4444),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ).animate().fadeIn().shake(),
+                        ],
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ).animate().fadeIn(delay: 380.ms),
-            if (authState.errorMessage != null) ...[
-              const SizedBox(height: 14),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: WbColors.red.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  authState.errorMessage!,
-                  style: const TextStyle(
-                      color: WbColors.red,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700),
-                  textAlign: TextAlign.center,
-                ),
-              ).animate().fadeIn().shake(),
-            ],
-          ],
+
+                  const SizedBox(height: 24),
+
+                  // Divider
+                  Row(
+                    children: [
+                      const Expanded(child: Divider(color: Color(0xFFE5E7EB))),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'OR',
+                          style: TextStyle(
+                            color: const Color(0xFF64748B),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const Expanded(child: Divider(color: Color(0xFFE5E7EB))),
+                    ],
+                  ).animate().fadeIn(delay: 700.ms),
+
+                  const SizedBox(height: 20),
+
+                  // Google signup
+                  _GoogleSignupButton(
+                    loading: authState.isLoading,
+                    onTap: () async {
+                      setState(() => _btnState = LoadingButtonState.loading);
+                      try {
+                        await ref
+                            .read(authControllerProvider.notifier)
+                            .signInWithGoogle(role: AppRole.consumer);
+                      } finally {
+                        if (mounted) {
+                          setState(() => _btnState = LoadingButtonState.idle);
+                        }
+                      }
+                    },
+                  ).animate().fadeIn(delay: 750.ms).slideY(begin: 0.08),
+
+                  const SizedBox(height: 24),
+
+                  // Login link
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Already have an account? ',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => context.pop(),
+                        child: const Text(
+                          'Log In',
+                          style: TextStyle(
+                            color: Color(0xFF0EA5E9),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ).animate().fadeIn(delay: 800.ms),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -238,15 +333,14 @@ class _GoogleSignupButtonState extends State<_GoogleSignupButton> {
         scale: _pressed ? 0.97 : 1.0,
         duration: const Duration(milliseconds: 120),
         child: Container(
-          height: 54,
+          height: 56,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius:
-                BorderRadius.circular(WaterBuddyDesignSystem.radiusPill),
-            border: Border.all(color: WbColors.line, width: 1.5),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE5E7EB), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: WbColors.ink.withOpacity(0.06),
+                color: const Color(0xFF08111F).withOpacity(0.06),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -257,18 +351,18 @@ class _GoogleSignupButtonState extends State<_GoogleSignupButton> {
             children: [
               Image.network(
                 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
-                height: 20,
+                height: 22,
                 errorBuilder: (_, __, ___) => const Icon(
                     Icons.g_mobiledata_rounded,
                     color: Colors.blue,
-                    size: 22),
+                    size: 24),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               const Text(
                 'Continue with Google',
                 style: TextStyle(
-                  color: WbColors.ink,
-                  fontSize: 14,
+                  color: Color(0xFF08111F),
+                  fontSize: 15,
                   fontWeight: FontWeight.w800,
                 ),
               ),

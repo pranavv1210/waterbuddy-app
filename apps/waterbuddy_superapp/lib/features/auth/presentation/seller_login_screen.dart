@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,7 +10,9 @@ import '../../../core/auth/app_role.dart';
 import '../../../core/services/auth/auth_service.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
-import '../../../widgets/waterbuddy_auth_layout.dart';
+import '../../../widgets/loading_feedback_button.dart';
+import '../../../widgets/premium_ui.dart';
+import '../../../widgets/waterbuddy_toast.dart';
 
 class SellerLoginScreen extends ConsumerStatefulWidget {
   const SellerLoginScreen({super.key});
@@ -21,9 +25,7 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController(text: AuthService.testSellerEmail);
   final _password = TextEditingController(text: AuthService.testSellerPassword);
-
-  bool _loading = false;
-  String? _error;
+  LoadingButtonState _btnState = LoadingButtonState.idle;
 
   @override
   void dispose() {
@@ -34,117 +36,148 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WaterBuddyAuthLayout(
-      activeRole: AppRole.seller,
-      title: 'Tanker Owner Login',
-      subtitle: 'Enter your credentials to login',
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: Color(0xFF111827), size: 18),
-                  onPressed: () => context.pop(),
-                ),
-                const Text(
-                  'Welcome Back',
-                  style: TextStyle(
-                      color: Color(0xFF111827),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _field(_email, 'Email Address', Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress),
-            _field(_password, 'Password', Icons.lock_outline, obscure: true),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: _loading ? null : _forgotPassword,
-                child: const Text(
-                  'Forgot password?',
-                  style: TextStyle(
-                    color: Color(0xFF0095F6),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: _loading ? null : _submit,
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: const Color(0xFF0095F6),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-                elevation: 0,
-              ),
-              child: _loading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2))
-                  : const Text('Log In',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 16),
-              Text(_error!,
-                  style:
-                      const TextStyle(color: Colors.redAccent, fontSize: 13),
-                  textAlign: TextAlign.center),
-            ],
-          ],
-        ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
       ),
-    );
-  }
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom - 40,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Back button
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Color(0xFF08111F),
+                        size: 18,
+                      ),
+                    ),
+                  ).animate().fadeIn(duration: 300.ms).slideX(begin: -0.1),
 
-  Widget _field(
-    TextEditingController controller,
-    String label,
-    IconData icon, {
-    bool obscure = false,
-    bool requiredField = true,
-    TextInputType? keyboardType,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextFormField(
-        controller: controller,
-        obscureText: obscure,
-        keyboardType: keyboardType,
-        style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w600),
-        validator: requiredField
-            ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null
-            : null,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Color(0xFF374151)),
-          prefixIcon: Icon(icon, color: const Color(0xFF6B7280)),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF0095F6), width: 2),
+                  const SizedBox(height: 36),
+
+                  // Header
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF14B8A6).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(Icons.local_shipping_rounded, color: Color(0xFF14B8A6), size: 28),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Tanker Owner Login',
+                            style: TextStyle(
+                              color: Color(0xFF08111F),
+                              fontSize: 26,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Enter your credentials to continue',
+                            style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.08),
+
+                  const SizedBox(height: 36),
+
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        WbPremiumTextField(
+                          controller: _email,
+                          label: 'Email Address',
+                          icon: Icons.email_rounded,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          accentColor: const Color(0xFF14B8A6),
+                          validator: (v) =>
+                              (v == null || v.trim().isEmpty) ? 'Enter email' : null,
+                        ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.08),
+                        
+                        const SizedBox(height: 16),
+                        
+                        WbPremiumTextField(
+                          controller: _password,
+                          label: 'Password',
+                          icon: Icons.lock_rounded,
+                          obscureText: true,
+                          textInputAction: TextInputAction.done,
+                          accentColor: const Color(0xFF14B8A6),
+                          validator: (v) =>
+                              (v == null || v.trim().isEmpty) ? 'Enter password' : null,
+                        ).animate().fadeIn(delay: 350.ms).slideY(begin: 0.08),
+
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => context.push('${RouteNames.passwordReset}?role=seller'),
+                            child: const Text(
+                              'Forgot password?',
+                              style: TextStyle(
+                                color: Color(0xFF14B8A6),
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ).animate().fadeIn(delay: 400.ms),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        LoadingFeedbackButton(
+                          onPressed: _btnState == LoadingButtonState.idle ? _submit : null,
+                          label: 'Log In',
+                          loadingLabel: 'Signing in...',
+                          successLabel: 'Welcome back!',
+                          buttonState: _btnState,
+                          backgroundColor: const Color(0xFF14B8A6),
+                          borderRadius: 18,
+                        ).animate().fadeIn(delay: 450.ms).slideY(begin: 0.08),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -153,21 +186,18 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    setState(() => _btnState = LoadingButtonState.loading);
 
     try {
       final auth = ref.read(authServiceProvider);
       final email = _email.text.trim();
       final password = _password.text.trim();
-      if (email == AuthService.testSellerEmail &&
-          password == AuthService.testSellerPassword) {
+      if (email == AuthService.testSellerEmail && password == AuthService.testSellerPassword) {
         await auth.signInOrCreateTestSeller();
         if (!mounted) return;
-        context.go(RouteNames.sellerDashboard);
+        setState(() => _btnState = LoadingButtonState.success);
+        await Future.delayed(const Duration(milliseconds: 400));
+        if (mounted) context.go(RouteNames.sellerDashboard);
         return;
       }
 
@@ -182,17 +212,19 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
           .catchError((_) {}));
 
       if (!mounted) return;
-      context.go(RouteNames.sellerDashboard);
+      setState(() => _btnState = LoadingButtonState.success);
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (mounted) context.go(RouteNames.sellerDashboard);
     } on AuthFailure catch (e) {
-      setState(() => _error = e.message);
+      if (mounted) {
+        setState(() => _btnState = LoadingButtonState.idle);
+        WaterBuddyToastService.error(context, e.message);
+      }
     } catch (_) {
-      setState(() => _error = 'Unable to complete action.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _btnState = LoadingButtonState.idle);
+        WaterBuddyToastService.error(context, 'Unable to complete action.');
+      }
     }
-  }
-
-  Future<void> _forgotPassword() async {
-    context.push('${RouteNames.passwordReset}?role=seller');
   }
 }
