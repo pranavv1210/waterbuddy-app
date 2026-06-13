@@ -53,9 +53,17 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
   @override
   void dispose() {
     for (final c in [
-      _fullName, _email, _address, _emergency,
-      _licenseNumber, _aadhaar, _pan, _driverPhoto,
-      _licenseUpload, _aadhaarUpload, _panUpload,
+      _fullName,
+      _email,
+      _address,
+      _emergency,
+      _licenseNumber,
+      _aadhaar,
+      _pan,
+      _driverPhoto,
+      _licenseUpload,
+      _aadhaarUpload,
+      _panUpload,
       _mobile,
     ]) {
       c.dispose();
@@ -284,7 +292,9 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
                 textInputAction: TextInputAction.done,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Required';
-                  if (v.trim().length < 10) return 'Enter valid 10-digit number';
+                  if (v.trim().length < 10) {
+                    return 'Enter valid 10-digit number';
+                  }
                   return null;
                 },
               ),
@@ -296,9 +306,8 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
 
   Widget _buildNavButtons(AuthState authState) {
     final isLast = _currentStep == _stepLabels.length - 1;
-    final btnState = authState.isLoading
-        ? LoadingButtonState.loading
-        : _btnState;
+    final btnState =
+        authState.isLoading ? LoadingButtonState.loading : _btnState;
 
     return Row(
       children: [
@@ -306,7 +315,7 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: _prevStep,
-              icon: const Icon(Icons.arrow_back_rounded, size: 18),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
               label: const Text('Back'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: WbColors.ink,
@@ -324,9 +333,8 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
           flex: isLast ? 1 : 2,
           child: isLast
               ? LoadingFeedbackButton(
-                  onPressed: btnState == LoadingButtonState.idle
-                      ? _sendOtp
-                      : null,
+                  onPressed:
+                      btnState == LoadingButtonState.idle ? _sendOtp : null,
                   label: 'Send OTP & Verify',
                   loadingLabel: 'Sending OTP...',
                   successLabel: 'OTP Sent!',

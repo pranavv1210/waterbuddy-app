@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/services/notifications/notification_service.dart';
@@ -18,6 +19,15 @@ class _WaterBuddySuperAppState extends ConsumerState<WaterBuddySuperApp> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
 
     FcmService.onNotificationTap((data) {
       final router = ref.read(appRouterProvider);
@@ -51,22 +61,14 @@ class _WaterBuddySuperAppState extends ConsumerState<WaterBuddySuperApp> {
       theme: AppTheme.light(),
       routerConfig: router,
       builder: (context, child) {
-        // Global SafeArea wrapper - ensures NOTHING renders under status bar, notch, or dynamic island
-        return SafeArea(
-          top: true,
-          bottom: true,
-          child: GestureDetector(
-            onTap: () {
-              FocusManager.instance.primaryFocus?.unfocus();
-            },
-            child: MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                // Respect system bottom insets globally
-                padding: MediaQuery.of(context).padding,
+        return GestureDetector(
+          onTap: () {
+            FocusManager.instance.primaryFocus?.unfocus();
+          },
+          child: child ??
+              const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
               ),
-              child: child ?? const Scaffold(body: Center(child: CircularProgressIndicator())),
-            ),
-          ),
         );
       },
     );

@@ -212,7 +212,11 @@ class _OrderDetailsBody extends ConsumerWidget {
       pinned: true,
       backgroundColor: _primary,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+        icon: const Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: Colors.white,
+          size: 20,
+        ),
         onPressed: () =>
             context.canPop() ? context.pop() : context.go(RouteNames.orders),
       ),

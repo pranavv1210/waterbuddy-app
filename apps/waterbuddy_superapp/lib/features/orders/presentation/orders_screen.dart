@@ -23,7 +23,11 @@ class OrdersScreen extends ConsumerWidget {
         elevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Color(0xFF0F172A),
+            size: 20,
+          ),
           onPressed: () => context.go(RouteNames.home),
         ),
         title: const Text(
@@ -387,10 +391,10 @@ class _EmptyState extends StatelessWidget {
             Container(
               width: 180,
               height: 52,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  color: const Color(0xFF0095F6),
-                ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: const Color(0xFF0095F6),
+              ),
               child: ElevatedButton.icon(
                 onPressed: () => context.go(RouteNames.home),
                 icon: const Icon(Icons.water_drop_rounded, size: 18),

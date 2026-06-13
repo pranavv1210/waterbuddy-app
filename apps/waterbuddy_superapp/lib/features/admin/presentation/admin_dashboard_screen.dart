@@ -1135,7 +1135,7 @@ class _AdminPageScaffold extends StatelessWidget {
         foregroundColor: OpsColors.ink,
         leading: IconButton(
           tooltip: 'Back',
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.maybePop(context),
         ),
         title: Text(

@@ -91,7 +91,11 @@ class _AppSettingsScreenState extends ConsumerState<AppSettingsScreen> {
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: OpsColors.ink),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: OpsColors.ink,
+              size: 20,
+            ),
             onPressed: _goBack,
           ),
           title: const Text(

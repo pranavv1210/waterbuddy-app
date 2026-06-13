@@ -65,8 +65,11 @@ class _OrderCompleteScreenState extends ConsumerState<OrderCompleteScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon:
-                const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Color(0xFF0F172A),
+              size: 20,
+            ),
             onPressed: () => context.go(RouteNames.orders),
           ),
         ),

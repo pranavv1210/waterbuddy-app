@@ -288,7 +288,11 @@ class _LocationSelectionScreenState
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: primary),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: primary,
+            size: 20,
+          ),
           onPressed: () => context.pop(),
         ),
         title: const Text(

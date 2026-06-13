@@ -312,7 +312,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       elevation: 0,
       centerTitle: true,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+        icon: const Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: Color(0xFF0F172A),
+          size: 20,
+        ),
         onPressed: _goBack,
       ),
       title: const Text(

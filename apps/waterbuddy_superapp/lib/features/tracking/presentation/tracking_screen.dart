@@ -118,7 +118,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     final body = uiState.when(
       data: (state) => _TrackingScreenBody(
           state: state, trackingState: trackingState, order: order),
-      error: (err, __) => _ErrorBody(onGoHome: () => context.go(RouteNames.home)),
+      error: (err, __) =>
+          _ErrorBody(onGoHome: () => context.go(RouteNames.home)),
       loading: () => _LoadingBody(),
     );
 
@@ -238,15 +239,12 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
 
   @override
   Widget build(BuildContext context) {
-    final statusTitle =
-        _getStatusTitle(widget.trackingState.orderStatus);
-    final statusSubtitle =
-        _getStatusSubtitle(widget.trackingState.orderStatus);
+    final statusTitle = _getStatusTitle(widget.trackingState.orderStatus);
+    final statusSubtitle = _getStatusSubtitle(widget.trackingState.orderStatus);
 
     LatLng? consumerLatLng;
     if (widget.order != null) {
-      consumerLatLng =
-          LatLng(widget.order!.latitude, widget.order!.longitude);
+      consumerLatLng = LatLng(widget.order!.latitude, widget.order!.longitude);
     }
 
     LatLng? driverLatLng;
@@ -259,7 +257,11 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
         driverLatLng ?? consumerLatLng ?? const LatLng(12.9716, 77.5946);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
       child: Scaffold(
         backgroundColor: WbColors.surface,
         body: Stack(
@@ -317,7 +319,7 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
               top: MediaQuery.of(context).padding.top + 14,
               left: 16,
               child: _FloatingButton(
-                icon: Icons.arrow_back_rounded,
+                icon: Icons.arrow_back_ios_new_rounded,
                 onTap: () => context.go(RouteNames.home),
               ),
             ),
@@ -328,12 +330,12 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
               left: 72,
               right: 72,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 18, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.95),
-                  borderRadius: BorderRadius.circular(
-                      WaterBuddyDesignSystem.radiusPill),
+                  borderRadius:
+                      BorderRadius.circular(WaterBuddyDesignSystem.radiusPill),
                   boxShadow: [
                     BoxShadow(
                       color: WbColors.ink.withOpacity(0.10),
@@ -361,8 +363,8 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(32)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(32)),
                   boxShadow: [
                     BoxShadow(
                       color: WbColors.ink.withOpacity(0.12),
@@ -385,23 +387,18 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.fromLTRB(
-                          20,
-                          4,
-                          20,
+                      padding: EdgeInsets.fromLTRB(20, 4, 20,
                           MediaQuery.of(context).padding.bottom + 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Status
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       statusTitle,
@@ -428,11 +425,9 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color: WbColors.blue.withOpacity(0.10),
-                                  borderRadius:
-                                      BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                                child: const Icon(
-                                    Icons.water_drop_rounded,
+                                child: const Icon(Icons.water_drop_rounded,
                                     color: WbColors.blue),
                               ),
                             ],
@@ -441,8 +436,7 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                           // Delivery PIN card
                           if (widget.order?.deliveryPin != null) ...[
                             const SizedBox(height: 14),
-                            _DeliveryPinCard(
-                                pin: widget.order!.deliveryPin!),
+                            _DeliveryPinCard(pin: widget.order!.deliveryPin!),
                           ],
 
                           const SizedBox(height: 16),
@@ -465,8 +459,7 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                             children: [
                               _InfoChip(
                                 icon: Icons.water_damage_rounded,
-                                label:
-                                    widget.state.vehicle.capacityLabel,
+                                label: widget.state.vehicle.capacityLabel,
                                 title: 'Volume',
                               ),
                               const SizedBox(width: 10),
@@ -625,8 +618,7 @@ class _DeliveryPinCard extends StatelessWidget {
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
@@ -680,8 +672,7 @@ class _DriverCard extends StatelessWidget {
                     ? NetworkImage(state.driver.avatarUrl)
                     : null,
                 child: state.driver.avatarUrl.isEmpty
-                    ? const Icon(Icons.person_rounded,
-                        color: WbColors.muted)
+                    ? const Icon(Icons.person_rounded, color: WbColors.muted)
                     : null,
               ),
               const SizedBox(width: 14),
@@ -719,8 +710,7 @@ class _DriverCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(state.driver.ratingLabel,
                             style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 12)),
+                                fontWeight: FontWeight.w800, fontSize: 12)),
                         const SizedBox(width: 6),
                         Text(state.driver.deliveriesLabel,
                             style: const TextStyle(
@@ -744,17 +734,15 @@ class _DriverCard extends StatelessWidget {
                     backgroundColor: WbColors.ink,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
-                    textStyle:
-                        const TextStyle(fontWeight: FontWeight.w900),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: state.driver.phoneNumber.isEmpty
-                      ? null
-                      : onMessage,
+                  onPressed:
+                      state.driver.phoneNumber.isEmpty ? null : onMessage,
                   icon: const Icon(Icons.chat_bubble_rounded, size: 18),
                   label: const Text('Message'),
                   style: OutlinedButton.styleFrom(
@@ -762,8 +750,7 @@ class _DriverCard extends StatelessWidget {
                     side: const BorderSide(color: WbColors.line),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
-                    textStyle:
-                        const TextStyle(fontWeight: FontWeight.w900),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                 ),
               ),
@@ -791,8 +778,7 @@ class _InfoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
           color: WbColors.surface,
           borderRadius: BorderRadius.circular(18),

@@ -64,10 +64,21 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
   @override
   void dispose() {
     for (final c in [
-      _fullName, _companyName, _mobile, _address,
-      _email, _password,
-      _capacity, _vehicle, _aadhaar, _pan,
-      _licenseUrl, _aadhaarUrl, _panUrl, _rcUrl, _photoUrl,
+      _fullName,
+      _companyName,
+      _mobile,
+      _address,
+      _email,
+      _password,
+      _capacity,
+      _vehicle,
+      _aadhaar,
+      _pan,
+      _licenseUrl,
+      _aadhaarUrl,
+      _panUrl,
+      _rcUrl,
+      _photoUrl,
     ]) {
       c.dispose();
     }
@@ -333,15 +344,15 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: _prevStep,
-              icon: const Icon(Icons.arrow_back_rounded, size: 18),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
               label: const Text('Back'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: WbColors.ink,
                 side: const BorderSide(color: WbColors.line),
                 minimumSize: const Size.fromHeight(54),
                 shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(WaterBuddyDesignSystem.radiusPill)),
+                    borderRadius: BorderRadius.circular(
+                        WaterBuddyDesignSystem.radiusPill)),
               ),
             ),
           ),
@@ -351,9 +362,8 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
           flex: isLast ? 1 : 2,
           child: isLast
               ? LoadingFeedbackButton(
-                  onPressed: _btnState == LoadingButtonState.idle
-                      ? _submit
-                      : null,
+                  onPressed:
+                      _btnState == LoadingButtonState.idle ? _submit : null,
                   label: 'Register Tanker',
                   loadingLabel: 'Registering...',
                   successLabel: 'Registered!',

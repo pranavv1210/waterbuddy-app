@@ -50,7 +50,11 @@ class ProfileScreen extends ConsumerWidget {
         elevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: OpsColors.ink),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: OpsColors.ink,
+            size: 20,
+          ),
           onPressed: () => context.go(RouteNames.home),
         ),
         title: const Text(
