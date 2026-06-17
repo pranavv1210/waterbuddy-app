@@ -51,10 +51,10 @@ class SellerWaitingScreen extends ConsumerWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: OpsColors.green.withOpacity(0.12),
+                        color: OpsColors.green.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: OpsColors.green.withOpacity(0.2),
+                          color: OpsColors.green.withValues(alpha: 0.2),
                         ),
                       ),
                       child: const Icon(
@@ -211,10 +211,10 @@ class SellerWaitingScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                OpsCard(
+                const OpsCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         'Approval checklist',
                         style: TextStyle(

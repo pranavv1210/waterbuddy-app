@@ -24,7 +24,7 @@ class OrdersScreen extends ConsumerWidget {
         centerTitle: false,
         leading: IconButton(
           icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
+            Icons.arrow_back,
             color: Color(0xFF0F172A),
             size: 20,
           ),
@@ -58,7 +58,8 @@ class OrdersScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(e.toString(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+                  style:
+                      const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
             ],
           ),
         ),
@@ -95,10 +96,10 @@ class _OrderList extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
               child: Text(
                 sectionLabel,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF64748B),
+                  color: Color(0xFF64748B),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -168,7 +169,7 @@ class _OrderCard extends StatelessWidget {
           border: Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0EA5E9).withOpacity(0.07),
+              color: const Color(0xFF0EA5E9).withValues(alpha: 0.07),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -184,7 +185,7 @@ class _OrderCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.12),
+                      color: statusColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(statusIcon, color: statusColor, size: 22),
@@ -205,7 +206,7 @@ class _OrderCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           timeStr,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFF64748B),
                             fontWeight: FontWeight.w500,
@@ -218,9 +219,10 @@ class _OrderCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.12),
+                      color: statusColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: statusColor.withOpacity(0.15)),
+                      border: Border.all(
+                          color: statusColor.withValues(alpha: 0.15)),
                     ),
                     child: Text(
                       _statusLabel(order.status),
@@ -236,9 +238,9 @@ class _OrderCard extends StatelessWidget {
             ),
 
             // Divider
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Divider(height: 1, color: Color(0xFFE2E8F0)),
             ),
 
             // Bottom row: location + payment + arrow
@@ -246,17 +248,17 @@ class _OrderCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
                 children: [
-                  Icon(Icons.location_on_rounded,
-                      size: 14, color: const Color(0xFF64748B)),
+                  const Icon(Icons.location_on_rounded,
+                      size: 14, color: Color(0xFF64748B)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       address,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: const Color(0xFF475569),
+                        color: Color(0xFF475569),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -264,16 +266,16 @@ class _OrderCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     order.paymentType,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
-                      color: const Color(0xFF64748B),
+                      color: Color(0xFF64748B),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   if (isActive || order.status == 'DELIVERED') ...[
                     const SizedBox(width: 4),
-                    Icon(Icons.chevron_right_rounded,
-                        size: 16, color: const Color(0xFF64748B)),
+                    const Icon(Icons.chevron_right_rounded,
+                        size: 16, color: Color(0xFF64748B)),
                   ],
                 ],
               ),
@@ -378,7 +380,7 @@ class _EmptyState extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Your water delivery history will\nappear here once you place an order.',
               textAlign: TextAlign.center,
               style: TextStyle(

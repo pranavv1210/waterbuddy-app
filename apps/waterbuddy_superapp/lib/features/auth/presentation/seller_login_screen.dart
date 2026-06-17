@@ -51,27 +51,21 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom - 40,
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    40,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Back button
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: Color(0xFF08111F),
-                        size: 18,
-                      ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      tooltip: 'Back',
+                      icon: const Icon(Icons.arrow_back),
+                      color: const Color(0xFF08111F),
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ).animate().fadeIn(duration: 300.ms).slideX(begin: -0.1),
 
@@ -83,16 +77,17 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF14B8A6).withOpacity(0.1),
+                          color: const Color(0xFF14B8A6).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.local_shipping_rounded, color: Color(0xFF14B8A6), size: 28),
+                        child: const Icon(Icons.local_shipping_rounded,
+                            color: Color(0xFF14B8A6), size: 28),
                       ),
                       const SizedBox(width: 16),
-                      Column(
+                      const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Tanker Owner Login',
                             style: TextStyle(
                               color: Color(0xFF08111F),
@@ -101,8 +96,8 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                               letterSpacing: -0.5,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          const Text(
+                          SizedBox(height: 4),
+                          Text(
                             'Enter your credentials to continue',
                             style: TextStyle(
                               color: Color(0xFF64748B),
@@ -129,12 +124,11 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
                           accentColor: const Color(0xFF14B8A6),
-                          validator: (v) =>
-                              (v == null || v.trim().isEmpty) ? 'Enter email' : null,
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Enter email'
+                              : null,
                         ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.08),
-                        
                         const SizedBox(height: 16),
-                        
                         WbPremiumTextField(
                           controller: _password,
                           label: 'Password',
@@ -142,14 +136,15 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                           obscureText: true,
                           textInputAction: TextInputAction.done,
                           accentColor: const Color(0xFF14B8A6),
-                          validator: (v) =>
-                              (v == null || v.trim().isEmpty) ? 'Enter password' : null,
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Enter password'
+                              : null,
                         ).animate().fadeIn(delay: 350.ms).slideY(begin: 0.08),
-
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () => context.push('${RouteNames.passwordReset}?role=seller'),
+                            onPressed: () => context.push(
+                                '${RouteNames.passwordReset}?role=seller'),
                             child: const Text(
                               'Forgot password?',
                               style: TextStyle(
@@ -160,11 +155,11 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                             ),
                           ).animate().fadeIn(delay: 400.ms),
                         ),
-
                         const SizedBox(height: 12),
-
                         LoadingFeedbackButton(
-                          onPressed: _btnState == LoadingButtonState.idle ? _submit : null,
+                          onPressed: _btnState == LoadingButtonState.idle
+                              ? _submit
+                              : null,
                           label: 'Log In',
                           loadingLabel: 'Signing in...',
                           successLabel: 'Welcome back!',
@@ -192,7 +187,8 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
       final auth = ref.read(authServiceProvider);
       final email = _email.text.trim();
       final password = _password.text.trim();
-      if (email == AuthService.testSellerEmail && password == AuthService.testSellerPassword) {
+      if (email == AuthService.testSellerEmail &&
+          password == AuthService.testSellerPassword) {
         await auth.signInOrCreateTestSeller();
         if (!mounted) return;
         setState(() => _btnState = LoadingButtonState.success);

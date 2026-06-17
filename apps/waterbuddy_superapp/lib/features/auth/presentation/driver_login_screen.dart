@@ -48,27 +48,21 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom - 40,
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    40,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Back button
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: Color(0xFF08111F),
-                        size: 18,
-                      ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      tooltip: 'Back',
+                      icon: const Icon(Icons.arrow_back),
+                      color: const Color(0xFF08111F),
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ).animate().fadeIn(duration: 300.ms).slideX(begin: -0.1),
 
@@ -80,16 +74,17 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF59E0B).withOpacity(0.1),
+                          color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.route_rounded, color: Color(0xFFF59E0B), size: 28),
+                        child: const Icon(Icons.route_rounded,
+                            color: Color(0xFFF59E0B), size: 28),
                       ),
                       const SizedBox(width: 16),
-                      Column(
+                      const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Driver Login',
                             style: TextStyle(
                               color: Color(0xFF08111F),
@@ -98,8 +93,8 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
                               letterSpacing: -0.5,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          const Text(
+                          SizedBox(height: 4),
+                          Text(
                             'Enter your mobile to continue',
                             style: TextStyle(
                               color: Color(0xFF64748B),
@@ -127,18 +122,22 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
                           textInputAction: TextInputAction.done,
                           accentColor: const Color(0xFFF59E0B),
                           validator: (v) {
-                            if (v == null || v.trim().isEmpty) return 'Enter mobile number';
-                            if (v.trim().length < 10) return 'Enter valid 10-digit number';
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Enter mobile number';
+                            }
+                            if (v.trim().length < 10) {
+                              return 'Enter valid 10-digit number';
+                            }
                             return null;
                           },
                         ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.08),
-
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: authState.isLoading
                                 ? null
-                                : () => context.push('${RouteNames.passwordReset}?role=driver'),
+                                : () => context.push(
+                                    '${RouteNames.passwordReset}?role=driver'),
                             child: const Text(
                               'Forgot password?',
                               style: TextStyle(
@@ -149,28 +148,34 @@ class _DriverLoginScreenState extends ConsumerState<DriverLoginScreen> {
                             ),
                           ).animate().fadeIn(delay: 300.ms),
                         ),
-
                         const SizedBox(height: 8),
-
                         LoadingFeedbackButton(
-                          onPressed: authState.isLoading || _btnState == LoadingButtonState.loading
+                          onPressed: authState.isLoading ||
+                                  _btnState == LoadingButtonState.loading
                               ? null
                               : () async {
                                   if (_mobile.text.trim().isEmpty) return;
-                                  setState(() => _btnState = LoadingButtonState.loading);
+                                  setState(() =>
+                                      _btnState = LoadingButtonState.loading);
                                   final ok = await ref
                                       .read(authControllerProvider.notifier)
-                                      .sendOtp(_mobile.text.trim(), role: AppRole.driver);
-                                  if (!mounted) return;
+                                      .sendOtp(_mobile.text.trim(),
+                                          role: AppRole.driver);
+                                  if (!context.mounted) return;
                                   if (!ok) {
-                                    setState(() => _btnState = LoadingButtonState.idle);
-                                    WaterBuddyToastService.error(context, 'Failed to send OTP');
+                                    setState(() =>
+                                        _btnState = LoadingButtonState.idle);
+                                    WaterBuddyToastService.error(
+                                        context, 'Failed to send OTP');
                                     return;
                                   }
-                                  setState(() => _btnState = LoadingButtonState.success);
-                                  await Future.delayed(const Duration(milliseconds: 400));
-                                  if (!mounted) return;
-                                  context.push(RouteNames.authDriverOtp, extra: {
+                                  setState(() =>
+                                      _btnState = LoadingButtonState.success);
+                                  await Future.delayed(
+                                      const Duration(milliseconds: 400));
+                                  if (!context.mounted) return;
+                                  context
+                                      .push(RouteNames.authDriverOtp, extra: {
                                     'phoneNumber': _mobile.text.trim(),
                                     'isSignUp': false,
                                   });

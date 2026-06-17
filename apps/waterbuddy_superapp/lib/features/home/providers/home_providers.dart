@@ -17,7 +17,8 @@ class HomeDashboardController extends StateNotifier<HomeDashboard> {
               'https://lh3.googleusercontent.com/aida-public/AB6AXuCC0t58EFVl-jJwFWMSegJqXIkOykl4aieFbREjMvSfCHqOZXspE3Ir3tkeFd4tsAh6L-VrP4UmC3vHU8tZ-SWPQpdG_Fklv7V1nGJhdBhXSs8adVwv776yEPaHgSJb7rVUlVsJR8nEGuiPqWzYJ7I3gprtxxzxGjVH-RwPlYttcYg-DkvSktCr9THVB7pWv4kUFV8qPXMp0Y2BMKZZN2Qj6prGSdzXYYPEg_HXA_TRYsnh41F7rFhCXGwsJkAyDI4OF6jOKmcZb-w',
           mapImageAlt: 'Map view',
           capacityTitle: 'Select Tank Capacity',
-          capacitySubtitle: 'High-quality spring water delivered to your doorstep.',
+          capacitySubtitle:
+              'High-quality spring water delivered to your doorstep.',
           tankOptions: [
             TankOption(
               id: 'small',
@@ -44,9 +45,12 @@ class HomeDashboardController extends StateNotifier<HomeDashboard> {
           ],
           bottomNavItems: [
             BottomNavItemData(id: 'home', label: 'Home', iconKey: 'home'),
-            BottomNavItemData(id: 'history', label: 'History', iconKey: 'history'),
-            BottomNavItemData(id: 'book', label: 'Book Now', iconKey: 'water_drop'),
-            BottomNavItemData(id: 'profile', label: 'Profile', iconKey: 'person'),
+            BottomNavItemData(
+                id: 'history', label: 'History', iconKey: 'history'),
+            BottomNavItemData(
+                id: 'book', label: 'Book Now', iconKey: 'water_drop'),
+            BottomNavItemData(
+                id: 'profile', label: 'Profile', iconKey: 'person'),
           ],
         )) {
     _loadUserData();

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'premium_ui.dart';
@@ -39,7 +38,8 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
     super.initState();
     if (widget.controller.text.isNotEmpty) {
       _success = true;
-      _fileName = "${widget.label.toLowerCase().replaceAll(' ', '_')}_verified.pdf";
+      _fileName =
+          "${widget.label.toLowerCase().replaceAll(' ', '_')}_verified.pdf";
       _fileSize = "1.8 MB";
     }
   }
@@ -114,7 +114,8 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                  icon:
+                      const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -122,7 +123,8 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
             const SizedBox(height: 8),
             const Text(
               'Select a source to scan or attach your document. Supported formats: PDF, PNG, JPG, JPEG, DOCX.',
-              style: TextStyle(color: Color(0xFF64748B), fontSize: 13, height: 1.4),
+              style: TextStyle(
+                  color: Color(0xFF64748B), fontSize: 13, height: 1.4),
             ),
             const SizedBox(height: 20),
             _buildBottomSheetOption(
@@ -186,7 +188,7 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 22),
@@ -207,7 +209,8 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                    style:
+                        const TextStyle(color: Color(0xFF64748B), fontSize: 12),
                   ),
                 ],
               ),
@@ -236,7 +239,7 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: widget.themeColor.withOpacity(0.12),
+                    color: widget.themeColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
@@ -280,7 +283,7 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                       decoration: BoxDecoration(
                         border: Border.all(color: widget.themeColor, width: 2),
                         borderRadius: BorderRadius.circular(22),
-                        color: Colors.white.withOpacity(0.42),
+                        color: Colors.white.withValues(alpha: 0.42),
                       ),
                       child: Center(
                         child: Text(
@@ -302,11 +305,11 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                     child: Container(
                       height: 3,
                       decoration: BoxDecoration(
-                        color: widget.themeColor.withOpacity(0.75),
+                        color: widget.themeColor.withValues(alpha: 0.75),
                         borderRadius: BorderRadius.circular(999),
                         boxShadow: [
                           BoxShadow(
-                            color: widget.themeColor.withOpacity(0.30),
+                            color: widget.themeColor.withValues(alpha: 0.30),
                             blurRadius: 14,
                           ),
                         ],
@@ -353,6 +356,7 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
       ),
     );
   }
+
   void _openGalleryPicker() {
     showWaterBuddyBottomSheet(
       context: context,
@@ -368,10 +372,14 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
               children: [
                 Text(
                   'Select ${widget.label} from Gallery',
-                  style: const TextStyle(color: Color(0xFF0F172A), fontSize: 17, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                  icon:
+                      const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -419,12 +427,14 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                 );
               },
               icon: const Icon(Icons.folder_open_rounded),
-              label: const Text('Browse Other Device Files...', style: TextStyle(fontWeight: FontWeight.bold)),
+              label: const Text('Browse Other Device Files...',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF0F172A),
                 side: const BorderSide(color: Color(0xFFE2E8F0)),
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
               ),
             ),
             const SizedBox(height: 16),
@@ -449,20 +459,27 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
               children: [
                 const Text(
                   'Select Document File',
-                  style: TextStyle(color: Color(0xFF0F172A), fontSize: 17, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                  icon:
+                      const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            _buildFileListOption('Aadhaar_Card_Digital.pdf', '1.4 MB', Colors.redAccent),
+            _buildFileListOption(
+                'Aadhaar_Card_Digital.pdf', '1.4 MB', Colors.redAccent),
             const SizedBox(height: 8),
-            _buildFileListOption('Driving_License_Copy.pdf', '980 KB', Colors.redAccent),
+            _buildFileListOption(
+                'Driving_License_Copy.pdf', '980 KB', Colors.redAccent),
             const SizedBox(height: 8),
-            _buildFileListOption('Vehicle_RC_Official.docx', '3.1 MB', Colors.blue),
+            _buildFileListOption(
+                'Vehicle_RC_Official.docx', '3.1 MB', Colors.blue),
             const SizedBox(height: 20),
             OutlinedButton.icon(
               onPressed: () {
@@ -474,12 +491,14 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                 );
               },
               icon: const Icon(Icons.file_copy_rounded),
-              label: const Text('Select Custom File...', style: TextStyle(fontWeight: FontWeight.bold)),
+              label: const Text('Select Custom File...',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF0F172A),
                 side: const BorderSide(color: Color(0xFFE2E8F0)),
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
               ),
             ),
             const SizedBox(height: 16),
@@ -493,7 +512,8 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
     return InkWell(
       onTap: () {
         Navigator.pop(context);
-        _simulateUpload(name, size, "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500");
+        _simulateUpload(name, size,
+            "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500");
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -511,12 +531,19 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.bold)),
-                  Text(size, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                  Text(name,
+                      style: const TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold)),
+                  Text(size,
+                      style: const TextStyle(
+                          color: Color(0xFF64748B), fontSize: 11)),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_downward_rounded, color: Color(0xFF94A3B8), size: 18),
+            const Icon(Icons.arrow_downward_rounded,
+                color: Color(0xFF94A3B8), size: 18),
           ],
         ),
       ),
@@ -533,7 +560,8 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
-        _simulateUpload(label, size, "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500");
+        _simulateUpload(label, size,
+            "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500");
       },
       child: Container(
         width: 110,
@@ -553,9 +581,16 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
               children: [
                 Icon(icon, color: color, size: 20),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(4)),
-                  child: Text(ext, style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.bold)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4)),
+                  child: Text(ext,
+                      style: TextStyle(
+                          color: color,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -564,12 +599,17 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(color: Color(0xFF0F172A), fontSize: 11, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                Text(size, style: const TextStyle(color: Color(0xFF64748B), fontSize: 9)),
+                Text(size,
+                    style:
+                        const TextStyle(color: Color(0xFF64748B), fontSize: 9)),
               ],
             ),
           ],
@@ -602,14 +642,14 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                   height: 96,
                   decoration: BoxDecoration(
                     color: _success
-                        ? widget.themeColor.withOpacity(0.04)
+                        ? widget.themeColor.withValues(alpha: 0.04)
                         : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
                       color: _success
                           ? widget.themeColor
                           : formFieldState.hasError
-                              ? Colors.redAccent.withOpacity(0.6)
+                              ? Colors.redAccent.withValues(alpha: 0.6)
                               : const Color(0xFFE2E8F0),
                       width: _success ? 1.8 : 1.2,
                     ),
@@ -623,9 +663,9 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                         height: 48,
                         decoration: BoxDecoration(
                           color: _success
-                              ? widget.themeColor.withOpacity(0.12)
+                              ? widget.themeColor.withValues(alpha: 0.12)
                               : _uploading
-                                  ? widget.themeColor.withOpacity(0.06)
+                                  ? widget.themeColor.withValues(alpha: 0.06)
                                   : const Color(0xFFE2E8F0),
                           shape: BoxShape.circle,
                         ),
@@ -644,7 +684,9 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                                     : widget.isPhoto
                                         ? Icons.add_a_photo_rounded
                                         : Icons.cloud_upload_outlined,
-                                color: _success ? widget.themeColor : textSlateMuted,
+                                color: _success
+                                    ? widget.themeColor
+                                    : textSlateMuted,
                                 size: 22,
                               ),
                       ),
@@ -677,7 +719,9 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                                           ? "Capture photo or choose image"
                                           : "Supports PDF, images & docs",
                               style: TextStyle(
-                                color: _success ? widget.themeColor : textSlateMuted,
+                                color: _success
+                                    ? widget.themeColor
+                                    : textSlateMuted,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -688,11 +732,13 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                       // Actions
                       if (_success)
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              color: Colors.redAccent, size: 22),
                           onPressed: _reset,
                         )
                       else if (!_uploading)
-                        const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 14),
+                        const Icon(Icons.arrow_forward_ios_rounded,
+                            color: Color(0xFF94A3B8), size: 14),
                     ],
                   ),
                 ),
@@ -702,7 +748,8 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
                   padding: const EdgeInsets.only(top: 6, left: 12),
                   child: Text(
                     formFieldState.errorText!,
-                    style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                    style:
+                        const TextStyle(color: Colors.redAccent, fontSize: 12),
                   ),
                 ),
             ],
@@ -712,4 +759,3 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
     );
   }
 }
-

@@ -161,12 +161,13 @@ class _AuthHero extends StatelessWidget {
             height: compact ? 66 : 82,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [meta.color.withOpacity(0.82), WbColors.deepBlue],
+                colors: [meta.color.withValues(alpha: 0.82), WbColors.deepBlue],
               ),
               borderRadius: BorderRadius.circular(compact ? 22 : 28),
               boxShadow: WaterBuddyDesignSystem.premiumShadow(meta.color),
             ),
-            child: Icon(meta.icon, color: Colors.white, size: compact ? 34 : 42),
+            child:
+                Icon(meta.icon, color: Colors.white, size: compact ? 34 : 42),
           ),
         ),
         SizedBox(height: compact ? 12 : 18),
@@ -275,9 +276,10 @@ class _AuthParallaxPainter extends CustomPainter {
     final paint = Paint()..style = PaintingStyle.fill;
     for (var i = 0; i < 7; i++) {
       final progress = (t + i * 0.17) % 1;
-      final x = size.width * ((i * 0.29 + math.sin(progress * math.pi) * 0.08) % 1);
+      final x =
+          size.width * ((i * 0.29 + math.sin(progress * math.pi) * 0.08) % 1);
       final y = size.height * (0.08 + ((i * 0.13 + progress * 0.32) % 0.58));
-      paint.color = accent.withOpacity(0.035 + (i % 3) * 0.018);
+      paint.color = accent.withValues(alpha: 0.035 + (i % 3) * 0.018);
       canvas.drawCircle(Offset(x, y), 18 + (i % 4) * 9, paint);
     }
   }
@@ -287,4 +289,3 @@ class _AuthParallaxPainter extends CustomPainter {
     return oldDelegate.t != t || oldDelegate.accent != accent;
   }
 }
-

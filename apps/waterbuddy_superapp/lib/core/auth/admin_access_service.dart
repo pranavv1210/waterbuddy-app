@@ -9,7 +9,8 @@ class AdminAccessService {
     final phoneAllowed = _csvSet(const String.fromEnvironment('ADMIN_PHONES'));
 
     return uidAllowed.contains(user.uid) ||
-        (user.email != null && emailAllowed.contains(user.email!.trim().toLowerCase())) ||
+        (user.email != null &&
+            emailAllowed.contains(user.email!.trim().toLowerCase())) ||
         (user.phoneNumber != null &&
             phoneAllowed.contains(user.phoneNumber!.trim().toLowerCase())) ||
         user.email == 'admin@waterbuddy.com' ||

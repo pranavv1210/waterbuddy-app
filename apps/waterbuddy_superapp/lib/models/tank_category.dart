@@ -21,16 +21,16 @@ class TankCategory {
     QueryDocumentSnapshot<Map<String, dynamic>> doc,
   ) {
     final data = doc.data();
+    final capacity = data['capacity'] ?? data['litres'];
+    final price = data['price'] ?? data['basePrice'];
     return TankCategory(
       id: doc.id,
       displayName: (data['name'] ?? data['displayName'] ?? doc.id).toString(),
-      litres: (data['litres'] as num?)?.toInt() ?? 0,
-      basePrice: (data['price'] ?? data['basePrice'] as num?) ?? 0,
+      litres: (capacity as num?)?.toInt() ?? 0,
+      basePrice: (price as num?) ?? 0,
       surgeMultiplier: (data['surgeMultiplier'] as num?)?.toDouble() ?? 1,
-      iconKey: _normalizeIconType(
-        (data['iconType'] ?? data['iconKey'] ?? 'drop').toString(),
-      ),
-      active: (data['isActive'] ?? data['active']) as bool? ?? true,
+      iconKey: 'drop',
+      active: data['isActive'] as bool? ?? true,
       displayOrder: (data['displayOrder'] as num?)?.toInt() ?? 999,
       serviceRadius: (data['serviceRadius'] as num?)?.toDouble() ?? 5,
       expressAvailable: data['expressAvailable'] as bool? ?? true,
@@ -57,42 +57,12 @@ class TankCategory {
   num get effectivePrice => (basePrice * surgeMultiplier).round();
   String get iconType => iconKey;
 
-  static String _normalizeIconType(String value) {
-    switch (value) {
-      case 'opacity':
-      case 'water_drop':
-      case 'drop':
-        return 'drop';
-      case 'truck':
-      case 'tanker':
-        return 'tanker';
-      case 'waves':
-      case 'water':
-        return 'water';
-      default:
-        return 'drop';
-    }
-  }
-
   Map<String, dynamic> toFirestore() {
     return {
-      'displayName': displayName,
       'name': displayName,
-      'litres': litres,
-      'basePrice': basePrice,
+      'capacity': litres,
       'price': basePrice,
-      'surgeMultiplier': surgeMultiplier,
-      'iconKey': iconKey,
-      'iconType': iconType,
-      'active': active,
       'isActive': active,
-      'displayOrder': displayOrder,
-      'serviceRadius': serviceRadius,
-      'expressAvailable': expressAvailable,
-      'nightCharge': nightCharge,
-      'extraDistanceCharge': extraDistanceCharge,
-      'description': description,
-      'updatedAt': FieldValue.serverTimestamp(),
     };
   }
 }

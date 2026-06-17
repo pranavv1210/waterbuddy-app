@@ -109,8 +109,7 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                 Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                          color: Color(0xFF111827), size: 18),
+                      icon: const Icon(Icons.arrow_back),
                       onPressed: () => context.canPop()
                           ? context.pop()
                           : context.go(RouteNames.authDriver),
@@ -154,8 +153,7 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                     hintText: '------',
                     counterText: '',
                     hintStyle: const TextStyle(
-                        color: Color(0xFF9CA3AF),
-                        letterSpacing: 8),
+                        color: Color(0xFF9CA3AF), letterSpacing: 8),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
@@ -252,9 +250,7 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                   children: [
                     const Text(
                       'Didn\'t receive code? ',
-                      style: TextStyle(
-                          color: Color(0xFF6B7280),
-                          fontSize: 14),
+                      style: TextStyle(color: Color(0xFF6B7280), fontSize: 14),
                     ),
                     TextButton(
                       onPressed: _countdown == 0 && !authState.isLoading

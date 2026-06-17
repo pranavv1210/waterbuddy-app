@@ -29,10 +29,15 @@ class DriverAuthLandingScreen extends StatelessWidget {
                 backgroundColor: const Color(0xFF2563EB),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
                 elevation: 2,
               ),
-              child: const Text('LOGIN', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+              child: const Text('LOGIN',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5)),
             ),
             const SizedBox(height: 18),
             ElevatedButton(
@@ -41,10 +46,15 @@ class DriverAuthLandingScreen extends StatelessWidget {
                 backgroundColor: const Color(0xFF2563EB),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
                 elevation: 2,
               ),
-              child: const Text('SIGNUP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+              child: const Text('SIGNUP',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5)),
             ),
           ],
         ),
@@ -52,4 +62,3 @@ class DriverAuthLandingScreen extends StatelessWidget {
     );
   }
 }
-

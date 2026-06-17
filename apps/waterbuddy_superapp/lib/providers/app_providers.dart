@@ -407,7 +407,7 @@ final tankCategoriesProvider = StreamProvider<List<TankCategory>>((ref) {
       .map(
     (snapshot) {
       final categories = snapshot.docs.map(TankCategory.fromDocument).toList()
-        ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+        ..sort((a, b) => a.litres.compareTo(b.litres));
       return categories;
     },
   );
@@ -415,24 +415,8 @@ final tankCategoriesProvider = StreamProvider<List<TankCategory>>((ref) {
 
 final activeTankCategoriesProvider = Provider<List<TankCategory>>((ref) {
   final categoriesAsync = ref.watch(tankCategoriesProvider);
-  
-  categoriesAsync.when(
-    data: (list) {
-      debugPrint('FIREBASE_SYNC: Loaded ${list.length} categories from Firestore: '
-          '${list.map((c) => "${c.displayName}(id=${c.id}, active=${c.active})").join(', ')}');
-    },
-    error: (err, stack) {
-      debugPrint('FIREBASE_SYNC_ERROR: Failed to load tank categories: $err\n$stack');
-    },
-    loading: () {
-      debugPrint('FIREBASE_SYNC: Loading categories...');
-    },
-  );
-
   final categories = categoriesAsync.valueOrNull ?? const [];
-  final activeList = categories.where((category) => category.active).toList();
-  debugPrint('FIREBASE_SYNC: Active categories count: ${activeList.length}');
-  return activeList;
+  return categories.where((category) => category.active).toList();
 });
 
 final platformConfigProvider =

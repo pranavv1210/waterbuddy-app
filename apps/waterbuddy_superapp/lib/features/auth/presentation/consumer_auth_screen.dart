@@ -32,7 +32,7 @@ class ConsumerAuthLandingScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       const Spacer(flex: 2),
-                      
+
                       // Icon
                       Container(
                         width: 96,
@@ -46,7 +46,8 @@ class ConsumerAuthLandingScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(28),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0EA5E9).withOpacity(0.3),
+                              color: const Color(0xFF0EA5E9)
+                                  .withValues(alpha: 0.3),
                               blurRadius: 30,
                               offset: const Offset(0, 12),
                             ),
@@ -58,12 +59,12 @@ class ConsumerAuthLandingScreen extends StatelessWidget {
                           size: 52,
                         ),
                       ).animate().fadeIn(duration: 400.ms).scale(
-                        begin: const Offset(0.8, 0.8),
-                        curve: Curves.easeOutBack,
-                      ),
-                      
+                            begin: const Offset(0.8, 0.8),
+                            curve: Curves.easeOutBack,
+                          ),
+
                       const SizedBox(height: 28),
-                      
+
                       // Title
                       const Text(
                         'Welcome to WaterBuddy',
@@ -75,9 +76,9 @@ class ConsumerAuthLandingScreen extends StatelessWidget {
                           letterSpacing: -0.5,
                         ),
                       ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
-                      
+
                       const SizedBox(height: 10),
-                      
+
                       const Text(
                         'Fresh water delivered to your doorstep\nin minutes',
                         textAlign: TextAlign.center,
@@ -88,30 +89,37 @@ class ConsumerAuthLandingScreen extends StatelessWidget {
                           height: 1.4,
                         ),
                       ).animate().fadeIn(delay: 350.ms).slideY(begin: 0.1),
-                      
+
                       const Spacer(flex: 2),
-                      
+
                       // CTA Buttons
                       _PremiumCTAButton(
                         label: 'Login',
                         subtitle: 'Already have an account',
                         icon: Icons.login_rounded,
-                        gradientColors: const [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+                        gradientColors: const [
+                          Color(0xFF0EA5E9),
+                          Color(0xFF0284C7)
+                        ],
                         onTap: () => context.push(RouteNames.authConsumerLogin),
                       ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.15),
-                      
+
                       const SizedBox(height: 14),
-                      
+
                       _PremiumCTAButton(
                         label: 'Create Account',
                         subtitle: 'New to WaterBuddy? Sign up',
                         icon: Icons.person_add_rounded,
-                        gradientColors: const [Color(0xFF08111F), Color(0xFF1E293B)],
-                        onTap: () => context.push(RouteNames.authConsumerSignup),
+                        gradientColors: const [
+                          Color(0xFF08111F),
+                          Color(0xFF1E293B)
+                        ],
+                        onTap: () =>
+                            context.push(RouteNames.authConsumerSignup),
                       ).animate().fadeIn(delay: 650.ms).slideY(begin: 0.15),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Skip / back
                       TextButton(
                         onPressed: () => context.go(RouteNames.roleSelection),
@@ -124,7 +132,7 @@ class ConsumerAuthLandingScreen extends StatelessWidget {
                           ),
                         ),
                       ).animate().fadeIn(delay: 800.ms),
-                      
+
                       const Spacer(flex: 1),
                     ],
                   ),
@@ -204,7 +212,7 @@ class _PremiumCTAButtonState extends State<_PremiumCTAButton> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: widget.gradientColors.first.withOpacity(0.25),
+                color: widget.gradientColors.first.withValues(alpha: 0.25),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -216,7 +224,7 @@ class _PremiumCTAButtonState extends State<_PremiumCTAButton> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(widget.icon, color: Colors.white, size: 24),
@@ -238,7 +246,7 @@ class _PremiumCTAButtonState extends State<_PremiumCTAButton> {
                     Text(
                       widget.subtitle,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -248,7 +256,7 @@ class _PremiumCTAButtonState extends State<_PremiumCTAButton> {
               ),
               Icon(
                 Icons.arrow_forward_rounded,
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 size: 24,
               ),
             ],

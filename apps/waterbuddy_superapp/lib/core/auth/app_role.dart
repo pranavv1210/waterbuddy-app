@@ -13,7 +13,8 @@ enum AppRole {
 
   static AppRole? fromValue(String? value) {
     for (final role in AppRole.values) {
-      if (role.value == value || (role == AppRole.consumer && value == 'customer')) {
+      if (role.value == value ||
+          (role == AppRole.consumer && value == 'customer')) {
         return role;
       }
     }

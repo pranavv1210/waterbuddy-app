@@ -259,10 +259,10 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withOpacity(0.07),
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.07),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                      color: const Color(0xFF6366F1).withOpacity(0.18)),
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.18)),
                 ),
                 child: const Row(
                   children: [
@@ -315,7 +315,7 @@ class _DriverSignupScreenState extends ConsumerState<DriverSignupScreen> {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: _prevStep,
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+              icon: const Icon(Icons.arrow_back, size: 18),
               label: const Text('Back'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: WbColors.ink,

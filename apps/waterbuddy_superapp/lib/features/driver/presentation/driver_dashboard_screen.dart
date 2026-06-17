@@ -67,38 +67,45 @@ class _DutySwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 430;
-    return Container(
-      margin: EdgeInsets.only(right: compact ? 4 : 8),
-      padding: EdgeInsets.only(left: compact ? 8 : 12),
-      decoration: BoxDecoration(
-        color: online
-            ? OpsColors.green.withValues(alpha: 0.1)
-            : const Color(0xFFF3F4F6),
+    return Semantics(
+      button: true,
+      label: online ? 'Go off duty' : 'Go on duty',
+      child: InkWell(
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color:
-              online ? OpsColors.green.withValues(alpha: 0.25) : OpsColors.line,
+        onTap: () => onChanged(!online),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.only(right: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: online ? OpsColors.green : const Color(0xFFE5E7EB),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                online ? 'Online' : 'Offline',
+                style: TextStyle(
+                  color: online ? Colors.white : OpsColors.ink,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            compact
-                ? (online ? 'ON' : 'OFF')
-                : (online ? 'ON DUTY' : 'OFF DUTY'),
-            style: TextStyle(
-              color: online ? OpsColors.green : OpsColors.muted,
-              fontSize: compact ? 10 : 11,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          Transform.scale(
-            scale: compact ? 0.78 : 0.92,
-            child: Switch(value: online, onChanged: onChanged),
-          ),
-        ],
       ),
     );
   }
@@ -222,10 +229,11 @@ class _DriverMapPanel extends StatelessWidget {
             primaryOrder.longitude == 0 ? 77.5946 : primaryOrder.longitude,
           );
 
+    final mapHeight = MediaQuery.sizeOf(context).height * 0.62;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(16),
       child: SizedBox(
-        height: 250,
+        height: mapHeight.clamp(420.0, 620.0),
         child: Stack(
           children: [
             GoogleMap(
@@ -378,7 +386,8 @@ class _RunCard extends ConsumerWidget {
               child: FilledButton(
                 onPressed: () async {
                   if (next == 'DELIVERED') {
-                    final pinConfirmed = await _showPinVerificationDialog(context, order.deliveryPin);
+                    final pinConfirmed = await _showPinVerificationDialog(
+                        context, order.deliveryPin);
                     if (!pinConfirmed) return;
                   }
                   await _updateLocationAndStatus(ref, order, next);

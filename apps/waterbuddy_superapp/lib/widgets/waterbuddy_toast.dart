@@ -37,7 +37,8 @@ class WaterBuddyToast {
     overlayEntry = OverlayEntry(
       builder: (context) => _ToastWidget(
         message: message,
-        type: type ?? (isError ? WaterBuddyToastType.error : WaterBuddyToastType.success),
+        type: type ??
+            (isError ? WaterBuddyToastType.error : WaterBuddyToastType.success),
         onDismiss: () {
           try {
             overlayEntry.remove();
@@ -68,7 +69,8 @@ class _ToastWidget extends StatefulWidget {
   State<_ToastWidget> createState() => _ToastWidgetState();
 }
 
-class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderStateMixin {
+class _ToastWidgetState extends State<_ToastWidget>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
   late Animation<double> _opacityAnimation;
@@ -138,17 +140,18 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.88),
+                        color: Colors.white.withValues(alpha: 0.88),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: colors.color.withOpacity(0.24),
+                          color: colors.color.withValues(alpha: 0.24),
                           width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.black.withValues(alpha: 0.06),
                             blurRadius: 16,
                             offset: const Offset(0, 8),
                           ),
@@ -159,7 +162,7 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: colors.color.withOpacity(0.12),
+                              color: colors.color.withValues(alpha: 0.12),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -172,7 +175,7 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
                           Expanded(
                             child: Text(
                               widget.message,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: WbColors.ink,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
@@ -182,11 +185,13 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
                           ),
                           GestureDetector(
                             onTap: () {
-                              _controller.reverse().then((_) => widget.onDismiss());
+                              _controller
+                                  .reverse()
+                                  .then((_) => widget.onDismiss());
                             },
                             child: Icon(
                               Icons.close_rounded,
-                              color: WbColors.muted.withOpacity(0.7),
+                              color: WbColors.muted.withValues(alpha: 0.7),
                               size: 18,
                             ),
                           ),

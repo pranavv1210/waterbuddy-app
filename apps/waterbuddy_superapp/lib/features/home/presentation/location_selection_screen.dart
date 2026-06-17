@@ -174,7 +174,9 @@ class _LocationSelectionScreenState
         return;
       }
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       ).timeout(const Duration(seconds: 8));
       var address = 'Current water delivery location';
       try {
@@ -289,9 +291,8 @@ class _LocationSelectionScreenState
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
+            Icons.arrow_back,
             color: primary,
-            size: 20,
           ),
           onPressed: () => context.pop(),
         ),

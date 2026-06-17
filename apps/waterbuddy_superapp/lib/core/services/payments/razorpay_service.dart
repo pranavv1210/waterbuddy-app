@@ -42,15 +42,15 @@ class RazorpayService {
     required String description,
     String? prefillMethod, // 'upi' | 'card' | 'netbanking'
   }) {
-    assert(_razorpay != null,
-        'Call init() before openCheckout()');
+    assert(_razorpay != null, 'Call init() before openCheckout()');
 
     final options = <String, dynamic>{
       'key': _keyId,
       'amount': amountInPaise,
       'name': 'WaterBuddy',
       'description': description,
-      'order_id': '', // Use Razorpay Orders API in production for server-side order id
+      'order_id':
+          '', // Use Razorpay Orders API in production for server-side order id
       'prefill': {
         'contact': customerPhone,
         'email': customerEmail,
@@ -81,7 +81,8 @@ class RazorpayService {
   }
 
   void _handleFailure(PaymentFailureResponse response) {
-    debugPrint('Razorpay payment failure: ${response.code} - ${response.message}');
+    debugPrint(
+        'Razorpay payment failure: ${response.code} - ${response.message}');
     onFailure?.call(response);
   }
 

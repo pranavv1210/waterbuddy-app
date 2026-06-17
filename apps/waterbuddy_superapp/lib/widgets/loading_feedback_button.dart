@@ -42,11 +42,12 @@ class LoadingFeedbackButton extends StatelessWidget {
         content = Text(
           label,
           key: const ValueKey('idle'),
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+          style: const TextStyle(
+              fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.5),
         );
         break;
       case LoadingButtonState.loading:
-        bg = primaryBg.withOpacity(0.8);
+        bg = primaryBg.withValues(alpha: 0.8);
         content = Row(
           mainAxisAlignment: MainAxisAlignment.center,
           key: const ValueKey('loading'),
@@ -62,7 +63,7 @@ class LoadingFeedbackButton extends StatelessWidget {
                   return CircularProgressIndicator(
                     value: value,
                     strokeWidth: 2.5,
-                    backgroundColor: Colors.white.withOpacity(0.22),
+                    backgroundColor: Colors.white.withValues(alpha: 0.22),
                     valueColor: AlwaysStoppedAnimation<Color>(textFg),
                   );
                 },
@@ -71,7 +72,10 @@ class LoadingFeedbackButton extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               loadingLabel,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5),
             ),
           ],
         );
@@ -86,7 +90,10 @@ class LoadingFeedbackButton extends StatelessWidget {
             const SizedBox(width: 10),
             Text(
               successLabel,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5),
             ),
           ],
         );

@@ -106,27 +106,21 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom - 40,
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    40,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Back button
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: Color(0xFF08111F),
-                        size: 18,
-                      ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      tooltip: 'Back',
+                      icon: const Icon(Icons.arrow_back),
+                      color: const Color(0xFF08111F),
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ).animate().fadeIn(duration: 300.ms).slideX(begin: -0.1),
 
@@ -142,9 +136,9 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
                       letterSpacing: -0.5,
                     ),
                   ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.08),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   const Text(
                     'Enter your mobile number to receive a verification code',
                     style: TextStyle(
@@ -171,16 +165,20 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
                           textInputAction: TextInputAction.done,
                           accentColor: WbColors.blue,
                           validator: (v) {
-                            if (v == null || v.trim().isEmpty) return 'Enter your phone number';
-                            if (v.trim().length < 10) return 'Enter a valid 10-digit number';
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Enter your phone number';
+                            }
+                            if (v.trim().length < 10) {
+                              return 'Enter a valid 10-digit number';
+                            }
                             return null;
                           },
                         ).animate().fadeIn(delay: 350.ms).slideY(begin: 0.08),
-                        
                         const SizedBox(height: 24),
-                        
                         LoadingFeedbackButton(
-                          onPressed: _btnState == LoadingButtonState.idle ? _sendOtp : null,
+                          onPressed: _btnState == LoadingButtonState.idle
+                              ? _sendOtp
+                              : null,
                           label: 'Send OTP',
                           loadingLabel: 'Sending OTP...',
                           successLabel: 'OTP Sent!',
@@ -188,19 +186,21 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
                           backgroundColor: const Color(0xFF0EA5E9),
                           borderRadius: 18,
                         ).animate().fadeIn(delay: 450.ms).slideY(begin: 0.08),
-
                         if (authState.errorMessage != null) ...[
                           const SizedBox(height: 16),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 12),
                             decoration: BoxDecoration(
                               color: const Color(0xFFFEF2F2),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFFECACA)),
+                              border:
+                                  Border.all(color: const Color(0xFFFECACA)),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444), size: 20),
+                                const Icon(Icons.error_outline_rounded,
+                                    color: Color(0xFFEF4444), size: 20),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
@@ -223,21 +223,21 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
                   const Spacer(),
 
                   // Divider
-                  Row(
+                  const Row(
                     children: [
-                      const Expanded(child: Divider(color: Color(0xFFE5E7EB))),
+                      Expanded(child: Divider(color: Color(0xFFE5E7EB))),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'OR',
                           style: TextStyle(
-                            color: const Color(0xFF64748B),
+                            color: Color(0xFF64748B),
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
-                      const Expanded(child: Divider(color: Color(0xFFE5E7EB))),
+                      Expanded(child: Divider(color: Color(0xFFE5E7EB))),
                     ],
                   ).animate().fadeIn(delay: 550.ms),
 
@@ -264,7 +264,8 @@ class _ConsumerLoginScreenState extends ConsumerState<ConsumerLoginScreen> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () => context.push(RouteNames.authConsumerSignup),
+                        onTap: () =>
+                            context.push(RouteNames.authConsumerSignup),
                         child: const Text(
                           'Sign Up',
                           style: TextStyle(
@@ -304,10 +305,12 @@ class _GoogleButtonState extends State<_GoogleButton> {
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
-      onTap: widget.loading ? null : () {
-        HapticFeedback.lightImpact();
-        widget.onTap();
-      },
+      onTap: widget.loading
+          ? null
+          : () {
+              HapticFeedback.lightImpact();
+              widget.onTap();
+            },
       child: AnimatedScale(
         scale: _pressed ? 0.97 : 1.0,
         duration: const Duration(milliseconds: 120),
@@ -319,7 +322,7 @@ class _GoogleButtonState extends State<_GoogleButton> {
             border: Border.all(color: const Color(0xFFE5E7EB), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF08111F).withOpacity(0.06),
+                color: const Color(0xFF08111F).withValues(alpha: 0.06),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),

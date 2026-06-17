@@ -37,7 +37,7 @@ class OpsScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.sizeOf(context).width >= 900;
-    final headerBg = Colors.white.withOpacity(0.94);
+    final headerBg = Colors.white.withValues(alpha: 0.94);
 
     if (isWide) {
       return Scaffold(
@@ -115,8 +115,8 @@ class OpsScaffold extends StatelessWidget {
       ),
       body: body,
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: const Border(top: BorderSide(color: OpsColors.line)),
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: OpsColors.line)),
         ),
         child: tabs.length <= 5
             ? NavigationBar(
@@ -124,7 +124,7 @@ class OpsScaffold extends StatelessWidget {
                 surfaceTintColor: Colors.transparent,
                 selectedIndex: activeIndex,
                 onDestinationSelected: onTabChanged,
-                indicatorColor: accent.withOpacity(0.15),
+                indicatorColor: accent.withValues(alpha: 0.15),
                 labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
                 destinations: [
                   for (final tab in tabs)
@@ -156,7 +156,7 @@ class OpsScaffold extends StatelessWidget {
                                   : OpsColors.muted,
                             ),
                             label: Text(tabs[index].label),
-                            selectedColor: accent.withOpacity(0.15),
+                            selectedColor: accent.withValues(alpha: 0.15),
                             backgroundColor: Colors.white,
                             side: const BorderSide(color: OpsColors.line),
                           ),
@@ -199,7 +199,7 @@ class OpsCard extends StatelessWidget {
         border: Border.all(color: OpsColors.line),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0EA5E9).withOpacity(0.07),
+            color: const Color(0xFF0EA5E9).withValues(alpha: 0.07),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -228,9 +228,9 @@ class OpsStatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         label,
@@ -271,9 +271,10 @@ class OpsEmptyState extends StatelessWidget {
               width: 76,
               height: 76,
               decoration: BoxDecoration(
-                color: OpsColors.blue.withOpacity(0.12),
+                color: OpsColors.blue.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
-                border: Border.all(color: OpsColors.blue.withOpacity(0.2)),
+                border:
+                    Border.all(color: OpsColors.blue.withValues(alpha: 0.2)),
               ),
               child: const Icon(Icons.water_drop_outlined,
                   color: OpsColors.blue, size: 34),
@@ -361,7 +362,7 @@ class _OpsTopBar extends StatelessWidget {
       height: 76,
       padding: const EdgeInsets.symmetric(horizontal: 28),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.94),
+        color: Colors.white.withValues(alpha: 0.94),
         border: const Border(bottom: BorderSide(color: OpsColors.line)),
       ),
       child: Row(
@@ -431,9 +432,9 @@ class _OpsSidebar extends StatelessWidget {
     return Container(
       width: 280,
       padding: const EdgeInsets.fromLTRB(18, 24, 18, 18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        border: const Border(right: BorderSide(color: OpsColors.line)),
+        border: Border(right: BorderSide(color: OpsColors.line)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,9 +445,9 @@ class _OpsSidebar extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: accent.withOpacity(0.12),
+                  color: accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: accent.withOpacity(0.2)),
+                  border: Border.all(color: accent.withValues(alpha: 0.2)),
                 ),
                 child: Icon(Icons.water_drop_rounded, color: accent),
               ),
@@ -489,7 +490,7 @@ class _OpsSidebar extends StatelessWidget {
                 final selected = activeIndex == index;
                 return ListTile(
                   selected: selected,
-                  selectedTileColor: accent.withOpacity(0.12),
+                  selectedTileColor: accent.withValues(alpha: 0.12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -526,9 +527,9 @@ class _OpsLogo extends StatelessWidget {
       width: 34,
       height: 34,
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.12),
+        color: accent.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: accent.withOpacity(0.22)),
+        border: Border.all(color: accent.withValues(alpha: 0.22)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(6),

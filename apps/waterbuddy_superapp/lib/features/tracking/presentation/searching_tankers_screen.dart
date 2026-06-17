@@ -108,7 +108,8 @@ class _SearchingTankersScreenState extends ConsumerState<SearchingTankersScreen>
     final address =
         (location?['address'] as String?) ?? 'Water delivery location';
     final tankSize = activeOrder?.tankSize.toInt();
-    final nearbyCount = ref.watch(onlineSellersProvider).valueOrNull?.length ?? 0;
+    final nearbyCount =
+        ref.watch(onlineSellersProvider).valueOrNull?.length ?? 0;
 
     return PopScope(
       canPop: false,
@@ -629,7 +630,7 @@ class _TimeoutView extends StatelessWidget {
                   width: 96,
                   height: 96,
                   decoration: BoxDecoration(
-                    color: WbColors.red.withOpacity(0.08),
+                    color: WbColors.red.withValues(alpha: 0.08),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.timer_off_rounded,
@@ -673,8 +674,8 @@ class _TimeoutView extends StatelessWidget {
                     ),
                     child: const Text(
                       'Back to Home',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w900, fontSize: 15),
+                      style:
+                          TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
                     ),
                   ),
                 ),

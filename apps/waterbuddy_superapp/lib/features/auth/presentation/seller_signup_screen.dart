@@ -344,7 +344,7 @@ class _SellerSignupScreenState extends ConsumerState<SellerSignupScreen> {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: _prevStep,
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+              icon: const Icon(Icons.arrow_back, size: 18),
               label: const Text('Back'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: WbColors.ink,
@@ -473,7 +473,7 @@ class _ToggleChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: value ? accentColor.withOpacity(0.08) : Colors.white,
+          color: value ? accentColor.withValues(alpha: 0.08) : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: value ? accentColor : WbColors.line,

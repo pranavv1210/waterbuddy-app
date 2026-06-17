@@ -17,7 +17,7 @@ class TrackingController extends StateNotifier<TrackingState> {
   void startWatchingOrder(String orderId) {
     // Prevent duplicate subscriptions
     _subscription?.cancel();
-    
+
     state = state.copyWith(orderId: orderId, isLoading: true, clearError: true);
 
     _subscription = _orderService.watchOrder(orderId).listen(
@@ -91,25 +91,28 @@ final trackingControllerProvider =
   return TrackingController(orderService);
 });
 
-final orderStreamProvider = StreamProvider.autoDispose.family<app_order.Order?, String>((ref, orderId) {
+final orderStreamProvider =
+    StreamProvider.autoDispose.family<app_order.Order?, String>((ref, orderId) {
   return ref.watch(orderServiceProvider).watchOrder(orderId);
 });
 
-final sellerFutureProvider = FutureProvider.family<Map<String, dynamic>?, String>((ref, sellerId) async {
+final sellerFutureProvider =
+    FutureProvider.family<Map<String, dynamic>?, String>((ref, sellerId) async {
   final firestore = FirebaseFirestore.instance;
   final doc = await firestore.collection('sellers').doc(sellerId).get();
   return doc.data();
 });
 
-final assignedOrderTrackingProvider = FutureProvider.autoDispose<AssignedOrderTracking>((ref) async {
+final assignedOrderTrackingProvider =
+    FutureProvider.autoDispose<AssignedOrderTracking>((ref) async {
   final trackingState = ref.watch(trackingControllerProvider);
   final orderId = trackingState.orderId;
-  
+
   if (orderId == null) throw Exception('No orderId provided');
-  
+
   final orderAsync = ref.watch(orderStreamProvider(orderId));
   final order = orderAsync.value;
-  
+
   if (order == null) {
     throw Exception('Order not found or still loading');
   }
@@ -156,17 +159,18 @@ final assignedOrderTrackingProvider = FutureProvider.autoDispose<AssignedOrderTr
       imageUrl: '',
       capacityLabel: '${order.tankSize}L',
     ),
-    orderSummary: OrderSummary(
+    orderSummary: const OrderSummary(
       amountLabel: 'COD',
       description: 'Payment on delivery',
       ctaLabel: 'View Details',
     ),
     navItems: [
       const TrackingNavItem(id: 'home', label: 'Home', iconKey: 'home'),
-      const TrackingNavItem(id: 'history', label: 'History', iconKey: 'history'),
-      const TrackingNavItem(id: 'book', label: 'Tracking', iconKey: 'water_drop'),
+      const TrackingNavItem(
+          id: 'history', label: 'History', iconKey: 'history'),
+      const TrackingNavItem(
+          id: 'book', label: 'Tracking', iconKey: 'water_drop'),
       const TrackingNavItem(id: 'profile', label: 'Profile', iconKey: 'person'),
     ],
   );
 });
-

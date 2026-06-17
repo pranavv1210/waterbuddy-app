@@ -344,7 +344,6 @@ class _HomeMapExperienceState extends ConsumerState<_HomeMapExperience>
         statusBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        extendBodyBehindAppBar: true,
         backgroundColor: WbColors.surface,
         drawer: _OlaStyleDrawer(user: user, support: _supportLabel()),
         body: Stack(
@@ -467,7 +466,7 @@ class _HomeMapExperienceState extends ConsumerState<_HomeMapExperience>
                           width: 42,
                           height: 42,
                           decoration: BoxDecoration(
-                            color: WbColors.blue.withOpacity(0.11),
+                            color: WbColors.blue.withValues(alpha: 0.11),
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: const Icon(
@@ -730,7 +729,7 @@ class _TankerOptionCard extends StatelessWidget {
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: WbColors.blue.withOpacity(0.16),
+                      color: WbColors.blue.withValues(alpha: 0.16),
                       blurRadius: 24,
                       offset: const Offset(0, 10),
                     ),
@@ -796,7 +795,7 @@ class _OlaStyleDrawer extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
           child: Container(
-            color: Colors.white.withOpacity(0.94),
+            color: Colors.white.withValues(alpha: 0.94),
             child: SafeArea(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
@@ -897,7 +896,8 @@ class _OlaStyleDrawer extends StatelessWidget {
                     label: const Text('Logout'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: WbColors.red,
-                      side: BorderSide(color: WbColors.red.withOpacity(0.25)),
+                      side: BorderSide(
+                          color: WbColors.red.withValues(alpha: 0.25)),
                     ),
                   ),
                 ],

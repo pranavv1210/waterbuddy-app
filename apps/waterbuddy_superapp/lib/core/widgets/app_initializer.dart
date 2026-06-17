@@ -31,7 +31,8 @@ class _AppInitializerState extends State<AppInitializer> {
 
   Future<void> _initialize() async {
     try {
-      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
+      await Firebase.initializeApp(
+              options: DefaultFirebaseOptions.currentPlatform)
           .timeout(const Duration(seconds: 15));
 
       final fcm = FcmService(
@@ -40,13 +41,15 @@ class _AppInitializerState extends State<AppInitializer> {
         auth: FirebaseAuth.instance,
       );
       fcm.initialize().catchError((e) {
-        developer.log('FCM init warning', name: 'waterbuddy.superapp', error: e);
+        developer.log('FCM init warning',
+            name: 'waterbuddy.superapp', error: e);
       });
 
       if (!mounted) return;
       setState(() => _initialized = true);
     } catch (e) {
-      developer.log('App initialization error', name: 'waterbuddy.superapp', error: e);
+      developer.log('App initialization error',
+          name: 'waterbuddy.superapp', error: e);
       if (!mounted) return;
       setState(() {
         _error = true;

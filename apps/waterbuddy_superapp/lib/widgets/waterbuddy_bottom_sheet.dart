@@ -14,7 +14,7 @@ Future<T?> showWaterBuddyBottomSheet<T>({
     elevation: 0,
     isDismissible: isDismissible,
     enableDrag: enableDrag,
-    barrierColor: Colors.black.withOpacity(0.18),
+    barrierColor: Colors.black.withValues(alpha: 0.18),
     builder: (context) {
       return BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),

@@ -37,7 +37,8 @@ class GoogleMapsService {
     }
 
     try {
-      final uri = Uri.https('maps.googleapis.com', '/maps/api/place/autocomplete/json', {
+      final uri = Uri.https(
+          'maps.googleapis.com', '/maps/api/place/autocomplete/json', {
         'input': query,
         'key': apiKey,
         'components': 'country:in',
@@ -54,7 +55,8 @@ class GoogleMapsService {
 
       final predictions = data['predictions'] as List<dynamic>? ?? const [];
       return predictions.map((pred) {
-        final struct = pred['structured_formatting'] as Map<String, dynamic>? ?? {};
+        final struct =
+            pred['structured_formatting'] as Map<String, dynamic>? ?? {};
         return GooglePlaceSuggestion(
           placeId: (pred['place_id'] ?? '').toString(),
           mainText: (struct['main_text'] ?? '').toString(),
@@ -72,7 +74,8 @@ class GoogleMapsService {
     if (apiKey.isEmpty || placeId.isEmpty) return null;
 
     try {
-      final uri = Uri.https('maps.googleapis.com', '/maps/api/place/details/json', {
+      final uri =
+          Uri.https('maps.googleapis.com', '/maps/api/place/details/json', {
         'place_id': placeId,
         'fields': 'geometry',
         'key': apiKey,

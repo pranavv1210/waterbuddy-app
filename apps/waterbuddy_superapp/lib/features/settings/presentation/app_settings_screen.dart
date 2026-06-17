@@ -92,7 +92,7 @@ class _AppSettingsScreenState extends ConsumerState<AppSettingsScreen> {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
+              Icons.arrow_back,
               color: OpsColors.ink,
               size: 20,
             ),

@@ -42,7 +42,7 @@ class WaterBuddyDesignSystem {
   static List<BoxShadow> premiumShadow([Color color = WbColors.ink]) {
     return [
       BoxShadow(
-        color: color.withOpacity(0.10),
+        color: color.withValues(alpha: 0.10),
         blurRadius: 28,
         offset: const Offset(0, 14),
       ),
@@ -79,16 +79,16 @@ class GlassPanel extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(opacity),
+            color: Colors.white.withValues(alpha: opacity),
             borderRadius: BorderRadius.circular(radius),
             border: Border.all(
-              color: Colors.white.withOpacity(borderOpacity),
+              color: Colors.white.withValues(alpha: borderOpacity),
               width: 1.2,
             ),
             boxShadow: shadow
                 ? [
                     BoxShadow(
-                      color: WbColors.ink.withOpacity(0.10),
+                      color: WbColors.ink.withValues(alpha: 0.10),
                       blurRadius: 26,
                       offset: const Offset(0, 12),
                     ),
@@ -189,7 +189,7 @@ class PremiumBottomPanel extends StatelessWidget {
             border: const Border(top: BorderSide(color: WbColors.line)),
             boxShadow: [
               BoxShadow(
-                color: WbColors.ink.withOpacity(0.16),
+                color: WbColors.ink.withValues(alpha: 0.16),
                 blurRadius: 34,
                 offset: const Offset(0, -14),
               ),
@@ -250,7 +250,7 @@ class AnimatedPulse extends StatelessWidget {
                       width: size * 0.74,
                       height: size * 0.74,
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.16),
+                        color: color.withValues(alpha: 0.16),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -264,7 +264,7 @@ class AnimatedPulse extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: color.withOpacity(0.20),
+                      color: color.withValues(alpha: 0.20),
                       blurRadius: 24,
                       offset: const Offset(0, 10),
                     ),
@@ -354,7 +354,6 @@ class _WaterBuddyLoaderState extends State<WaterBuddyLoader>
   }
 }
 
-
 class _AbstractWaterBackgroundState extends State<AbstractWaterBackground>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
@@ -412,14 +411,15 @@ class _WaterBackgroundPainter extends CustomPainter {
     final wavePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2
-      ..color = WbColors.blue.withOpacity(0.12);
+      ..color = WbColors.blue.withValues(alpha: 0.12);
 
     for (var i = 0; i < 9; i++) {
       final progress = (t + i * 0.13) % 1;
       final x = size.width * ((i * 0.23 + progress * 0.15) % 1);
       final y = size.height * (0.12 + ((i * 0.19 + progress * 0.55) % 0.78));
       final radius = 8.0 + (i % 4) * 8;
-      shapePaint.color = WbColors.blue.withOpacity(0.045 + (i % 3) * 0.02);
+      shapePaint.color =
+          WbColors.blue.withValues(alpha: 0.045 + (i % 3) * 0.02);
       canvas.drawCircle(Offset(x, y), radius, shapePaint);
       canvas.drawCircle(Offset(x, y), radius * (1.6 + progress), wavePaint);
     }
@@ -435,7 +435,8 @@ class _WaterBackgroundPainter extends CustomPainter {
     path.lineTo(size.width, size.height);
     path.lineTo(0, size.height);
     path.close();
-    canvas.drawPath(path, Paint()..color = Colors.white.withOpacity(0.58));
+    canvas.drawPath(
+        path, Paint()..color = Colors.white.withValues(alpha: 0.58));
   }
 
   @override
@@ -542,7 +543,7 @@ class _WbPremiumTextFieldState extends State<WbPremiumTextField>
           boxShadow: _focused
               ? [
                   BoxShadow(
-                    color: accentColor.withOpacity(0.18),
+                    color: accentColor.withValues(alpha: 0.18),
                     blurRadius: 18,
                     offset: const Offset(0, 6),
                   )
@@ -853,7 +854,7 @@ class _WbGradientButtonState extends State<WbGradientButton>
       child = Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(
+          const SizedBox(
             width: 18,
             height: 18,
             child: CircularProgressIndicator(
@@ -924,16 +925,17 @@ class _WbGradientButtonState extends State<WbGradientButton>
                     ? gradient
                     : LinearGradient(
                         colors: [
-                          gradient.colors.first.withOpacity(0.6),
-                          gradient.colors.last.withOpacity(0.6),
+                          gradient.colors.first.withValues(alpha: 0.6),
+                          gradient.colors.last.withValues(alpha: 0.6),
                         ],
                       ),
-            borderRadius: BorderRadius.circular(WaterBuddyDesignSystem.radiusPill),
+            borderRadius:
+                BorderRadius.circular(WaterBuddyDesignSystem.radiusPill),
             boxShadow: _pressed
                 ? null
                 : [
                     BoxShadow(
-                      color: WbColors.blue.withOpacity(0.28),
+                      color: WbColors.blue.withValues(alpha: 0.28),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),

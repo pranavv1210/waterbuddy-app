@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -445,9 +447,10 @@ class _AdminOverview extends ConsumerWidget {
                   status == 'DELIVERED';
             }).toList();
 
-            final revenueToday = completedOrdersToday.fold<num>(0, (sum, doc) {
+            final revenueToday =
+                completedOrdersToday.fold<num>(0, (total, doc) {
               final amt = doc.data()['amount'] ?? doc.data()['price'] ?? 0;
-              return sum + (amt is num ? amt : 0);
+              return total + (amt is num ? amt : 0);
             });
 
             final activeDeliveries = docs.where((doc) {
@@ -663,7 +666,7 @@ class _PlainMetric extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: activeColor.withOpacity(0.12),
+              color: activeColor.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: activeColor, size: 20),
@@ -725,7 +728,7 @@ class _CollectionMetric extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: activeColor.withOpacity(0.12),
+              color: activeColor.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: activeColor, size: 20),
@@ -958,8 +961,6 @@ class _TankCategoryAdminCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(_tankIcon(category.iconKey), color: OpsColors.blue),
-              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   category.displayName,
@@ -1006,24 +1007,14 @@ class _TankCategoryAdminCard extends StatelessWidget {
     );
   }
 
-  static IconData _tankIcon(String key) {
-    return switch (key) {
-      'opacity' || 'water_drop' || 'drop' => Icons.opacity_rounded,
-      'waves' || 'water' => Icons.waves_rounded,
-      'truck' || 'tanker' => Icons.local_shipping_rounded,
-      _ => Icons.water_drop_rounded,
-    };
-  }
-
   static Future<void> _toggleCategory(TankCategory category) {
     return FirebaseFirestore.instance
         .collection('tank_categories')
         .doc(category.id)
         .set({
-      'active': !category.active,
       'isActive': !category.active,
       'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
   }
 
   static Future<void> _deleteCategory(
@@ -1135,7 +1126,7 @@ class _AdminPageScaffold extends StatelessWidget {
         foregroundColor: OpsColors.ink,
         leading: IconButton(
           tooltip: 'Back',
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.maybePop(context),
         ),
         title: Text(
@@ -1209,36 +1200,31 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
       final price = num.tryParse(_price.text.trim()) ?? 0;
       final docRef =
           FirebaseFirestore.instance.collection('tank_categories').doc(tankId);
+      final startedAt = DateTime.now();
+      debugPrint(
+        'CATEGORY_SAVE: Firestore start ${startedAt.toIso8601String()}',
+      );
       await docRef.set({
-        'id': tankId,
         'name': name,
-        'displayName': name,
-        'litres': litres,
+        'capacity': litres,
         'price': price,
-        'basePrice': price,
         'isActive': _active,
-        'active': _active,
-        'surgeMultiplier': category?.surgeMultiplier ?? 1,
-        'displayOrder':
-            category?.displayOrder ?? DateTime.now().millisecondsSinceEpoch,
-        'serviceRadius': category?.serviceRadius ?? 5,
-        'expressAvailable': category?.expressAvailable ?? true,
-        'nightCharge': category?.nightCharge ?? 0,
-        'extraDistanceCharge': category?.extraDistanceCharge ?? 0,
-        'description': category?.description ?? '',
         'updatedAt': FieldValue.serverTimestamp(),
         if (category == null) 'createdAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      final saved = await docRef.get(const GetOptions(source: Source.server));
-      if (!saved.exists) {
-        throw StateError('Firestore write did not return a saved document.');
-      }
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
+      debugPrint(
+        'CATEGORY_SAVE: Firestore finish ${DateTime.now().difference(startedAt).inMilliseconds}ms',
+      );
       if (!mounted) return;
       setState(() => _saveButtonState = LoadingButtonState.success);
-      await Future.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
       Navigator.pop(context);
       WaterBuddyToastService.success(context, 'Tank category saved');
+    } on TimeoutException {
+      if (mounted) {
+        setState(() => _saveButtonState = LoadingButtonState.idle);
+        WaterBuddyToastService.error(context, 'Unable to save category');
+      }
     } catch (error) {
       if (mounted) {
         setState(() => _saveButtonState = LoadingButtonState.idle);

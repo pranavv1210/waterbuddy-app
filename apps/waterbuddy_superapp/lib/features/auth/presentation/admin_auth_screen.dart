@@ -57,10 +57,10 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1D4ED8).withOpacity(0.08),
+                  color: const Color(0xFF1D4ED8).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                      color: const Color(0xFF1D4ED8).withOpacity(0.18)),
+                      color: const Color(0xFF1D4ED8).withValues(alpha: 0.18)),
                 ),
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -113,8 +113,7 @@ class _AdminAuthScreenState extends ConsumerState<AdminAuthScreen> {
                   ),
                   child: const Text(
                     'Forgot password?',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                   ),
                 ),
               ).animate().fadeIn(delay: 220.ms),

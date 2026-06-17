@@ -51,7 +51,7 @@ class ProfileScreen extends ConsumerWidget {
         centerTitle: false,
         leading: IconButton(
           icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
+            Icons.arrow_back,
             color: OpsColors.ink,
             size: 20,
           ),
@@ -78,7 +78,7 @@ class ProfileScreen extends ConsumerWidget {
               border: Border.all(color: const Color(0xFFE2E8F0)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
+                  color: Colors.black.withValues(alpha: 0.02),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -145,7 +145,8 @@ class ProfileScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0095F6).withOpacity(0.10),
+                          color:
+                              const Color(0xFF0095F6).withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: const Text(
@@ -321,7 +322,7 @@ class ProfileScreen extends ConsumerWidget {
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.06),
+            color: color.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -337,7 +338,7 @@ class ProfileScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 18),
@@ -563,7 +564,7 @@ class _ProfileAction extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: destructive
-                          ? color.withOpacity(0.72)
+                          ? color.withValues(alpha: 0.72)
                           : OpsColors.muted,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,

@@ -213,7 +213,7 @@ class _OrderDetailsBody extends ConsumerWidget {
       backgroundColor: _primary,
       leading: IconButton(
         icon: const Icon(
-          Icons.arrow_back_ios_new_rounded,
+          Icons.arrow_back,
           color: Colors.white,
           size: 20,
         ),
@@ -253,7 +253,7 @@ class _OrderDetailsBody extends ConsumerWidget {
                         Text(
                           '#${order.id.substring(0, 8).toUpperCase()}',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 1,
@@ -266,10 +266,11 @@ class _OrderDetailsBody extends ConsumerWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.18),
+                      color: statusColor.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: statusColor.withOpacity(0.5), width: 1.5),
+                          color: statusColor.withValues(alpha: 0.5),
+                          width: 1.5),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -412,17 +413,18 @@ class _DriverCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionHeader(
+          const _SectionHeader(
             title: 'Driver',
             icon: Icons.person_pin_circle_rounded,
-            iconColor: const Color(0xFF8B5CF6),
+            iconColor: Color(0xFF8B5CF6),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: const Color(0xFF0F172A).withOpacity(0.08),
+                backgroundColor:
+                    const Color(0xFF0F172A).withValues(alpha: 0.08),
                 backgroundImage:
                     photoUrl != null ? NetworkImage(photoUrl) : null,
                 child: photoUrl == null
@@ -488,7 +490,7 @@ class _DriverCard extends StatelessWidget {
                   icon: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withOpacity(0.12),
+                      color: const Color(0xFF10B981).withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.call_rounded,
@@ -632,7 +634,7 @@ class _TimelineStep extends StatelessWidget {
                 boxShadow: isDone
                     ? [
                         BoxShadow(
-                          color: circleColor.withOpacity(0.3),
+                          color: circleColor.withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -671,7 +673,7 @@ class _TimelineStep extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF38BDF8).withOpacity(0.12),
+                color: const Color(0xFF38BDF8).withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
@@ -699,16 +701,16 @@ class _CancelledBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFEF4444).withOpacity(0.08),
+        color: const Color(0xFFEF4444).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.3)),
+        border:
+            Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const Icon(Icons.info_outline_rounded,
-              color: Color(0xFFEF4444), size: 20),
-          const SizedBox(width: 12),
-          const Expanded(
+          Icon(Icons.info_outline_rounded, color: Color(0xFFEF4444), size: 20),
+          SizedBox(width: 12),
+          Expanded(
             child: Text(
               'This order was cancelled and will not be fulfilled.',
               style: TextStyle(
@@ -925,7 +927,7 @@ class _SectionHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.12),
+            color: iconColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: iconColor, size: 16),
@@ -1018,7 +1020,7 @@ BoxDecoration _cardDecoration() => BoxDecoration(
       borderRadius: BorderRadius.circular(20),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           blurRadius: 16,
           offset: const Offset(0, 4),
         ),

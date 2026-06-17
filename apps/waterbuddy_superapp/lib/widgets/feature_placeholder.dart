@@ -34,7 +34,7 @@ class FeaturePlaceholder extends StatelessWidget {
                       width: 72,
                       height: 72,
                       decoration: BoxDecoration(
-                        color: WbColors.blue.withOpacity(0.12),
+                        color: WbColors.blue.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: const Icon(
@@ -73,4 +73,3 @@ class FeaturePlaceholder extends StatelessWidget {
     );
   }
 }
-

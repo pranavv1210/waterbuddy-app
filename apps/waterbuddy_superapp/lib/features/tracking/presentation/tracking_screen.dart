@@ -59,7 +59,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: WbColors.red.withOpacity(0.08),
+                      color: WbColors.red.withValues(alpha: 0.08),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.error_outline_rounded,
@@ -319,7 +319,7 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
               top: MediaQuery.of(context).padding.top + 14,
               left: 16,
               child: _FloatingButton(
-                icon: Icons.arrow_back_ios_new_rounded,
+                icon: Icons.arrow_back,
                 onTap: () => context.go(RouteNames.home),
               ),
             ),
@@ -333,12 +333,12 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.95),
+                  color: Colors.white.withValues(alpha: 0.95),
                   borderRadius:
                       BorderRadius.circular(WaterBuddyDesignSystem.radiusPill),
                   boxShadow: [
                     BoxShadow(
-                      color: WbColors.ink.withOpacity(0.10),
+                      color: WbColors.ink.withValues(alpha: 0.10),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -367,7 +367,7 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                       const BorderRadius.vertical(top: Radius.circular(32)),
                   boxShadow: [
                     BoxShadow(
-                      color: WbColors.ink.withOpacity(0.12),
+                      color: WbColors.ink.withValues(alpha: 0.12),
                       blurRadius: 30,
                       offset: const Offset(0, -10),
                     ),
@@ -424,7 +424,7 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: WbColors.blue.withOpacity(0.10),
+                                  color: WbColors.blue.withValues(alpha: 0.10),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: const Icon(Icons.water_drop_rounded,
@@ -563,7 +563,7 @@ class _FloatingButtonState extends State<_FloatingButton> {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: WbColors.ink.withOpacity(0.14),
+                color: WbColors.ink.withValues(alpha: 0.14),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -587,17 +587,17 @@ class _DeliveryPinCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: WbColors.blue.withOpacity(0.06),
+        color: WbColors.blue.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: WbColors.blue.withOpacity(0.20)),
+        border: Border.all(color: WbColors.blue.withValues(alpha: 0.20)),
       ),
       child: Row(
         children: [
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Delivery PIN',
                   style: TextStyle(
                     fontSize: 11,
@@ -605,8 +605,8 @@ class _DeliveryPinCard extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 2),
-                const Text(
+                SizedBox(height: 2),
+                Text(
                   'Share with driver on arrival',
                   style: TextStyle(
                     fontSize: 11,
@@ -622,7 +622,7 @@ class _DeliveryPinCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: WbColors.blue.withOpacity(0.3)),
+              border: Border.all(color: WbColors.blue.withValues(alpha: 0.3)),
             ),
             child: Text(
               pin,

@@ -71,36 +71,45 @@ class _OnlineSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 430;
-    return Container(
-      margin: EdgeInsets.only(right: compact ? 4 : 8),
-      padding: EdgeInsets.only(left: compact ? 8 : 12),
-      decoration: BoxDecoration(
-        color: online
-            ? OpsColors.green.withValues(alpha: 0.1)
-            : const Color(0xFFF3F4F6),
+    return Semantics(
+      button: true,
+      label: online ? 'Go offline' : 'Go online',
+      child: InkWell(
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color:
-              online ? OpsColors.green.withValues(alpha: 0.25) : OpsColors.line,
+        onTap: () => onChanged(!online),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.only(right: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: online ? OpsColors.green : const Color(0xFFE5E7EB),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                online ? 'Online' : 'Offline',
+                style: TextStyle(
+                  color: online ? Colors.white : OpsColors.ink,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            compact ? (online ? 'ON' : 'OFF') : (online ? 'ONLINE' : 'OFFLINE'),
-            style: TextStyle(
-              color: online ? OpsColors.green : OpsColors.muted,
-              fontSize: compact ? 10 : 11,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          Transform.scale(
-            scale: compact ? 0.78 : 0.92,
-            child: Switch(value: online, onChanged: onChanged),
-          ),
-        ],
       ),
     );
   }
@@ -263,10 +272,11 @@ class _SellerMapPanel extends StatelessWidget {
       ...nearbyOrders,
     ].where((order) => order.latitude != 0 && order.longitude != 0).take(12);
 
+    final mapHeight = MediaQuery.sizeOf(context).height * 0.62;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(16),
       child: SizedBox(
-        height: 230,
+        height: mapHeight.clamp(420.0, 620.0),
         child: Stack(
           children: [
             GoogleMap(
@@ -282,14 +292,16 @@ class _SellerMapPanel extends StatelessWidget {
                 Marker(
                   markerId: const MarkerId('fleet_center'),
                   position: center,
-                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueBlue),
                   infoWindow: const InfoWindow(title: 'My Fleet Location'),
                 ),
                 for (final order in orderMarkers)
                   Marker(
                     markerId: MarkerId('order_${order.id}'),
                     position: LatLng(order.latitude, order.longitude),
-                    icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                        BitmapDescriptor.hueGreen),
                     infoWindow: InfoWindow(
                       title: order.tankLabel,
                       snippet: order.deliveryAddress,
@@ -1310,14 +1322,14 @@ class _SellerProfileView extends ConsumerWidget {
             OpsCard(
               child: Column(
                 children: [
-                  _SellerSettingsRow(
+                  const _SellerSettingsRow(
                     icon: Icons.description_rounded,
                     title: 'Business documents',
                     subtitle:
                         'RC, Aadhaar, tanker photos, and approval details.',
                   ),
                   const Divider(height: 24),
-                  _SellerSettingsRow(
+                  const _SellerSettingsRow(
                     icon: Icons.account_balance_rounded,
                     title: 'Payout account',
                     subtitle:
@@ -1331,7 +1343,7 @@ class _SellerProfileView extends ConsumerWidget {
                     onTap: () => context.push(RouteNames.appSettings),
                   ),
                   const Divider(height: 24),
-                  _SellerSettingsRow(
+                  const _SellerSettingsRow(
                     icon: Icons.support_agent_rounded,
                     title: 'Support',
                     subtitle: 'waterbuddyapp.wb@gmail.com',

@@ -179,8 +179,7 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
         Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                  color: Color(0xFF111827), size: 18),
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF111827)),
               onPressed: () {
                 if (_step == 0 || _step == 3) {
                   context.go(_loginRoute);
@@ -296,7 +295,8 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFF0095F6), width: 2),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF0095F6), width: 2),
                   ),
                 ),
                 onChanged: (value) {
@@ -325,7 +325,9 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
               child: Text(
                 _seconds == 0 ? 'Resend OTP' : 'Resend in ${_seconds}s',
                 style: TextStyle(
-                  color: _seconds == 0 ? const Color(0xFF0095F6) : const Color(0xFF9CA3AF),
+                  color: _seconds == 0
+                      ? const Color(0xFF0095F6)
+                      : const Color(0xFF9CA3AF),
                 ),
               ),
             ),
@@ -408,7 +410,8 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscure,
-      style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w600),
+      style: const TextStyle(
+          color: Color(0xFF111827), fontWeight: FontWeight.w600),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Color(0xFF6B7280)),

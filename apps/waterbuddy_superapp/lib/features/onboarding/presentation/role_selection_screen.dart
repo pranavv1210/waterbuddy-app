@@ -17,7 +17,7 @@ class RoleSelectionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedRole = ref.watch(selectedRoleProvider);
-    final roles = AppRole.values;
+    const roles = AppRole.values;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
@@ -25,7 +25,6 @@ class RoleSelectionScreen extends ConsumerWidget {
         statusBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        extendBodyBehindAppBar: true,
         backgroundColor: WbColors.surface,
         body: Stack(
           children: [
@@ -113,7 +112,7 @@ class RoleSelectionScreen extends ConsumerWidget {
                         minimumSize: const Size.fromHeight(58),
                         backgroundColor: WbColors.ink,
                         disabledBackgroundColor:
-                            Colors.white.withOpacity(0.72),
+                            Colors.white.withValues(alpha: 0.72),
                         disabledForegroundColor: WbColors.muted,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(999),
@@ -152,6 +151,7 @@ class RoleSelectionScreen extends ConsumerWidget {
     }
   }
 }
+
 class _PremiumLogoLockup extends StatelessWidget {
   const _PremiumLogoLockup();
 
@@ -171,7 +171,7 @@ class _PremiumLogoLockup extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: WbColors.blue.withOpacity(0.30),
+                  color: WbColors.blue.withValues(alpha: 0.30),
                   blurRadius: 24,
                   offset: const Offset(0, 12),
                 ),
@@ -255,7 +255,7 @@ class _RoleGlassCardState extends State<_RoleGlassCard> {
             boxShadow: widget.selected
                 ? [
                     BoxShadow(
-                      color: meta.color.withOpacity(0.22),
+                      color: meta.color.withValues(alpha: 0.22),
                       blurRadius: 28,
                       offset: const Offset(0, 12),
                     ),
@@ -275,7 +275,7 @@ class _RoleGlassCardState extends State<_RoleGlassCard> {
                     width: 62,
                     height: 62,
                     decoration: BoxDecoration(
-                      color: meta.color.withOpacity(0.12),
+                      color: meta.color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(22),
                     ),
                     child: Icon(meta.icon, color: meta.color, size: 31),
@@ -315,9 +315,7 @@ class _RoleGlassCardState extends State<_RoleGlassCard> {
                     color: widget.selected ? meta.color : Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: widget.selected
-                          ? meta.color
-                          : WbColors.line,
+                      color: widget.selected ? meta.color : WbColors.line,
                     ),
                   ),
                   child: Icon(

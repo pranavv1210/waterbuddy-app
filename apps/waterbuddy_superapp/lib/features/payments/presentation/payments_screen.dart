@@ -75,12 +75,12 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                     const Icon(Icons.error_outline,
                         size: 64, color: Color(0xFFE53E3E)),
                     const SizedBox(height: 24),
-                    Text(
+                    const Text(
                       'Payment Failed',
                       style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w900,
-                          color: const Color(0xFF0F172A),
+                          color: Color(0xFF0F172A),
                           letterSpacing: -0.5),
                     ),
                     const SizedBox(height: 8),
@@ -148,7 +148,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.04),
+                                  color: Colors.black.withValues(alpha: 0.04),
                                   blurRadius: 16,
                                   offset: const Offset(0, 8),
                                 ),
@@ -236,7 +236,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 20,
                       offset: const Offset(0, -10),
                     ),
@@ -313,7 +313,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       centerTitle: true,
       leading: IconButton(
         icon: const Icon(
-          Icons.arrow_back_ios_new_rounded,
+          Icons.arrow_back,
           color: Color(0xFF0F172A),
           size: 20,
         ),
@@ -357,8 +357,8 @@ class _PaymentMethodCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = const Color(0xFF0F172A);
-    final accentColor = const Color(0xFF38BDF8);
+    const activeColor = Color(0xFF0F172A);
+    const accentColor = Color(0xFF38BDF8);
 
     return GestureDetector(
       onTap: onTap,
@@ -366,17 +366,19 @@ class _PaymentMethodCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor.withOpacity(0.04) : Colors.white,
+          color:
+              isSelected ? activeColor.withValues(alpha: 0.04) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? activeColor : Colors.black.withOpacity(0.05),
+            color:
+                isSelected ? activeColor : Colors.black.withValues(alpha: 0.05),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
               ? []
               : [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
+                    color: Colors.black.withValues(alpha: 0.02),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -433,7 +435,7 @@ class _PaymentMethodCard extends StatelessWidget {
                       child: Container(
                         width: 12,
                         height: 12,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: accentColor,
                           shape: BoxShape.circle,
                         ),

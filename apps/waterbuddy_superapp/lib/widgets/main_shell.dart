@@ -110,11 +110,11 @@ class _DesktopSidebar extends StatelessWidget {
                     color: Colors.white, size: 24),
               ),
               const SizedBox(width: 14),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'WaterBuddy',
                       style: TextStyle(
                         fontSize: 18,
@@ -211,11 +211,12 @@ class _SidebarItem extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color:
-              isSelected ? activeColor.withOpacity(0.08) : Colors.transparent,
+          color: isSelected
+              ? activeColor.withValues(alpha: 0.08)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
           border: isSelected
-              ? Border.all(color: activeColor.withOpacity(0.2))
+              ? Border.all(color: activeColor.withValues(alpha: 0.2))
               : null,
         ),
         child: Row(
@@ -256,9 +257,9 @@ class _WaterBuddyNavBar extends StatelessWidget {
     const bg = Colors.white;
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.transparent,
-        border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
       ),
       child: ClipRRect(
         child: BackdropFilter(
@@ -334,8 +335,9 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color:
-              isSelected ? primaryColor.withOpacity(0.08) : Colors.transparent,
+          color: isSelected
+              ? primaryColor.withValues(alpha: 0.08)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

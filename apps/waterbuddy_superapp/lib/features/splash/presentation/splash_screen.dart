@@ -69,7 +69,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           children: [
             // Premium animated water background
             const _PremiumSplashBackground(),
-            
+
             // Floating particles layer
             Positioned.fill(
               child: AnimatedBuilder(
@@ -79,7 +79,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 ),
               ),
             ),
-            
+
             // Content
             SafeArea(
               child: Center(
@@ -87,7 +87,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Spacer(flex: 3),
-                    
+
                     // Premium logo with glass effect
                     Hero(
                       tag: 'waterbuddy-logo',
@@ -95,7 +95,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         animation: _motion,
                         builder: (context, child) {
                           return Transform.scale(
-                            scale: 1 + math.sin(_motion.value * math.pi * 2) * 0.025,
+                            scale: 1 +
+                                math.sin(_motion.value * math.pi * 2) * 0.025,
                             child: child,
                           );
                         },
@@ -111,12 +112,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             borderRadius: BorderRadius.circular(36),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF0EA5E9).withOpacity(0.35),
+                                color: const Color(0xFF0EA5E9)
+                                    .withValues(alpha: 0.35),
                                 blurRadius: 40,
                                 offset: const Offset(0, 16),
                               ),
                               BoxShadow(
-                                color: const Color(0xFF0EA5E9).withOpacity(0.15),
+                                color: const Color(0xFF0EA5E9)
+                                    .withValues(alpha: 0.15),
                                 blurRadius: 80,
                                 offset: const Offset(0, 40),
                               ),
@@ -130,12 +133,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(36),
                                   child: BackdropFilter(
-                                    filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                                    filter:
+                                        ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                                     child: Container(
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
-                                            Colors.white.withOpacity(0.2),
+                                            Colors.white.withValues(alpha: 0.2),
                                             Colors.transparent,
                                           ],
                                           begin: Alignment.topLeft,
@@ -155,13 +159,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           ),
                         ),
                       ),
-                    )
-                        .animate()
-                        .fadeIn(duration: 500.ms)
-                        .scale(begin: const Offset(0.8, 0.8), curve: Curves.easeOutBack),
-                    
+                    ).animate().fadeIn(duration: 500.ms).scale(
+                        begin: const Offset(0.8, 0.8),
+                        curve: Curves.easeOutBack),
+
                     const SizedBox(height: 28),
-                    
+
                     // Brand name
                     const Text(
                       'WaterBuddy',
@@ -172,15 +175,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         letterSpacing: -1,
                         height: 1.1,
                       ),
-                    ).animate(delay: 700.ms).fadeIn().slideY(begin: 0.12, curve: Curves.easeOutCubic),
-                    
+                    )
+                        .animate(delay: 700.ms)
+                        .fadeIn()
+                        .slideY(begin: 0.12, curve: Curves.easeOutCubic),
+
                     const SizedBox(height: 10),
-                    
+
                     // Tagline
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0EA5E9).withOpacity(0.08),
+                        color: const Color(0xFF0EA5E9).withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: const Text(
@@ -192,15 +199,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           letterSpacing: 0.3,
                         ),
                       ),
-                    ).animate(delay: 1000.ms).fadeIn().slideY(begin: 0.12, curve: Curves.easeOutCubic),
-                    
+                    )
+                        .animate(delay: 1000.ms)
+                        .fadeIn()
+                        .slideY(begin: 0.12, curve: Curves.easeOutCubic),
+
                     const Spacer(flex: 2),
-                    
+
                     // Premium loading indicator
                     const _PremiumLoadingBar()
                         .animate(delay: 1300.ms)
                         .fadeIn(duration: 400.ms),
-                    
+
                     const Spacer(flex: 1),
                   ],
                 ),
@@ -217,7 +227,8 @@ class _PremiumSplashBackground extends StatefulWidget {
   const _PremiumSplashBackground();
 
   @override
-  State<_PremiumSplashBackground> createState() => _PremiumSplashBackgroundState();
+  State<_PremiumSplashBackground> createState() =>
+      _PremiumSplashBackgroundState();
 }
 
 class _PremiumSplashBackgroundState extends State<_PremiumSplashBackground>
@@ -260,7 +271,7 @@ class _PremiumBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    
+
     // Base gradient
     final basePaint = Paint()
       ..shader = const LinearGradient(
@@ -278,7 +289,8 @@ class _PremiumBackgroundPainter extends CustomPainter {
     final glowPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF0EA5E9).withOpacity(0.08 * (0.8 + math.sin(t * math.pi * 2) * 0.2)),
+          const Color(0xFF0EA5E9).withValues(
+              alpha: 0.08 * (0.8 + math.sin(t * math.pi * 2) * 0.2)),
           Colors.transparent,
         ],
       ).createShader(Rect.fromCircle(
@@ -294,8 +306,8 @@ class _PremiumBackgroundPainter extends CustomPainter {
     // Animated wave at bottom
     final wavePaint = Paint()
       ..style = PaintingStyle.fill
-      ..color = Colors.white.withOpacity(0.5);
-    
+      ..color = Colors.white.withValues(alpha: 0.5);
+
     final wavePath = Path();
     final baseY = size.height * 0.82;
     wavePath.moveTo(0, size.height);
@@ -312,14 +324,15 @@ class _PremiumBackgroundPainter extends CustomPainter {
     // Second wave layer
     final wavePaint2 = Paint()
       ..style = PaintingStyle.fill
-      ..color = const Color(0xFF0EA5E9).withOpacity(0.04);
-    
+      ..color = const Color(0xFF0EA5E9).withValues(alpha: 0.04);
+
     final wavePath2 = Path();
     final baseY2 = size.height * 0.78;
     wavePath2.moveTo(0, size.height);
     for (double x = 0; x <= size.width; x += 2) {
       final y = baseY2 +
-          math.sin((x / size.width * math.pi * 2.5) + t * math.pi * 2 + 1) * 22 +
+          math.sin((x / size.width * math.pi * 2.5) + t * math.pi * 2 + 1) *
+              22 +
           math.sin((x / size.width * math.pi * 4) + t * math.pi * 3) * 10;
       wavePath2.lineTo(x, y);
     }
@@ -329,7 +342,8 @@ class _PremiumBackgroundPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _PremiumBackgroundPainter oldDelegate) => oldDelegate.t != t;
+  bool shouldRepaint(covariant _PremiumBackgroundPainter oldDelegate) =>
+      oldDelegate.t != t;
 }
 
 class _FloatingParticlePainter extends CustomPainter {
@@ -339,21 +353,24 @@ class _FloatingParticlePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
-    
+
     for (var i = 0; i < 12; i++) {
       final progress = (t + i * 0.085) % 1;
-      final x = size.width * ((i * 0.19 + math.sin(progress * math.pi * 2) * 0.06) % 1);
+      final x = size.width *
+          ((i * 0.19 + math.sin(progress * math.pi * 2) * 0.06) % 1);
       final y = size.height * (0.05 + ((i * 0.11 + progress * 0.4) % 0.7));
       final radius = 4.0 + (i % 4) * 6;
-      
-      paint.color = const Color(0xFF0EA5E9).withOpacity(0.04 + (i % 3) * 0.015);
+
+      paint.color =
+          const Color(0xFF0EA5E9).withValues(alpha: 0.04 + (i % 3) * 0.015);
       canvas.drawCircle(Offset(x, y), radius, paint);
-      
+
       // Soft ripple
       final ripplePaint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0
-        ..color = const Color(0xFF0EA5E9).withOpacity(0.06 * (1 - progress));
+        ..color =
+            const Color(0xFF0EA5E9).withValues(alpha: 0.06 * (1 - progress));
       canvas.drawCircle(
         Offset(x, y),
         radius * (1.5 + progress * 2),
@@ -363,7 +380,8 @@ class _FloatingParticlePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _FloatingParticlePainter oldDelegate) => oldDelegate.t != t;
+  bool shouldRepaint(covariant _FloatingParticlePainter oldDelegate) =>
+      oldDelegate.t != t;
 }
 
 class _PremiumLoadingBar extends StatefulWidget {

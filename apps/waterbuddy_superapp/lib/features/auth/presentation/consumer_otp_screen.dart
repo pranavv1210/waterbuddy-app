@@ -72,8 +72,12 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
   @override
   void dispose() {
     _timer?.cancel();
-    for (var c in _controllers) { c.dispose(); }
-    for (var f in _focusNodes) { f.dispose(); }
+    for (var c in _controllers) {
+      c.dispose();
+    }
+    for (var f in _focusNodes) {
+      f.dispose();
+    }
     _successController.dispose();
     super.dispose();
   }
@@ -98,7 +102,8 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
       String phoneNumber, String fullName, String email) async {
     final code = _otpCode;
     if (code.length < 6) {
-      WaterBuddyToastService.warning(context, 'Enter the complete 6-digit OTP.');
+      WaterBuddyToastService.warning(
+          context, 'Enter the complete 6-digit OTP.');
       return;
     }
     if (_btnState != LoadingButtonState.idle) return;
@@ -153,8 +158,11 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        if (context.canPop()) context.pop();
-        else context.go(RouteNames.authConsumer);
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(RouteNames.authConsumer);
+        }
       },
       child: WaterBuddyAuthLayout(
         activeRole: AppRole.consumer,
@@ -169,25 +177,25 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
-                  onTap: () => context.canPop()
-                      ? context.pop()
-                      : context.go(RouteNames.authConsumer),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.arrow_back_ios_new_rounded,
-                          color: WbColors.blue, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        phoneNumber.isNotEmpty ? '+91 $phoneNumber' : 'Back',
-                        style: const TextStyle(
-                          color: WbColors.blue,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                        ),
+                Row(
+                  children: [
+                    IconButton(
+                      tooltip: 'Back',
+                      icon: const Icon(Icons.arrow_back),
+                      color: WbColors.blue,
+                      onPressed: () => context.canPop()
+                          ? context.pop()
+                          : context.go(RouteNames.authConsumer),
+                    ),
+                    Text(
+                      phoneNumber.isNotEmpty ? '+91 $phoneNumber' : 'Back',
+                      style: const TextStyle(
+                        color: WbColors.blue,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 GestureDetector(
                   onTap: () => context.canPop()
@@ -219,8 +227,8 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
                 return _OtpBox(
                   controller: _controllers[index],
                   focusNode: _focusNodes[index],
-                  onChanged: (val) => _onBoxChanged(
-                      index, val, phoneNumber, fullName, email),
+                  onChanged: (val) =>
+                      _onBoxChanged(index, val, phoneNumber, fullName, email),
                 );
               }),
             ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
@@ -264,7 +272,9 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
                       fontSize: 14,
                     ),
                     child: Text(
-                      _countdown > 0 ? 'Resend in ${_countdown}s' : 'Resend OTP',
+                      _countdown > 0
+                          ? 'Resend in ${_countdown}s'
+                          : 'Resend OTP',
                     ),
                   ),
                 ),
@@ -277,7 +287,7 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: WbColors.red.withOpacity(0.08),
+                  color: WbColors.red.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -340,20 +350,11 @@ class _OtpBoxState extends State<_OtpBox> {
       height: 60,
       decoration: BoxDecoration(
         color: _focused ? const Color(0xFFEEF7FF) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _focused ? WbColors.blue : const Color(0xFFE5E7EB),
-          width: _focused ? 2 : 1.5,
+          width: 1,
         ),
-        boxShadow: _focused
-            ? [
-                BoxShadow(
-                  color: WbColors.blue.withOpacity(0.18),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                )
-              ]
-            : null,
       ),
       child: Center(
         child: TextField(
