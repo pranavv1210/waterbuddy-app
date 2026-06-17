@@ -443,23 +443,45 @@ final sellerCompletedOrdersProvider =
 });
 
 final tankCategoriesProvider = StreamProvider<List<TankCategory>>((ref) {
+  debugPrint(
+    'TANK_CATEGORIES: Starting stream from collection=tank_categories',
+  );
   return ref
       .watch(firestoreProvider)
       .collection('tank_categories')
       .snapshots()
       .map(
     (snapshot) {
+      debugPrint(
+        'TANK_CATEGORIES: Snapshot received with ${snapshot.docs.length} docs',
+      );
+      for (final doc in snapshot.docs) {
+        debugPrint(
+          'TANK_CATEGORIES: doc=$doc id=${doc.id} data=${doc.data()}',
+        );
+      }
       final categories = snapshot.docs.map(TankCategory.fromDocument).toList()
         ..sort((a, b) => a.litres.compareTo(b.litres));
+      debugPrint(
+        'TANK_CATEGORIES: Deserialized ${categories.length} categories: '
+        '${categories.map((c) => "${c.displayName}(id=${c.id}, active=${c.active})").join(', ')}',
+      );
       return categories;
     },
   );
 });
 
+/// Synchronous provider that filters active categories from the stream.
+/// Must NOT be a StreamProvider itself to avoid async-value confusion.
 final activeTankCategoriesProvider = Provider<List<TankCategory>>((ref) {
   final categoriesAsync = ref.watch(tankCategoriesProvider);
   final categories = categoriesAsync.valueOrNull ?? const [];
-  return categories.where((category) => category.active).toList();
+  final active = categories.where((category) => category.active).toList();
+  debugPrint(
+    'ACTIVE_TANK_CATEGORIES: ${active.length} active out of ${categories.length} total: '
+    '${active.map((c) => "${c.displayName}(id=${c.id}, active=${c.active}, isActive=${c.active})").join(', ')}',
+  );
+  return active;
 });
 
 final platformConfigProvider =

@@ -1014,7 +1014,8 @@ class _TankCategoryAdminCard extends StatelessWidget {
         .set({
       'isActive': !category.active,
       'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
+    }, SetOptions(merge: true));
+    // NOTE: No .timeout() - Firestore SDK handles retries/timeouts internally.
   }
 
   static Future<void> _deleteCategory(
@@ -1204,6 +1205,9 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
       debugPrint(
         'CATEGORY_SAVE: Firestore start ${startedAt.toIso8601String()}',
       );
+      // Firestore SDK handles retries and timeouts internally.
+      // Do NOT add .timeout() here - it causes false "Unable to save category"
+      // errors when the write succeeds server-side but the response is slightly delayed.
       await docRef.set({
         'name': name,
         'capacity': litres,
@@ -1211,21 +1215,21 @@ class _TankCategoryFormPageState extends State<_TankCategoryFormPage> {
         'isActive': _active,
         'updatedAt': FieldValue.serverTimestamp(),
         if (category == null) 'createdAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
+      }, SetOptions(merge: true));
       debugPrint(
         'CATEGORY_SAVE: Firestore finish ${DateTime.now().difference(startedAt).inMilliseconds}ms',
       );
       if (!mounted) return;
       setState(() => _saveButtonState = LoadingButtonState.success);
+      // Show success toast after pop to avoid context issues
       if (!mounted) return;
       Navigator.pop(context);
-      WaterBuddyToastService.success(context, 'Tank category saved');
-    } on TimeoutException {
-      if (mounted) {
-        setState(() => _saveButtonState = LoadingButtonState.idle);
-        WaterBuddyToastService.error(context, 'Unable to save category');
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        WaterBuddyToastService.success(context, 'Tank category saved');
+      });
     } catch (error) {
+      debugPrint('CATEGORY_SAVE_ERROR: $error');
       if (mounted) {
         setState(() => _saveButtonState = LoadingButtonState.idle);
         WaterBuddyToastService.error(
