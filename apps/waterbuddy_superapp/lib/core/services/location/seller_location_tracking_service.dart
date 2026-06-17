@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
@@ -51,7 +50,7 @@ class SellerLocationTrackingService {
       final now = DateTime.now();
       
       // THROTTLE: Minimum 5 seconds between writes
-      if (_lastWriteAt != null && now.difference(_lastWriteAt!).inSeconds < 5) {
+      if (_lastWriteAt != null && now.difference(_lastWriteAt!) < _minInterval) {
         return;
       }
       

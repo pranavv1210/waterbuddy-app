@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 
 import '../../auth/app_role.dart';
 import '../../../models/order.dart' as app_order;
-import '../../../providers/app_providers.dart';
 import '../orders/order_service.dart';
 
 /// Session Restoration Service
@@ -28,20 +27,7 @@ class SessionRestorationService {
     debugPrint('[SESSION] Restoring session for user=$userId role=$role');
 
     try {
-      String? fieldName;
-      switch (role) {
-        case AppRole.consumer:
-          fieldName = 'customerId';
-          break;
-        case AppRole.seller:
-          fieldName = 'sellerId';
-          break;
-        case AppRole.driver:
-          fieldName = 'driverId';
-          break;
-        case AppRole.admin:
-          return null; // Admin doesn't need session restoration
-      }
+      if (role == AppRole.admin) return null;
 
       final activeOrder = await orderService.findActiveOrder(
         customerId: role == AppRole.consumer ? userId : null,

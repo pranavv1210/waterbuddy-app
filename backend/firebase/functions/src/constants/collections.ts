@@ -12,4 +12,9 @@ export const collections = {
   driverLocations: "driver_locations",
   tracking: "tracking",
   complaints: "complaints",
+  // Phase 5 additions
+  paymentEvents: "payment_events",
+  ratings: "ratings",
+  ratingAggregates: "rating_aggregates",
+  systemMetrics: "system_metrics",
 } as const;

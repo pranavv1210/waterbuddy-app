@@ -5,6 +5,7 @@ import { OrderRecord, SystemSettings } from "../models/domain";
 import { db } from "./firebase";
 import { NotificationService } from "./notificationService";
 import { SellerDiscoveryService } from "./sellerDiscoveryService";
+import { AnalyticsService } from "./analyticsService";
 
 const DEFAULT_SETTINGS: SystemSettings = {
   bookingsEnabled: true,
@@ -26,7 +27,8 @@ function normalizeLocation(location: Record<string, unknown>): {
 export class DispatchService {
   constructor(
     private readonly sellerDiscovery = new SellerDiscoveryService(),
-    private readonly notifications = new NotificationService()
+    private readonly notifications = new NotificationService(),
+    private readonly analytics = new AnalyticsService()
   ) {}
 
   async getSettings(): Promise<SystemSettings> {
@@ -56,6 +58,8 @@ export class DispatchService {
     if (!orderSnapshot.exists) return;
     const order = { id: orderSnapshot.id, ...orderSnapshot.data() } as OrderRecord;
     if (order.status !== "SEARCHING") return;
+
+    await this.analytics.incrementOrdersCreated();
     await this.offerNextSeller(order);
   }
 
@@ -95,12 +99,7 @@ export class DispatchService {
       await this.log(order.id, "NO_PARTNER_FOUND", {
         radiusKm: settings.dispatchRadiusKm,
       });
-      await this.notifications.send({
-        userIds: [order.customerId],
-        title: "No tanker found",
-        body: "No available tanker accepted this request. Please retry.",
-        data: { orderId: order.id, status: "NO_PARTNER_FOUND" },
-      });
+      await this.notifications.notifyNoPartnerFound(order.customerId, order.id);
       return;
     }
 
@@ -146,16 +145,16 @@ export class DispatchService {
       attemptNumber,
       expiresAt: expiresAt.toDate().toISOString(),
     });
-    await this.notifications.send({
-      userIds: [candidate.sellerId],
-      title: "New water delivery request",
-      body: `Nearest request ${candidate.distanceKm.toFixed(1)} km away. Accept within ${settings.offerTimeoutSeconds}s.`,
-      data: {
-        orderId: order.id,
-        offerId: offerRef.id,
-        type: "ORDER_OFFER",
-      },
-    });
+
+    await this.analytics.incrementDispatchAttempts();
+
+    await this.notifications.notifySellerNewOffer(
+      candidate.sellerId,
+      order.id,
+      offerRef.id,
+      candidate.distanceKm,
+      settings.offerTimeoutSeconds
+    );
   }
 
   async acceptOffer(params: {
@@ -184,6 +183,8 @@ export class DispatchService {
         throw new Error("Order is no longer available.");
       }
 
+      const newStatus = params.driverId ? "DRIVER_ASSIGNED" : "ACCEPTED";
+
       transaction.update(offerRef, {
         status: "accepted",
         driverId: params.driverId ?? params.sellerId,
@@ -192,7 +193,7 @@ export class DispatchService {
       transaction.set(
         orderRef,
         {
-          status: params.driverId ? "DRIVER_ASSIGNED" : "ACCEPTED",
+          status: newStatus,
           sellerId: params.sellerId,
           driverId: params.driverId ?? params.sellerId,
           assignedAt: FieldValue.serverTimestamp(),
@@ -209,10 +210,12 @@ export class DispatchService {
         },
         { merge: true }
       );
+
       return {
         orderId: offer.orderId as string,
         customerId: order.customerId as string,
-        status: params.driverId ? "DRIVER_ASSIGNED" : "ACCEPTED",
+        createdAt: order.createdAt,
+        status: newStatus,
       };
     });
 
@@ -221,12 +224,22 @@ export class DispatchService {
       sellerId: params.sellerId,
       driverId: params.driverId ?? params.sellerId,
     });
-    await this.notifications.send({
-      userIds: [result.customerId],
-      title: "Tanker assigned",
-      body: "A nearby tanker accepted your water delivery request.",
-      data: { orderId: result.orderId, status: result.status },
-    });
+
+    // Compute acceptance time if createdAt is available
+    if (result.createdAt?.toDate) {
+      const acceptanceSeconds = Math.round(
+        (Date.now() - result.createdAt.toDate().getTime()) / 1000
+      );
+      await this.analytics.recordAcceptanceTime(acceptanceSeconds);
+    }
+
+    // Notify customer with typed notification
+    if (result.status === "DRIVER_ASSIGNED") {
+      await this.notifications.notifyDriverAssigned(result.customerId, result.orderId);
+    } else {
+      await this.notifications.notifyOrderAccepted(result.customerId, result.orderId);
+    }
+
     return { orderId: result.orderId, status: result.status };
   }
 
@@ -312,6 +325,12 @@ export class DispatchService {
       { merge: true }
     );
     await this.log(orderId, "FAILED", { reason });
+    // Notify admins of critical failure
+    await this.notifications.notifyAdmins(
+      "Order dispatch failed",
+      `Order ${orderId} failed: ${reason}`,
+      { orderId }
+    );
   }
 
   private async log(

@@ -1,33 +1,17 @@
 import 'dart:async';
-import 'dart:developer' as developer;
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'core/services/crashlytics/crashlytics_service.dart';
 import 'core/widgets/app_initializer.dart';
 
 void main() {
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-    developer.log(
-      'FlutterError',
-      name: 'waterbuddy.superapp',
-      error: details.exception,
-      stackTrace: details.stack,
-    );
-  };
-
-  PlatformDispatcher.instance.onError = (error, stack) {
-    developer.log(
-      'PlatformDispatcherError',
-      name: 'waterbuddy.superapp',
-      error: error,
-      stackTrace: stack,
-    );
-    return true;
-  };
+  // Wire Crashlytics before runApp so startup crashes are caught.
+  // The actual FirebaseCrashlytics.instance is initialized in AppInitializer
+  // after Firebase.initializeApp(); this handler is just a safety net.
+  FlutterError.onError = CrashlyticsService.recordFlutterError;
 
   runZonedGuarded(
     () async {
@@ -41,11 +25,12 @@ void main() {
       );
     },
     (error, stack) {
-      developer.log(
-        'ZoneError',
-        name: 'waterbuddy.superapp',
-        error: error,
-        stackTrace: stack,
+      // Uncaught async errors in the zone
+      CrashlyticsService.recordError(
+        error,
+        stack,
+        fatal: true,
+        context: 'runZonedGuarded',
       );
     },
   );

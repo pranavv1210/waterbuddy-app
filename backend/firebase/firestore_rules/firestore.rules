@@ -29,51 +29,82 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // ── Users ──────────────────────────────────────────────────────────────
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdminRole();
       allow create: if isOwner(userId);
       allow update: if isOwner(userId) || isAdminRole();
       allow delete: if isAdminRole();
+
+      match /fcmTokens/{token} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
+    // ── Admins ─────────────────────────────────────────────────────────────
     match /admins/{adminId} {
       allow read: if isOwner(adminId) || isAdminRole();
       allow write: if isAdminRole();
     }
 
+    // ── Sellers ────────────────────────────────────────────────────────────
     match /sellers/{sellerId} {
       allow read: if isSignedIn();
       allow create: if isOwner(sellerId) || isAdminRole();
+      // Sellers can update their own profile but NOT verificationStatus
       allow update: if isAdminRole()
-        || (isOwner(sellerId) && request.resource.data.verificationStatus == resource.data.verificationStatus);
+        || (isOwner(sellerId)
+          && request.resource.data.verificationStatus == resource.data.verificationStatus
+          && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['averageRating', 'ratingCount']));
       allow delete: if isAdminRole();
+
+      match /fcmTokens/{token} {
+        allow read, write: if isOwner(sellerId);
+      }
     }
 
+    // ── Drivers ────────────────────────────────────────────────────────────
     match /drivers/{driverId} {
       allow read: if isSignedIn();
       allow create: if isOwner(driverId) || isAdminRole();
       allow update: if isOwner(driverId) || isAdminRole();
       allow delete: if isAdminRole();
+
+      match /fcmTokens/{token} {
+        allow read, write: if isOwner(driverId);
+      }
     }
 
+    // ── Orders ─────────────────────────────────────────────────────────────
     match /orders/{orderId} {
       allow read: if isAdminRole()
         || (isConsumerRole() && resource.data.customerId == request.auth.uid)
         || (isSellerRole() && resource.data.sellerId == request.auth.uid)
         || (isDriverRole() && resource.data.driverId == request.auth.uid);
 
-      allow create: if isConsumerRole() && request.resource.data.customerId == request.auth.uid;
+      // Orders are created via Cloud Function (placeOrder) — Flutter never
+      // creates orders directly, but we allow it as a fallback with strict validation.
+      allow create: if isConsumerRole()
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.paymentStatus == 'PENDING';
 
       allow update: if isAdminRole()
+        // Consumer can only cancel their own order; cannot change payment fields
         || (isConsumerRole()
           && resource.data.customerId == request.auth.uid
-          && request.resource.data.status in ['CANCELLED'])
+          && request.resource.data.status == 'CANCELLED'
+          && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['paymentStatus', 'paymentId', 'razorpayOrderId', 'razorpaySignature']))
+        // Seller can update their own orders (status transitions)
         || (isSellerRole() && resource.data.sellerId == request.auth.uid)
+        // Driver can update their own orders
         || (isDriverRole() && resource.data.driverId == request.auth.uid);
 
       allow delete: if isAdminRole();
     }
 
+    // ── Order Offers ───────────────────────────────────────────────────────
     match /order_offers/{offerId} {
       allow read: if isAdminRole()
         || (isSellerRole() && resource.data.sellerId == request.auth.uid)
@@ -87,21 +118,25 @@ service cloud.firestore {
       allow create, delete: if false;
     }
 
+    // ── Dispatch Logs ──────────────────────────────────────────────────────
     match /dispatch_logs/{logId} {
       allow read: if isAdminRole();
-      allow write: if false;
+      allow write: if false; // backend only
     }
 
+    // ── System Settings ────────────────────────────────────────────────────
     match /system_settings/{settingsId} {
       allow read: if isSignedIn();
       allow write: if isAdminRole();
     }
 
+    // ── Tank Categories ────────────────────────────────────────────────────
     match /tank_categories/{categoryId} {
       allow read: if isSignedIn();
       allow write: if isAdminRole();
     }
 
+    // ── Location Collections ───────────────────────────────────────────────
     match /seller_locations/{sellerId} {
       allow read: if isSignedIn();
       allow write: if isOwner(sellerId) || isAdminRole();
@@ -112,21 +147,59 @@ service cloud.firestore {
       allow write: if isOwner(driverId) || isAdminRole();
     }
 
+    // ── Notifications ──────────────────────────────────────────────────────
     match /notifications/{notificationId} {
-      allow read: if isAdminRole() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      allow create, update, delete: if isAdminRole();
+      allow read: if isAdminRole()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Users can mark their own notifications as read
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow create, delete: if isAdminRole();
     }
 
+    // ── Tracking ───────────────────────────────────────────────────────────
     match /tracking/{trackingId} {
       allow read: if isSignedIn();
       allow create, update: if isSellerRole() || isDriverRole() || isAdminRole();
       allow delete: if isAdminRole();
     }
 
+    // ── Complaints ─────────────────────────────────────────────────────────
     match /complaints/{complaintId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if isAdminRole();
+    }
+
+    // ── Payment Events — Phase 5 ───────────────────────────────────────────
+    // Payment events are written exclusively by Cloud Functions (paymentWebhook,
+    // verifyPayment). No client can write payment status directly.
+    match /payment_events/{eventId} {
+      allow read: if isAdminRole()
+        || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow write: if false; // backend only — enforced
+    }
+
+    // ── Ratings — Phase 5 ──────────────────────────────────────────────────
+    match /ratings/{ratingId} {
+      allow read: if isSignedIn();
+      // Ratings are created via the submitRating Cloud Function callable.
+      // Direct client creation is blocked to enforce order-membership validation.
+      allow create: if false;
+      allow update, delete: if isAdminRole();
+    }
+
+    // ── Rating Aggregates — Phase 5 ────────────────────────────────────────
+    match /rating_aggregates/{userId} {
+      allow read: if isSignedIn();
+      allow write: if false; // computed by Cloud Functions only
+    }
+
+    // ── System Metrics — Phase 5 ───────────────────────────────────────────
+    match /system_metrics/{docId} {
+      allow read: if isAdminRole();
+      allow write: if false; // incremented by Cloud Functions only
     }
   }
 }

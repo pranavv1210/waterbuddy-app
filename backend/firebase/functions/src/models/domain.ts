@@ -18,7 +18,21 @@ export type PaymentStatus =
   | "PAID"
   | "COD_PENDING"
   | "COMPLETED"
-  | "FAILED";
+  | "FAILED"
+  | "REFUNDED";
+
+export type NotificationType =
+  | "ORDER_OFFER"
+  | "ORDER_ACCEPTED"
+  | "DRIVER_ASSIGNED"
+  | "DRIVER_EN_ROUTE"
+  | "DRIVER_ARRIVED"
+  | "ORDER_DELIVERED"
+  | "ORDER_CANCELLED"
+  | "PAYMENT_SUCCESS"
+  | "PAYMENT_FAILED"
+  | "REFUND_INITIATED"
+  | "SYSTEM_ALERT";
 
 export interface WaterBuddyUser {
   id: string;
@@ -39,6 +53,8 @@ export interface SellerProfile {
     label: string;
     radiusKm: number;
   };
+  averageRating?: number;
+  ratingCount?: number;
 }
 
 export interface SystemSettings {
@@ -70,6 +86,8 @@ export interface OrderRecord {
   status: OrderStatus;
   paymentType: PaymentType;
   paymentStatus: PaymentStatus;
+  paymentId?: string | null;
+  razorpayOrderId?: string | null;
   location: OrderLocation;
   candidateSellerIds: string[];
   rejectedSellerIds: string[];
@@ -93,4 +111,57 @@ export interface OrderOfferRecord {
   expiresAt: FirebaseFirestore.Timestamp;
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;
+}
+
+// Phase 5 additions ───────────────────────────────────────────────────────────
+
+export interface PaymentEvent {
+  id: string;
+  orderId: string;
+  razorpayPaymentId?: string;
+  razorpayOrderId?: string;
+  razorpaySignature?: string;
+  razorpayRefundId?: string;
+  event: "payment_captured" | "payment_failed" | "refund_created" | "cod_confirmed";
+  amount?: number;
+  currency?: string;
+  status: PaymentStatus;
+  errorCode?: string;
+  errorDescription?: string;
+  processedAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+  createdAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+}
+
+export interface RatingRecord {
+  id: string;
+  orderId: string;
+  raterId: string;
+  rateeId: string;
+  rateeRole: "seller" | "driver" | "customer";
+  stars: number; // 1-5
+  comment?: string;
+  createdAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+}
+
+export interface RatingAggregate {
+  userId: string;
+  role: "seller" | "driver";
+  averageRating: number;
+  ratingCount: number;
+  updatedAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+}
+
+export interface AnalyticsCounter {
+  date: string; // YYYY-MM-DD
+  ordersCreated?: number;
+  ordersCompleted?: number;
+  ordersCancelled?: number;
+  paymentsSuccess?: number;
+  paymentsFailed?: number;
+  revenue?: number;
+  deliveryTimes?: number[];
+  totalDeliveries?: number;
+  dispatchAttempts?: number;
+  averageAcceptanceSeconds?: number;
+  updatedAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
 }

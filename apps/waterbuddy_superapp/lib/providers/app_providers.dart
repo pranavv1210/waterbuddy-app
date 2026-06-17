@@ -2,10 +2,13 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+
+import '../core/services/background/background_service.dart';
 
 import '../core/auth/admin_access_service.dart';
 import '../core/auth/app_role.dart';
@@ -57,10 +60,23 @@ final firebaseAuthProvider =
     Provider<FirebaseAuth>((ref) => FirebaseAuth.instance);
 final firestoreProvider =
     Provider<FirebaseFirestore>((ref) => FirebaseFirestore.instance);
+final cloudFunctionsProvider =
+    Provider<FirebaseFunctions>((ref) => FirebaseFunctions.instance);
 final adminAccessServiceProvider =
     Provider<AdminAccessService>((ref) => const AdminAccessService());
 final roleSessionServiceProvider =
     Provider<RoleSessionService>((ref) => RoleSessionService());
+
+// ── Background service ────────────────────────────────────────────────────────
+final backgroundServiceProvider = Provider<BackgroundService>((ref) {
+  final service = BackgroundService(
+    firestore: ref.watch(firestoreProvider),
+    orderService: ref.watch(orderServiceProvider),
+  );
+  service.attach();
+  ref.onDispose(service.detach);
+  return service;
+});
 
 final authServiceProvider = Provider<AuthService>(
   (ref) => AuthService(

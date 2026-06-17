@@ -51,7 +51,7 @@ class DriverLocationTrackingService {
       final now = DateTime.now();
       
       // THROTTLE: Minimum 5 seconds between writes
-      if (_lastWriteAt != null && now.difference(_lastWriteAt!).inSeconds < 5) {
+      if (_lastWriteAt != null && now.difference(_lastWriteAt!) < _minInterval) {
         return;
       }
       
