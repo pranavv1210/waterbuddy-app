@@ -23,40 +23,492 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
   int _tab = 0;
 
   static const _tabs = [
+    OpsTab(label: 'Home', icon: Icons.map_rounded),
     OpsTab(label: 'Orders', icon: Icons.assignment_rounded),
-    OpsTab(label: 'Fleet', icon: Icons.local_shipping_rounded),
-    OpsTab(label: 'Drivers', icon: Icons.groups_rounded),
-    OpsTab(label: 'Payouts', icon: Icons.payments_rounded),
+    OpsTab(label: 'History', icon: Icons.history_rounded),
     OpsTab(label: 'Profile', icon: Icons.storefront_rounded),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final online = ref.watch(sellerOnlineProvider);
-
-    return OpsScaffold(
-      title: 'Tanker Owner',
-      subtitle: online ? 'Online for water requests' : 'Offline',
-      accent: OpsColors.blue,
-      tabs: _tabs,
-      activeIndex: _tab,
-      onTabChanged: (index) => setState(() => _tab = index),
-      actions: [
-        _OnlineSwitch(
-          online: online,
-          onChanged: (value) =>
-              ref.read(sellerOnlineProvider.notifier).setOnline(value),
-        ),
-        const _SellerNotificationButton(),
-      ],
+    return Scaffold(
+      backgroundColor: OpsColors.surface,
       body: IndexedStack(
         index: _tab,
         children: const [
+          _SellerHomeView(),
           _SellerOrdersView(),
-          _FleetView(),
-          _DriversView(),
           _SellerPayoutsView(),
           _SellerProfileView(),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        selectedIndex: _tab,
+        onDestinationSelected: (index) => setState(() => _tab = index),
+        indicatorColor: OpsColors.blue.withValues(alpha: 0.12),
+        destinations: [
+          for (final tab in _tabs)
+            NavigationDestination(
+              icon: Icon(tab.icon, color: OpsColors.muted),
+              selectedIcon: Icon(tab.icon, color: OpsColors.blue),
+              label: tab.label,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SellerHomeView extends ConsumerWidget {
+  const _SellerHomeView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final online = ref.watch(sellerOnlineProvider);
+    final active = ref.watch(sellerActiveOrdersProvider);
+    final offers = ref.watch(sellerPendingOffersProvider);
+    final location = ref.watch(sellerCurrentLocationProvider).valueOrNull;
+    final activeOrders = active.valueOrNull ?? const <app_order.Order>[];
+    final pendingOffers = offers.valueOrNull ?? const <OrderOffer>[];
+    final nearbyOrders =
+        pendingOffers.map((offer) => offer.order).whereType<app_order.Order>();
+    final center = location == null
+        ? const LatLng(12.9716, 77.5946)
+        : LatLng(location.latitude, location.longitude);
+    final orderMarkers = [...activeOrders, ...nearbyOrders]
+        .where((order) => order.latitude != 0 && order.longitude != 0)
+        .take(12);
+
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(target: center, zoom: 13.8),
+            myLocationEnabled: true,
+            myLocationButtonEnabled: true,
+            zoomControlsEnabled: true,
+            mapToolbarEnabled: false,
+            markers: {
+              Marker(
+                markerId: const MarkerId('tanker_location'),
+                position: center,
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueBlue,
+                ),
+                infoWindow: const InfoWindow(title: 'Your tanker'),
+              ),
+              for (final order in orderMarkers)
+                Marker(
+                  markerId: MarkerId('order_${order.id}'),
+                  position: LatLng(order.latitude, order.longitude),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueGreen,
+                  ),
+                  infoWindow: InfoWindow(
+                    title: order.tankLabel,
+                    snippet: order.deliveryAddress,
+                  ),
+                ),
+            },
+          ),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: _OpsMapHeader(
+              title: 'Tanker Owner',
+              subtitle: online ? 'Online for requests' : 'Offline',
+              walletLabel: 'Wallet',
+              walletValue: _earningsLabel(activeOrders),
+              avatarIcon: Icons.local_shipping_rounded,
+              accent: OpsColors.blue,
+              toggle: _OnlineSwitch(
+                online: online,
+                onChanged: (value) =>
+                    ref.read(sellerOnlineProvider.notifier).setOnline(value),
+              ),
+            ),
+          ),
+        ),
+        _SellerWorkSheet(
+          pendingOffers: pendingOffers,
+          activeOrders: activeOrders,
+        ),
+      ],
+    );
+  }
+
+  static String _earningsLabel(List<app_order.Order> orders) {
+    final today = DateTime.now();
+    final total = orders.where((order) {
+      final date = order.createdAt?.toDate();
+      return date != null &&
+          date.year == today.year &&
+          date.month == today.month &&
+          date.day == today.day;
+    }).fold<num>(0, (total, order) => total + order.amount);
+    return 'Rs ${total.toInt()}';
+  }
+}
+
+class _SellerWorkSheet extends ConsumerWidget {
+  const _SellerWorkSheet({
+    required this.pendingOffers,
+    required this.activeOrders,
+  });
+
+  final List<OrderOffer> pendingOffers;
+  final List<app_order.Order> activeOrders;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentOrder = activeOrders.isEmpty ? null : activeOrders.first;
+    return DraggableScrollableSheet(
+      initialChildSize: 0.30,
+      minChildSize: 0.20,
+      maxChildSize: 0.58,
+      builder: (context, controller) {
+        return DecoratedBox(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x22000000),
+                blurRadius: 24,
+                offset: Offset(0, -8),
+              ),
+            ],
+          ),
+          child: ListView(
+            controller: controller,
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: OpsColors.line,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              _SheetMetricRow(
+                pending: pendingOffers.length,
+                current: currentOrder == null ? 0 : 1,
+                earnings: activeOrders.fold<num>(
+                  0,
+                  (total, order) => total + order.amount,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (pendingOffers.isNotEmpty)
+                _PendingOfferTile(offer: pendingOffers.first)
+              else if (currentOrder != null)
+                _CurrentSellerOrderTile(order: currentOrder)
+              else
+                const _QuietSheetMessage(
+                  icon: Icons.radar_rounded,
+                  title: 'Waiting for requests',
+                  message: 'Stay online to receive nearby water deliveries.',
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SheetMetricRow extends StatelessWidget {
+  const _SheetMetricRow({
+    required this.pending,
+    required this.current,
+    required this.earnings,
+  });
+
+  final int pending;
+  final int current;
+  final num earnings;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: _TinyMetric(label: 'Pending', value: '$pending')),
+        Expanded(child: _TinyMetric(label: 'Current', value: '$current')),
+        Expanded(
+          child: _TinyMetric(label: 'Today', value: 'Rs ${earnings.toInt()}'),
+        ),
+      ],
+    );
+  }
+}
+
+class _TinyMetric extends StatelessWidget {
+  const _TinyMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: OpsColors.ink,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            color: OpsColors.muted,
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PendingOfferTile extends ConsumerWidget {
+  const _PendingOfferTile({required this.offer});
+
+  final OrderOffer offer;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final order = offer.order;
+    final uid = ref.watch(currentUserProvider)?.uid;
+    if (order == null) {
+      return const _QuietSheetMessage(
+        icon: Icons.radar_rounded,
+        title: 'Incoming request',
+        message: 'Order details are loading.',
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Incoming request',
+          style: TextStyle(
+            color: OpsColors.ink,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          order.deliveryAddress ?? 'Delivery address unavailable',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: OpsColors.muted),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: uid == null
+                    ? null
+                    : () => ref
+                        .read(orderServiceProvider)
+                        .rejectOffer(offerId: offer.id),
+                child: const Text('Reject'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: FilledButton(
+                onPressed: uid == null
+                    ? null
+                    : () => ref.read(orderServiceProvider).acceptOffer(
+                          offerId: offer.id,
+                          driverId: uid,
+                        ),
+                child: const Text('Accept'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _CurrentSellerOrderTile extends StatelessWidget {
+  const _CurrentSellerOrderTile({required this.order});
+
+  final app_order.Order order;
+
+  @override
+  Widget build(BuildContext context) {
+    return _QuietSheetMessage(
+      icon: Icons.route_rounded,
+      title: formatOrderStatus(order.status),
+      message: order.deliveryAddress ?? order.tankLabel,
+    );
+  }
+}
+
+class _QuietSheetMessage extends StatelessWidget {
+  const _QuietSheetMessage({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(
+          backgroundColor: OpsColors.blue.withValues(alpha: 0.12),
+          child: Icon(icon, color: OpsColors.blue),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: OpsColors.ink,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                message,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: OpsColors.muted),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OpsMapHeader extends StatelessWidget {
+  const _OpsMapHeader({
+    required this.title,
+    required this.subtitle,
+    required this.walletLabel,
+    required this.walletValue,
+    required this.avatarIcon,
+    required this.accent,
+    required this.toggle,
+  });
+
+  final String title;
+  final String subtitle;
+  final String walletLabel;
+  final String walletValue;
+  final IconData avatarIcon;
+  final Color accent;
+  final Widget toggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: OpsColors.line),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: accent.withValues(alpha: 0.12),
+            child: Icon(avatarIcon, color: accent),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: OpsColors.ink,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: OpsColors.muted,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                walletLabel,
+                style: const TextStyle(
+                  color: OpsColors.muted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                walletValue,
+                style: const TextStyle(
+                  color: OpsColors.ink,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 10),
+          toggle,
+          IconButton(
+            tooltip: 'Notifications',
+            onPressed: () {},
+            icon: const Icon(Icons.notifications_none_rounded),
+          ),
         ],
       ),
     );
@@ -111,53 +563,6 @@ class _OnlineSwitch extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _SellerNotificationButton extends StatelessWidget {
-  const _SellerNotificationButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton.filledTonal(
-      tooltip: 'Notifications',
-      onPressed: () => showModalBottomSheet<void>(
-        context: context,
-        showDragHandle: true,
-        backgroundColor: Colors.white,
-        builder: (context) => const SafeArea(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20, 4, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Notifications',
-                  style: TextStyle(
-                    color: OpsColors.ink,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                SizedBox(height: 14),
-                OpsCard(
-                  child: Text(
-                    'New order alerts, driver updates, and payout updates will appear here.',
-                    style: TextStyle(
-                      color: OpsColors.muted,
-                      height: 1.35,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      icon: const Icon(Icons.notifications_none_rounded),
     );
   }
 }
@@ -1165,23 +1570,11 @@ class _SellerPayoutsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final uid = ref.watch(currentUserProvider)?.uid;
-    if (uid == null) return const SizedBox.shrink();
-
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('orders')
-          .where('sellerId', isEqualTo: uid)
-          .where('status', isEqualTo: 'DELIVERED')
-          .snapshots(),
-      builder: (context, snapshot) {
-        final docs = snapshot.data?.docs ?? [];
-        final amounts = docs
-            .map((doc) => _recordedAmount(doc.data()))
-            .whereType<num>()
-            .toList();
-        final total = amounts.fold<num>(0, (total, amount) => total + amount);
-
+    final completedAsync = ref.watch(sellerCompletedOrdersProvider);
+    return completedAsync.when(
+      data: (orders) {
+        final total =
+            orders.fold<num>(0, (total, order) => total + order.amount);
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -1203,7 +1596,7 @@ class _SellerPayoutsView extends ConsumerWidget {
                       child: OpsCard(
                         child: _Metric(
                           label: 'Delivered orders',
-                          value: '${docs.length}',
+                          value: '${orders.length}',
                           icon: Icons.check_circle_rounded,
                         ),
                       ),
@@ -1213,7 +1606,7 @@ class _SellerPayoutsView extends ConsumerWidget {
                       child: OpsCard(
                         child: _Metric(
                           label: 'Recorded payout',
-                          value: amounts.isEmpty
+                          value: orders.isEmpty
                               ? 'Pending payout setup'
                               : 'Rs ${total.toInt()}',
                           icon: Icons.account_balance_wallet_rounded,
@@ -1225,7 +1618,7 @@ class _SellerPayoutsView extends ConsumerWidget {
               },
             ),
             const SizedBox(height: 18),
-            if (docs.isEmpty)
+            if (orders.isEmpty)
               const OpsEmptyState(
                 icon: Icons.receipt_long_rounded,
                 title: 'No delivered orders',
@@ -1233,23 +1626,26 @@ class _SellerPayoutsView extends ConsumerWidget {
                     'Completed deliveries will appear here once orders are delivered.',
               )
             else
-              for (final doc in docs)
+              for (final order in orders)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: OpsCard(
-                    child: _PayoutRow(id: doc.id, data: doc.data()),
+                    child: _PayoutRow(
+                      id: order.id,
+                      data: {
+                        'tankLabel': order.tankLabel,
+                        'amount': order.amount,
+                        'status': order.status,
+                      },
+                    ),
                   ),
                 ),
           ],
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(child: Text(error.toString())),
     );
-  }
-
-  static num? _recordedAmount(Map<String, dynamic> data) {
-    return data['amount'] as num? ??
-        data['totalAmount'] as num? ??
-        data['price'] as num?;
   }
 }
 
@@ -1261,13 +1657,10 @@ class _SellerProfileView extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     if (user == null) return const SizedBox.shrink();
 
-    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('sellers')
-          .doc(user.uid)
-          .snapshots(),
-      builder: (context, snapshot) {
-        final data = snapshot.data?.data() ?? {};
+    final profileAsync = ref.watch(currentSellerProfileProvider);
+    return profileAsync.when(
+      data: (snapshot) {
+        final data = snapshot?.data() ?? {};
         final name =
             (data['businessName'] ?? data['ownerName'] ?? 'Tanker owner')
                 .toString();
@@ -1365,6 +1758,8 @@ class _SellerProfileView extends ConsumerWidget {
           ],
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(child: Text(error.toString())),
     );
   }
 }
@@ -1430,7 +1825,8 @@ class _PayoutRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final amount = _SellerPayoutsView._recordedAmount(data);
+    final amount =
+        data['amount'] as num? ?? data['totalAmount'] as num? ?? data['price'];
     return Row(
       children: [
         const Icon(Icons.receipt_long_rounded, color: OpsColors.green),

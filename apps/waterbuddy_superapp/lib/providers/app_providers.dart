@@ -11,6 +11,7 @@ import '../core/auth/admin_access_service.dart';
 import '../core/auth/app_role.dart';
 import '../core/auth/role_session_service.dart';
 import '../core/services/auth/auth_service.dart';
+import '../core/services/location/driver_location_tracking_service.dart';
 import '../core/services/location/seller_location_tracking_service.dart';
 import '../core/services/orders/order_service.dart';
 import '../features/admin/presentation/admin_dashboard_screen.dart';
@@ -72,6 +73,9 @@ final authServiceProvider = Provider<AuthService>(
 final sellerLocationTrackingServiceProvider =
     Provider<SellerLocationTrackingService>(
         (ref) => SellerLocationTrackingService(ref.watch(firestoreProvider)));
+final driverLocationTrackingServiceProvider =
+    Provider<DriverLocationTrackingService>(
+        (ref) => DriverLocationTrackingService(ref.watch(firestoreProvider)));
 
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
   (ref) => AuthController(ref.watch(authServiceProvider)),
@@ -186,11 +190,13 @@ final sellerOnlineProvider =
 );
 
 class DriverOnlineController extends StateNotifier<bool> {
-  DriverOnlineController(this._firestore, this._user) : super(false) {
+  DriverOnlineController(this._firestore, this._user, this._trackingService)
+      : super(false) {
     _watchSelf();
   }
   final FirebaseFirestore _firestore;
   final User? _user;
+  final DriverLocationTrackingService _trackingService;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _selfSub;
 
   void _watchSelf() {
@@ -210,12 +216,19 @@ class DriverOnlineController extends StateNotifier<bool> {
       'uid': _user.uid,
       'isOnline': value,
       'lastActiveAt': FieldValue.serverTimestamp(),
+      if (!value) 'currentLocation': FieldValue.delete(),
     }, SetOptions(merge: true));
+    if (value) {
+      await _trackingService.start(driverId: _user.uid);
+    } else {
+      await _trackingService.stop();
+    }
   }
 
   @override
   void dispose() {
     _selfSub?.cancel();
+    _trackingService.stop();
     super.dispose();
   }
 }
@@ -225,6 +238,7 @@ final driverOnlineProvider =
   (ref) => DriverOnlineController(
     ref.watch(firestoreProvider),
     ref.watch(currentUserProvider),
+    ref.watch(driverLocationTrackingServiceProvider),
   ),
 );
 
@@ -337,14 +351,7 @@ final activeOrderProvider = StreamProvider<app_order.Order?>((ref) {
       .watchCustomerOrders(user.uid)
       .map((orders) {
     for (final order in orders) {
-      if (order.status == 'SEARCHING' ||
-          order.status == 'OFFER_SENT' ||
-          order.status == 'ACCEPTED' ||
-          order.status == 'ASSIGNED' ||
-          order.status == 'DRIVER_ASSIGNED' ||
-          order.status == 'ON_THE_WAY' ||
-          order.status == 'DELIVERING' ||
-          order.status == 'ARRIVED') {
+      if (_isActiveOrderStatus(order.status)) {
         return order;
       }
     }
@@ -359,16 +366,7 @@ final sellerActiveOrdersProvider = StreamProvider<List<app_order.Order>>((ref) {
       .watch(orderServiceProvider)
       .watchSellerOrders(user.uid)
       .map((orders) {
-    return orders
-        .where((o) =>
-            o.status == 'OFFER_SENT' ||
-            o.status == 'ACCEPTED' ||
-            o.status == 'ASSIGNED' ||
-            o.status == 'DRIVER_ASSIGNED' ||
-            o.status == 'ON_THE_WAY' ||
-            o.status == 'DELIVERING' ||
-            o.status == 'ARRIVED')
-        .toList();
+    return orders.where((o) => _isActiveOrderStatus(o.status)).toList();
   });
 });
 
@@ -380,11 +378,23 @@ final driverAssignedOrdersProvider =
       .watch(orderServiceProvider)
       .watchDriverOrders(user.uid)
       .map((orders) {
-    return orders
-        .where((o) => o.status != 'DELIVERED' && o.status != 'CANCELLED')
-        .toList();
+    return orders.where((o) => _isActiveOrderStatus(o.status)).toList();
   });
 });
+
+bool _isActiveOrderStatus(String status) {
+  return const {
+    'SEARCHING',
+    'OFFER_SENT',
+    'ACCEPTED',
+    'ASSIGNED',
+    'DRIVER_ASSIGNED',
+    'EN_ROUTE',
+    'ON_THE_WAY',
+    'ARRIVED',
+    'DELIVERING',
+  }.contains(status);
+}
 
 final usersProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>(
   (ref) => ref.watch(firestoreProvider).collection('users').snapshots(),
@@ -398,6 +408,39 @@ final driversProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>(
 final allOrdersProvider = StreamProvider<QuerySnapshot<Map<String, dynamic>>>(
   (ref) => ref.watch(firestoreProvider).collection('orders').snapshots(),
 );
+
+final currentSellerProfileProvider =
+    StreamProvider<DocumentSnapshot<Map<String, dynamic>>?>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return Stream.value(null);
+  return ref
+      .watch(firestoreProvider)
+      .collection('sellers')
+      .doc(user.uid)
+      .snapshots();
+});
+
+final currentDriverProfileProvider =
+    StreamProvider<DocumentSnapshot<Map<String, dynamic>>?>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return Stream.value(null);
+  return ref
+      .watch(firestoreProvider)
+      .collection('drivers')
+      .doc(user.uid)
+      .snapshots();
+});
+
+final sellerCompletedOrdersProvider =
+    StreamProvider<List<app_order.Order>>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return Stream.value(const <app_order.Order>[]);
+  return ref.watch(orderServiceProvider).watchSellerOrders(user.uid).map(
+      (orders) => orders
+          .where((order) =>
+              order.status == 'COMPLETED' || order.status == 'DELIVERED')
+          .toList());
+});
 
 final tankCategoriesProvider = StreamProvider<List<TankCategory>>((ref) {
   return ref

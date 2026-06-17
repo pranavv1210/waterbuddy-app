@@ -43,11 +43,15 @@ class OrderService {
   /// Legacy string-based transitions for backward compatibility
   static const Map<String, Set<String>> _validTransitions = {
     'SEARCHING': {'ACCEPTED', 'ASSIGNED', 'CANCELLED'},
-    'ACCEPTED': {'DRIVER_ASSIGNED', 'ON_THE_WAY', 'CANCELLED'},
-    'ASSIGNED': {'DRIVER_ASSIGNED', 'ON_THE_WAY', 'CANCELLED'},
-    'DRIVER_ASSIGNED': {'ON_THE_WAY', 'CANCELLED'},
-    'ON_THE_WAY': {'ARRIVED', 'DELIVERED', 'CANCELLED'},
-    'ARRIVED': {'DELIVERED', 'CANCELLED'},
+    'OFFER_SENT': {'ACCEPTED', 'ASSIGNED', 'DRIVER_ASSIGNED', 'CANCELLED'},
+    'ACCEPTED': {'DRIVER_ASSIGNED', 'EN_ROUTE', 'ON_THE_WAY', 'CANCELLED'},
+    'ASSIGNED': {'DRIVER_ASSIGNED', 'EN_ROUTE', 'ON_THE_WAY', 'CANCELLED'},
+    'DRIVER_ASSIGNED': {'EN_ROUTE', 'ON_THE_WAY', 'CANCELLED'},
+    'EN_ROUTE': {'ARRIVED', 'DELIVERING', 'CANCELLED'},
+    'ON_THE_WAY': {'ARRIVED', 'DELIVERING', 'DELIVERED', 'CANCELLED'},
+    'ARRIVED': {'DELIVERING', 'COMPLETED', 'DELIVERED', 'CANCELLED'},
+    'DELIVERING': {'COMPLETED', 'DELIVERED', 'CANCELLED'},
+    'COMPLETED': {},
     'DELIVERED': {},
     'CANCELLED': {},
   };
@@ -57,7 +61,7 @@ class OrderService {
   static const String statusSearching = 'SEARCHING';
   static const String statusOwnerAccepted = 'OWNER_ACCEPTED';
   static const String statusDriverAssigned = 'DRIVER_ASSIGNED';
-  static const String statusDriverEnRoute = 'DRIVER_EN_ROUTE';
+  static const String statusDriverEnRoute = 'EN_ROUTE';
   static const String statusArrived = 'ARRIVED';
   static const String statusFilling = 'FILLING';
   static const String statusDelivering = 'DELIVERING';
@@ -74,7 +78,9 @@ class OrderService {
         return OrderState.ownerAccepted;
       case 'DRIVER_ASSIGNED':
         return OrderState.driverAssigned;
+      case 'EN_ROUTE':
       case 'DRIVER_EN_ROUTE':
+      case 'ON_THE_WAY':
         return OrderState.driverEnRoute;
       case 'ARRIVED':
         return OrderState.arrived;
@@ -83,6 +89,7 @@ class OrderService {
       case 'DELIVERING':
         return OrderState.delivering;
       case 'COMPLETED':
+      case 'DELIVERED':
         return OrderState.completed;
       case 'CANCELLED':
         return OrderState.cancelled;
@@ -275,11 +282,50 @@ class OrderService {
     required String offerId,
     String? driverId,
   }) async {
-    await _firestore.collection('order_offers').doc(offerId).set({
-      'status': 'accepted',
-      if (driverId != null) 'driverId': driverId,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    await _firestore.runTransaction((transaction) async {
+      final offerRef = _firestore.collection('order_offers').doc(offerId);
+      final offerSnapshot = await transaction.get(offerRef);
+      if (!offerSnapshot.exists) throw Exception('Offer not found');
+      final offer = offerSnapshot.data() as Map<String, dynamic>;
+      if ((offer['status'] ?? 'pending').toString() != 'pending') {
+        throw Exception('This request is no longer available');
+      }
+
+      final orderId = (offer['orderId'] ?? '').toString();
+      if (orderId.isEmpty) throw Exception('Offer is missing order');
+      final orderRef = _firestore.collection('orders').doc(orderId);
+      final orderSnapshot = await transaction.get(orderRef);
+      if (!orderSnapshot.exists) throw Exception('Order not found');
+      final order = orderSnapshot.data() as Map<String, dynamic>;
+      final status = (order['status'] ?? '').toString();
+      if (status != 'OFFER_SENT' && status != statusSearching) {
+        throw Exception('Order is no longer available');
+      }
+      if ((order['sellerId'] ?? '').toString().isNotEmpty) {
+        throw Exception('Order already accepted');
+      }
+
+      final sellerId = (offer['sellerId'] ?? '').toString();
+      transaction.set(
+          offerRef,
+          {
+            'status': 'accepted',
+            if (driverId != null) 'driverId': driverId,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
+      transaction.set(
+          orderRef,
+          {
+            'status': driverId == null ? 'ACCEPTED' : statusDriverAssigned,
+            'sellerId': sellerId,
+            if (driverId != null) 'driverId': driverId,
+            'acceptedBy': sellerId,
+            'assignedAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
+    });
   }
 
   Future<void> rejectOffer({required String offerId}) async {
@@ -367,5 +413,26 @@ class OrderService {
       'paymentStatus': 'PENDING',
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  Future<void> updateOrderTracking({
+    required String orderId,
+    required double latitude,
+    required double longitude,
+    double? heading,
+    double? speed,
+    double? accuracy,
+  }) async {
+    await _firestore.collection('orders').doc(orderId).set({
+      'tracking': {
+        'lat': latitude,
+        'lng': longitude,
+        'heading': heading,
+        'speed': speed,
+        'accuracy': accuracy,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 }

@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 
-class SellerLocationTrackingService {
-  SellerLocationTrackingService(this._firestore);
+class DriverLocationTrackingService {
+  DriverLocationTrackingService(this._firestore);
 
   final FirebaseFirestore _firestore;
   StreamSubscription<Position>? _subscription;
@@ -20,7 +20,7 @@ class SellerLocationTrackingService {
         permission == LocationPermission.whileInUse;
   }
 
-  Future<void> start({required String sellerId}) async {
+  Future<void> start({required String driverId}) async {
     final allowed = await _ensurePermission();
     if (!allowed) return;
     await stop();
@@ -37,7 +37,7 @@ class SellerLocationTrackingService {
         return;
       }
       _lastWriteAt = now;
-      await _firestore.collection('sellers').doc(sellerId).set({
+      await _firestore.collection('drivers').doc(driverId).set({
         'currentLocation': {
           'latitude': position.latitude,
           'longitude': position.longitude,
@@ -48,8 +48,8 @@ class SellerLocationTrackingService {
         },
         'lastLocationAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      await _firestore.collection('tanker_locations').doc(sellerId).set({
-        'tankerId': sellerId,
+      await _firestore.collection('driver_locations').doc(driverId).set({
+        'driverId': driverId,
         'latitude': position.latitude,
         'longitude': position.longitude,
         'timestamp': FieldValue.serverTimestamp(),

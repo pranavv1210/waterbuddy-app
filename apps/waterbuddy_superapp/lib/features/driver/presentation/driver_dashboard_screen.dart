@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,36 +24,378 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
   int _tab = 0;
 
   static const _tabs = [
-    OpsTab(label: 'Runs', icon: Icons.route_rounded),
+    OpsTab(label: 'Home', icon: Icons.map_rounded),
+    OpsTab(label: 'Orders', icon: Icons.route_rounded),
+    OpsTab(label: 'History', icon: Icons.history_rounded),
     OpsTab(label: 'Profile', icon: Icons.badge_rounded),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final online = ref.watch(driverOnlineProvider);
-
-    return OpsScaffold(
-      title: 'Driver',
-      subtitle: online ? 'On duty' : 'Off duty',
-      accent: OpsColors.amber,
-      tabs: _tabs,
-      activeIndex: _tab,
-      onTabChanged: (index) => setState(() => _tab = index),
-      actions: [
-        _DutySwitch(
-          online: online,
-          onChanged: (value) =>
-              ref.read(driverOnlineProvider.notifier).setOnline(value),
-        ),
-        const _DriverNotificationButton(),
-      ],
+    return Scaffold(
+      backgroundColor: OpsColors.surface,
       body: IndexedStack(
         index: _tab,
         children: const [
+          _DriverHomeView(),
           _DriverRunsView(),
+          _DriverHistoryView(),
           _DriverProfileView(),
         ],
       ),
+      bottomNavigationBar: NavigationBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        selectedIndex: _tab,
+        onDestinationSelected: (index) => setState(() => _tab = index),
+        indicatorColor: OpsColors.amber.withValues(alpha: 0.15),
+        destinations: [
+          for (final tab in _tabs)
+            NavigationDestination(
+              icon: Icon(tab.icon, color: OpsColors.muted),
+              selectedIcon: Icon(tab.icon, color: OpsColors.amber),
+              label: tab.label,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DriverHomeView extends ConsumerWidget {
+  const _DriverHomeView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final online = ref.watch(driverOnlineProvider);
+    final orders =
+        ref.watch(driverAssignedOrdersProvider).valueOrNull ?? const <Order>[];
+    final activeOrders = orders
+        .where((order) =>
+            order.status != 'COMPLETED' && order.status != 'CANCELLED')
+        .toList();
+    final primaryOrder = activeOrders.isEmpty ? null : activeOrders.first;
+    final center = primaryOrder == null
+        ? const LatLng(12.9716, 77.5946)
+        : LatLng(
+            primaryOrder.latitude == 0 ? 12.9716 : primaryOrder.latitude,
+            primaryOrder.longitude == 0 ? 77.5946 : primaryOrder.longitude,
+          );
+
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(target: center, zoom: 14),
+            myLocationEnabled: true,
+            myLocationButtonEnabled: true,
+            zoomControlsEnabled: true,
+            mapToolbarEnabled: false,
+            markers: {
+              for (final order in activeOrders)
+                if (order.latitude != 0 || order.longitude != 0)
+                  Marker(
+                    markerId: MarkerId('delivery_${order.id}'),
+                    position: LatLng(order.latitude, order.longitude),
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueYellow,
+                    ),
+                    infoWindow: InfoWindow(
+                      title: order.tankLabel,
+                      snippet: order.deliveryAddress,
+                    ),
+                  ),
+            },
+            polylines: {
+              if (primaryOrder != null &&
+                  primaryOrder.latitude != 0 &&
+                  primaryOrder.longitude != 0)
+                Polyline(
+                  polylineId: PolylineId('route_${primaryOrder.id}'),
+                  points: [
+                    center,
+                    LatLng(primaryOrder.latitude, primaryOrder.longitude),
+                  ],
+                  color: OpsColors.amber,
+                  width: 5,
+                ),
+            },
+          ),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: _DriverMapHeader(
+              online: online,
+              activeOrders: activeOrders.length,
+              onToggle: (value) =>
+                  ref.read(driverOnlineProvider.notifier).setOnline(value),
+            ),
+          ),
+        ),
+        _DriverWorkSheet(activeOrders: activeOrders),
+      ],
+    );
+  }
+}
+
+class _DriverMapHeader extends StatelessWidget {
+  const _DriverMapHeader({
+    required this.online,
+    required this.activeOrders,
+    required this.onToggle,
+  });
+
+  final bool online;
+  final int activeOrders;
+  final ValueChanged<bool> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: OpsColors.line),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 22,
+            backgroundColor: Color(0xFFFFF7ED),
+            child: Icon(Icons.badge_rounded, color: OpsColors.amber),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Driver',
+                  style: TextStyle(
+                    color: OpsColors.ink,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  online ? 'Rating 4.8 - $activeOrders active' : 'Offline',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: OpsColors.muted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const _DriverWalletLabel(),
+          const SizedBox(width: 10),
+          _DutySwitch(online: online, onChanged: onToggle),
+          IconButton(
+            tooltip: 'Notifications',
+            onPressed: () {},
+            icon: const Icon(Icons.notifications_none_rounded),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DriverWalletLabel extends StatelessWidget {
+  const _DriverWalletLabel();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Wallet',
+          style: TextStyle(
+            color: OpsColors.muted,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Text(
+          'Rs 0',
+          style: TextStyle(
+            color: OpsColors.ink,
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DriverWorkSheet extends StatelessWidget {
+  const _DriverWorkSheet({required this.activeOrders});
+
+  final List<Order> activeOrders;
+
+  @override
+  Widget build(BuildContext context) {
+    final current = activeOrders.isEmpty ? null : activeOrders.first;
+    return DraggableScrollableSheet(
+      initialChildSize: 0.30,
+      minChildSize: 0.20,
+      maxChildSize: 0.58,
+      builder: (context, controller) {
+        return DecoratedBox(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x22000000),
+                blurRadius: 24,
+                offset: Offset(0, -8),
+              ),
+            ],
+          ),
+          child: ListView(
+            controller: controller,
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: OpsColors.line,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: _DriverTinyMetric(
+                      label: 'Current',
+                      value: current == null ? '0' : '1',
+                    ),
+                  ),
+                  const Expanded(
+                    child: _DriverTinyMetric(label: 'History', value: 'Live'),
+                  ),
+                  const Expanded(
+                    child: _DriverTinyMetric(label: 'Earnings', value: 'Rs 0'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (current == null)
+                const _DriverSheetMessage(
+                  icon: Icons.route_outlined,
+                  title: 'Waiting for delivery',
+                  message: 'Go online to receive assigned tanker runs.',
+                )
+              else
+                _DriverSheetMessage(
+                  icon: Icons.navigation_rounded,
+                  title: formatOrderStatus(current.status),
+                  message: current.deliveryAddress ?? current.tankLabel,
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DriverTinyMetric extends StatelessWidget {
+  const _DriverTinyMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: OpsColors.ink,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            color: OpsColors.muted,
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DriverSheetMessage extends StatelessWidget {
+  const _DriverSheetMessage({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(
+          backgroundColor: OpsColors.amber.withValues(alpha: 0.12),
+          child: Icon(icon, color: OpsColors.amber),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: OpsColors.ink,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                message,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: OpsColors.muted),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -107,53 +448,6 @@ class _DutySwitch extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _DriverNotificationButton extends StatelessWidget {
-  const _DriverNotificationButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton.filledTonal(
-      tooltip: 'Notifications',
-      onPressed: () => showModalBottomSheet<void>(
-        context: context,
-        showDragHandle: true,
-        backgroundColor: Colors.white,
-        builder: (context) => const SafeArea(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20, 4, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Notifications',
-                  style: TextStyle(
-                    color: OpsColors.ink,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                SizedBox(height: 14),
-                OpsCard(
-                  child: Text(
-                    'Assigned delivery runs, route updates, and payout alerts will appear here.',
-                    style: TextStyle(
-                      color: OpsColors.muted,
-                      height: 1.35,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      icon: const Icon(Icons.notifications_none_rounded),
     );
   }
 }
@@ -307,6 +601,64 @@ class _DriverMapPanel extends StatelessWidget {
   }
 }
 
+class _DriverHistoryView extends ConsumerWidget {
+  const _DriverHistoryView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final orders = ref.watch(driverAssignedOrdersProvider);
+    return orders.when(
+      data: (list) {
+        final completed = list
+            .where((order) =>
+                order.status == 'COMPLETED' || order.status == 'DELIVERED')
+            .toList();
+        if (completed.isEmpty) {
+          return const OpsEmptyState(
+            icon: Icons.history_rounded,
+            title: 'No completed runs',
+            message: 'Completed deliveries will appear here.',
+          );
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.all(20),
+          itemBuilder: (context, index) {
+            final order = completed[index];
+            return OpsCard(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  order.tankLabel,
+                  style: const TextStyle(
+                    color: OpsColors.ink,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                subtitle: Text(
+                  order.deliveryAddress ?? 'Address unavailable',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: Text(
+                  'Rs ${order.amount.toInt()}',
+                  style: const TextStyle(
+                    color: OpsColors.green,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            );
+          },
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemCount: completed.length,
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(child: Text(error.toString())),
+    );
+  }
+}
+
 class _RunCard extends ConsumerWidget {
   const _RunCard({required this.order});
 
@@ -385,7 +737,7 @@ class _RunCard extends ConsumerWidget {
               width: double.infinity,
               child: FilledButton(
                 onPressed: () async {
-                  if (next == 'DELIVERED') {
+                  if (next == 'COMPLETED') {
                     final pinConfirmed = await _showPinVerificationDialog(
                         context, order.deliveryPin);
                     if (!pinConfirmed) return;
@@ -516,11 +868,14 @@ class _RunCard extends ConsumerWidget {
     switch (status) {
       case 'DRIVER_ASSIGNED':
       case 'ASSIGNED':
-        return 'ON_THE_WAY';
+        return 'EN_ROUTE';
+      case 'EN_ROUTE':
       case 'ON_THE_WAY':
         return 'ARRIVED';
       case 'ARRIVED':
-        return 'DELIVERED';
+        return 'DELIVERING';
+      case 'DELIVERING':
+        return 'COMPLETED';
       default:
         return null;
     }
@@ -528,11 +883,13 @@ class _RunCard extends ConsumerWidget {
 
   static String _actionLabel(String status) {
     switch (status) {
+      case 'EN_ROUTE':
       case 'ON_THE_WAY':
-        return 'Start delivery';
-      case 'ARRIVED':
         return 'Mark arrived';
-      case 'DELIVERED':
+      case 'ARRIVED':
+        return 'Start delivery';
+      case 'DELIVERING':
+      case 'COMPLETED':
         return 'Complete delivery';
       default:
         return 'Update status';
@@ -558,17 +915,17 @@ class _RunCard extends ConsumerWidget {
       position = null;
     }
 
-    await ref.read(orderServiceProvider).updateOrderStatus(order.id, status);
-
+    final service = ref.read(orderServiceProvider);
+    await service.updateOrderStatus(order.id, status);
     if (position != null) {
-      await FirebaseFirestore.instance.collection('orders').doc(order.id).set({
-        'tracking': {
-          'lat': position.latitude,
-          'lng': position.longitude,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      await service.updateOrderTracking(
+        orderId: order.id,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        heading: position.heading,
+        speed: position.speed,
+        accuracy: position.accuracy,
+      );
     }
   }
 }
@@ -623,14 +980,10 @@ class _DriverProfileView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final uid = ref.watch(currentUserProvider)?.uid;
-    if (uid == null) return const SizedBox.shrink();
-
-    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream:
-          FirebaseFirestore.instance.collection('drivers').doc(uid).snapshots(),
-      builder: (context, snapshot) {
-        final data = snapshot.data?.data() ?? {};
+    final profileAsync = ref.watch(currentDriverProfileProvider);
+    return profileAsync.when(
+      data: (snapshot) {
+        final data = snapshot?.data() ?? {};
         final name =
             (data['driverName'] ?? data['fullName'] ?? 'Driver').toString();
         final phone =
@@ -741,6 +1094,8 @@ class _DriverProfileView extends ConsumerWidget {
           ],
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(child: Text(error.toString())),
     );
   }
 }
