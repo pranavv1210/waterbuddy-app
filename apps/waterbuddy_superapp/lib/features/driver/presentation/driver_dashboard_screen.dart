@@ -916,7 +916,10 @@ class _RunCard extends ConsumerWidget {
     }
 
     final service = ref.read(orderServiceProvider);
-    await service.updateOrderStatus(order.id, status);
+    await service.updateOrderStatus(
+      orderId: order.id,
+      newStatus: status,
+    );
     if (position != null) {
       await service.updateOrderTracking(
         orderId: order.id,
