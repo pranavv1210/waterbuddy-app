@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../models/order.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
+import '../../../widgets/premium_ui.dart';
 import 'cancellation_sheet.dart';
 import '../../tracking/providers/tracking_providers.dart';
 
@@ -48,9 +49,10 @@ class OrderDetailsScreen extends ConsumerWidget {
 
     return orderAsync.when(
       loading: () => const Scaffold(
-        backgroundColor: Color(0xFFF8FAFC),
-        body:
-            Center(child: CircularProgressIndicator(color: Color(0xFF38BDF8))),
+        backgroundColor: WbColors.surface,
+        body: Center(
+          child: WaterBuddyLoader(message: 'Loading order details...'),
+        ),
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(title: const Text('Order Details')),
@@ -78,9 +80,8 @@ class _OrderDetailsBody extends ConsumerWidget {
 
   final Order order;
 
-  static const _primary = Color(0xFF0F172A);
-  static const _accent = Color(0xFF38BDF8);
-  static const _bg = Color(0xFFF8FAFC);
+  static const _accent = WbColors.blue;
+  static const _bg = WbColors.surface;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -210,24 +211,41 @@ class _OrderDetailsBody extends ConsumerWidget {
     return SliverAppBar(
       expandedHeight: 180,
       pinned: true,
-      backgroundColor: _primary,
-      leading: IconButton(
-        icon: const Icon(
-          Icons.arrow_back,
-          color: Colors.white,
-          size: 20,
-        ),
-        onPressed: () =>
+      backgroundColor: WbColors.ink,
+      leading: GestureDetector(
+        onTap: () =>
             context.canPop() ? context.pop() : context.go(RouteNames.orders),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.25)),
+            ),
+            child: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+              size: 16,
+            ),
+          ),
+        ),
       ),
       title: const Text(
         'Order Details',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
       ),
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: const BoxDecoration(
-            color: Color(0xFF0095F6),
+            gradient: LinearGradient(
+              colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
           child: SafeArea(
             child: Padding(

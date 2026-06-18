@@ -1,17 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static ThemeData light() {
     const primary = Color(0xFF0095F6); // Primary Blue
     const accent = Color(0xFF3BA8FF); // Secondary Blue
     const background = Color(0xFFFFFFFF); // Background
-    const ink = Color(0xFF111827); // Text Primary
-    const border = Color(0xFFE5E7EB);
+    const ink = Color(0xFF08111F); // Text Primary
+    const border = Color(0xFFE2E8F0);
+
+    final textTheme = GoogleFonts.outfitTextTheme(
+      ThemeData.light().textTheme,
+    ).copyWith(
+      displayLarge: GoogleFonts.outfit(
+        fontWeight: FontWeight.w900,
+        color: ink,
+        letterSpacing: -1.5,
+      ),
+      displayMedium: GoogleFonts.outfit(
+        fontWeight: FontWeight.w900,
+        color: ink,
+        letterSpacing: -1,
+      ),
+      headlineLarge: GoogleFonts.outfit(
+        fontWeight: FontWeight.w900,
+        color: ink,
+        letterSpacing: -0.5,
+      ),
+      headlineMedium: GoogleFonts.outfit(
+        fontWeight: FontWeight.w800,
+        color: ink,
+        letterSpacing: -0.3,
+      ),
+      titleLarge: GoogleFonts.outfit(
+        fontWeight: FontWeight.w800,
+        color: ink,
+      ),
+      titleMedium: GoogleFonts.outfit(
+        fontWeight: FontWeight.w700,
+        color: ink,
+      ),
+      titleSmall: GoogleFonts.outfit(
+        fontWeight: FontWeight.w700,
+        color: ink,
+      ),
+      bodyLarge: GoogleFonts.outfit(
+        fontWeight: FontWeight.w500,
+        color: ink,
+      ),
+      bodyMedium: GoogleFonts.outfit(
+        fontWeight: FontWeight.w400,
+        color: ink,
+      ),
+      labelLarge: GoogleFonts.outfit(
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.2,
+      ),
+      labelMedium: GoogleFonts.outfit(
+        fontWeight: FontWeight.w700,
+      ),
+      labelSmall: GoogleFonts.outfit(
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
+      ),
+    );
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      textTheme: textTheme,
       colorScheme: const ColorScheme.light(
         primary: primary,
         secondary: accent,
@@ -20,8 +78,8 @@ class AppTheme {
         onSurface: ink,
       ),
       scaffoldBackgroundColor: background,
-      appBarTheme: const AppBarTheme(
-        systemOverlayStyle: SystemUiOverlayStyle(
+      appBarTheme: AppBarTheme(
+        systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.dark,
           statusBarBrightness: Brightness.light,
@@ -32,12 +90,12 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: TextStyle(
+        titleTextStyle: GoogleFonts.outfit(
           color: ink,
           fontSize: 22,
           fontWeight: FontWeight.w900,
         ),
-        iconTheme: IconThemeData(color: ink),
+        iconTheme: const IconThemeData(color: ink),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -46,7 +104,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          textStyle: const TextStyle(
+          textStyle: GoogleFonts.outfit(
             fontSize: 16,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.2,
@@ -62,7 +120,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          textStyle: const TextStyle(
+          textStyle: GoogleFonts.outfit(
             fontSize: 15,
             fontWeight: FontWeight.w700,
           ),
@@ -88,18 +146,18 @@ class AppTheme {
           horizontal: 18,
           vertical: 18,
         ),
-        labelStyle: const TextStyle(
-          color: Color(0xFF374151), // Label #374151
+        labelStyle: GoogleFonts.outfit(
+          color: const Color(0xFF374151),
           fontWeight: FontWeight.w500,
         ),
-        hintStyle: const TextStyle(
-          color: Color(0xFF9CA3AF), // Hint #9CA3AF
+        hintStyle: GoogleFonts.outfit(
+          color: const Color(0xFF9CA3AF),
           fontWeight: FontWeight.w500,
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: ink,
-        contentTextStyle: const TextStyle(
+        contentTextStyle: GoogleFonts.outfit(
           color: Colors.white,
           fontSize: 14,
           fontWeight: FontWeight.w600,
@@ -113,6 +171,12 @@ class AppTheme {
       dividerTheme: const DividerThemeData(
         color: border,
         thickness: 1,
+      ),
+      chipTheme: ChipThemeData(
+        labelStyle: GoogleFonts.outfit(
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
+        ),
       ),
     );
   }

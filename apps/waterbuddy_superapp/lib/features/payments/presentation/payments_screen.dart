@@ -1,9 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../routes/route_names.dart';
+import '../../../widgets/premium_ui.dart';
 import '../providers/payment_providers.dart';
 
 class PaymentsScreen extends ConsumerStatefulWidget {
@@ -54,7 +57,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       });
     }
 
-    // Show error if any
+    // Show error state
     if (paymentState.errorMessage != null) {
       return PopScope(
         canPop: false,
@@ -63,269 +66,381 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
           _goBack();
         },
         child: Scaffold(
-          backgroundColor: const Color(0xFFF8FAFC),
-          appBar: _buildAppBar(),
-          body: SafeArea(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 64, color: Color(0xFFE53E3E)),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Payment Failed',
-                      style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF0F172A),
-                          letterSpacing: -0.5),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      paymentState.errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          color: Color(0xFF486581), fontSize: 16),
-                    ),
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: FilledButton(
-                        onPressed: () {
-                          ref
-                              .read(paymentControllerProvider.notifier)
-                              .clearError();
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18)),
-                          elevation: 0,
+          backgroundColor: WbColors.surface,
+          body: Stack(
+            children: [
+              const AbstractWaterBackground(),
+              SafeArea(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: WbColors.red.withValues(alpha: 0.10),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: WbColors.red.withValues(alpha: 0.20)),
+                          ),
+                          child: const Icon(Icons.payment_rounded,
+                              size: 38, color: WbColors.red),
                         ),
-                        child: const Text('Try Again',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.w700)),
-                      ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Payment Failed',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: WbColors.ink,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          paymentState.errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              color: WbColors.muted, fontSize: 14, height: 1.4),
+                        ),
+                        const SizedBox(height: 32),
+                        GestureDetector(
+                          onTap: () {
+                            ref
+                                .read(paymentControllerProvider.notifier)
+                                .clearError();
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF0EA5E9), Color(0xFF0369A1)],
+                              ),
+                              borderRadius: BorderRadius.circular(999),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: WbColors.blue.withValues(alpha: 0.28),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.refresh_rounded,
+                                    color: Colors.white, size: 20),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Try Again',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w900),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       );
     }
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        _goBack();
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
-        appBar: _buildAppBar(),
-        body: Stack(
-          children: [
-            SafeArea(
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          _goBack();
+        },
+        child: Scaffold(
+          backgroundColor: WbColors.surface,
+          body: Stack(
+            children: [
+              const AbstractWaterBackground(),
+              SafeArea(
+                child: Column(
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      child: Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Order Total',
-                                  style: TextStyle(
-                                    color: Color(0xFF829AB1),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                          GestureDetector(
+                            onTap: _goBack,
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: WbColors.line),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: WbColors.ink.withValues(alpha: 0.06),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
                                   ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '₹${(_amountInPaise / 100).toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    color: Color(0xFF0F172A),
-                                    fontSize: 44,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: -2,
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                color: WbColors.ink,
+                                size: 18,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 32),
-                          const Text(
-                            'Select Payment Method',
-                            style: TextStyle(
-                              color: Color(0xFF0F172A),
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.5,
-                            ),
+                          const SizedBox(width: 16),
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Checkout',
+                                style: TextStyle(
+                                  color: WbColors.ink,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              Text(
+                                'Complete your water booking',
+                                style: TextStyle(
+                                  color: WbColors.muted,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 16),
-                          _PaymentMethodCard(
-                            icon: Icons.qr_code_2_rounded,
-                            title: 'UPI / QR',
-                            subtitle: 'Google Pay, PhonePe, Paytm',
-                            isSelected: selectedMethod == 'upi',
-                            onTap: () => ref
-                                .read(selectedPaymentMethodProvider.notifier)
-                                .state = 'upi',
-                          ),
-                          const SizedBox(height: 12),
-                          _PaymentMethodCard(
-                            icon: Icons.credit_card_rounded,
-                            title: 'Credit / Debit Card',
-                            subtitle: 'Visa, Mastercard, RuPay',
-                            isSelected: selectedMethod == 'card',
-                            onTap: () => ref
-                                .read(selectedPaymentMethodProvider.notifier)
-                                .state = 'card',
-                          ),
-                          const SizedBox(height: 12),
-                          _PaymentMethodCard(
-                            icon: Icons.payments_rounded,
-                            title: 'Cash on Delivery',
-                            subtitle: 'Pay when your order arrives',
-                            isSelected: selectedMethod == 'cash',
-                            onTap: () => ref
-                                .read(selectedPaymentMethodProvider.notifier)
-                                .state = 'cash',
-                          ),
-                          const SizedBox(
-                              height: 120), // padding for bottom button
                         ],
-                      ),
+                      ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.1),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, -10),
+                    // Scrollable content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Amount card
+                            GlassPanel(
+                              radius: 28,
+                              opacity: 0.94,
+                              padding: const EdgeInsets.all(24),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 52,
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF22C55E),
+                                          Color(0xFF16A34A)
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: const Icon(Icons.water_drop_rounded,
+                                        color: Colors.white, size: 26),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Order Total',
+                                        style: TextStyle(
+                                          color: WbColors.muted,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '₹${(_amountInPaise / 100).toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          color: WbColors.ink,
+                                          fontSize: 36,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: -1.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ).animate(delay: 80.ms).fadeIn().slideY(begin: 0.06),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Payment Method',
+                              style: TextStyle(
+                                color: WbColors.ink,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ).animate(delay: 140.ms).fadeIn(),
+                            const SizedBox(height: 12),
+                            _PaymentMethodCard(
+                              icon: Icons.qr_code_2_rounded,
+                              title: 'UPI / QR',
+                              subtitle: 'Google Pay, PhonePe, Paytm',
+                              isSelected: selectedMethod == 'upi',
+                              onTap: () => ref
+                                  .read(selectedPaymentMethodProvider.notifier)
+                                  .state = 'upi',
+                            ).animate(delay: 180.ms).fadeIn().slideY(begin: 0.05),
+                            const SizedBox(height: 10),
+                            _PaymentMethodCard(
+                              icon: Icons.credit_card_rounded,
+                              title: 'Credit / Debit Card',
+                              subtitle: 'Visa, Mastercard, RuPay',
+                              isSelected: selectedMethod == 'card',
+                              onTap: () => ref
+                                  .read(selectedPaymentMethodProvider.notifier)
+                                  .state = 'card',
+                            ).animate(delay: 220.ms).fadeIn().slideY(begin: 0.05),
+                            const SizedBox(height: 10),
+                            _PaymentMethodCard(
+                              icon: Icons.payments_rounded,
+                              title: 'Cash on Delivery',
+                              subtitle: 'Pay when your order arrives',
+                              isSelected: selectedMethod == 'cash',
+                              onTap: () => ref
+                                  .read(selectedPaymentMethodProvider.notifier)
+                                  .state = 'cash',
+                            ).animate(delay: 260.ms).fadeIn().slideY(begin: 0.05),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                child: SafeArea(
-                  top: false,
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 60,
-                    child: FilledButton(
-                      onPressed: paymentState.isProcessing || _orderId == null
-                          ? null
-                          : () async {
-                              final controller =
-                                  ref.read(paymentControllerProvider.notifier);
-                              final user = FirebaseAuth.instance.currentUser;
-
-                              if (selectedMethod == 'cash') {
-                                await controller.selectCod(_orderId!);
-                              } else {
-                                final method =
-                                    selectedMethod == 'card' ? 'card' : 'upi';
-                                await controller.startOnlinePayment(
-                                  orderId: _orderId!,
-                                  amountInPaise: _amountInPaise > 0
-                                      ? _amountInPaise
-                                      : 50000,
-                                  method: method,
-                                  customerName: user?.displayName ?? 'Customer',
-                                  customerPhone: user?.phoneNumber ?? '',
-                                  customerEmail: user?.email ?? '',
-                                  description: 'Water Delivery Order',
-                                );
-                              }
-                            },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F172A),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18)),
-                        elevation: 0,
+              ),
+              // Floating CTA
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: const Border(
+                        top: BorderSide(color: WbColors.line)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: WbColors.ink.withValues(alpha: 0.08),
+                        blurRadius: 24,
+                        offset: const Offset(0, -8),
                       ),
-                      child: paymentState.isProcessing
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2),
-                            )
-                          : Text(
-                              selectedMethod == 'cash'
-                                  ? 'Confirm Order'
-                                  : 'Pay ₹${(_amountInPaise / 100).toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                  fontSize: 18,
+                    ],
+                  ),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    16,
+                    20,
+                    MediaQuery.paddingOf(context).bottom + 16,
+                  ),
+                  child: GestureDetector(
+                    onTap: paymentState.isProcessing || _orderId == null
+                        ? null
+                        : () async {
+                            HapticFeedback.mediumImpact();
+                            final controller =
+                                ref.read(paymentControllerProvider.notifier);
+                            final user = FirebaseAuth.instance.currentUser;
+
+                            if (selectedMethod == 'cash') {
+                              await controller.selectCod(_orderId!);
+                            } else {
+                              final method =
+                                  selectedMethod == 'card' ? 'card' : 'upi';
+                              await controller.startOnlinePayment(
+                                orderId: _orderId!,
+                                amountInPaise: _amountInPaise > 0
+                                    ? _amountInPaise
+                                    : 50000,
+                                method: method,
+                                customerName:
+                                    user?.displayName ?? 'Customer',
+                                customerPhone: user?.phoneNumber ?? '',
+                                customerEmail: user?.email ?? '',
+                                description: 'Water Delivery Order',
+                              );
+                            }
+                          },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      height: 58,
+                      decoration: BoxDecoration(
+                        gradient: paymentState.isProcessing
+                            ? LinearGradient(
+                                colors: [
+                                  WbColors.blue.withValues(alpha: 0.6),
+                                  WbColors.deepBlue.withValues(alpha: 0.6),
+                                ],
+                              )
+                            : const LinearGradient(
+                                colors: [
+                                  Color(0xFF0EA5E9),
+                                  Color(0xFF0369A1)
+                                ],
+                              ),
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: paymentState.isProcessing
+                            ? null
+                            : [
+                                BoxShadow(
+                                  color: WbColors.blue.withValues(alpha: 0.30),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                      ),
+                      child: Center(
+                        child: paymentState.isProcessing
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2.5),
+                              )
+                            : Text(
+                                selectedMethod == 'cash'
+                                    ? 'Confirm Order'
+                                    : 'Pay ₹${(_amountInPaise / 100).toStringAsFixed(0)}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 17,
                                   fontWeight: FontWeight.w900,
-                                  letterSpacing: -0.5),
-                            ),
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      centerTitle: true,
-      leading: IconButton(
-        icon: const Icon(
-          Icons.arrow_back,
-          color: Color(0xFF0F172A),
-          size: 20,
-        ),
-        onPressed: _goBack,
-      ),
-      title: const Text(
-        'Checkout',
-        style: TextStyle(
-          color: Color(0xFF0F172A),
-          fontSize: 24,
-          fontWeight: FontWeight.w900,
-          letterSpacing: -1.0,
+            ],
+          ),
         ),
       ),
     );
@@ -340,7 +455,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   }
 }
 
-class _PaymentMethodCard extends StatelessWidget {
+class _PaymentMethodCard extends StatefulWidget {
   const _PaymentMethodCard({
     required this.icon,
     required this.title,
@@ -356,94 +471,116 @@ class _PaymentMethodCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    const activeColor = Color(0xFF0F172A);
-    const accentColor = Color(0xFF38BDF8);
+  State<_PaymentMethodCard> createState() => _PaymentMethodCardState();
+}
 
+class _PaymentMethodCardState extends State<_PaymentMethodCard> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color:
-              isSelected ? activeColor.withValues(alpha: 0.04) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color:
-                isSelected ? activeColor : Colors.black.withValues(alpha: 0.05),
-            width: isSelected ? 2 : 1,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        HapticFeedback.selectionClick();
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 130),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: widget.isSelected
+                ? WbColors.blue.withValues(alpha: 0.05)
+                : Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: widget.isSelected
+                  ? WbColors.blue
+                  : WbColors.line,
+              width: widget.isSelected ? 1.8 : 1,
+            ),
+            boxShadow: widget.isSelected
+                ? [
+                    BoxShadow(
+                      color: WbColors.blue.withValues(alpha: 0.12),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: WbColors.ink.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
-          boxShadow: isSelected
-              ? []
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isSelected ? accentColor : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(icon,
-                  color: isSelected ? Colors.white : const Color(0xFF64748B)),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Color(0xFF0F172A),
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: Color(0xFF829AB1),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected ? accentColor : const Color(0xFFCBD5E1),
-                  width: 2,
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: widget.isSelected
+                      ? WbColors.blue.withValues(alpha: 0.12)
+                      : WbColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  widget.icon,
+                  color: widget.isSelected ? WbColors.blue : WbColors.muted,
+                  size: 22,
                 ),
               ),
-              child: isSelected
-                  ? Center(
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: const BoxDecoration(
-                          color: accentColor,
-                          shape: BoxShape.circle,
-                        ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: TextStyle(
+                        color: widget.isSelected ? WbColors.ink : WbColors.ink,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
                       ),
-                    )
-                  : null,
-            ),
-          ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      widget.subtitle,
+                      style: const TextStyle(
+                        color: WbColors.muted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: widget.isSelected ? WbColors.blue : Colors.transparent,
+                  border: Border.all(
+                    color: widget.isSelected ? WbColors.blue : WbColors.line,
+                    width: 2,
+                  ),
+                ),
+                child: widget.isSelected
+                    ? const Icon(Icons.check_rounded,
+                        color: Colors.white, size: 14)
+                    : null,
+              ),
+            ],
+          ),
         ),
       ),
     );

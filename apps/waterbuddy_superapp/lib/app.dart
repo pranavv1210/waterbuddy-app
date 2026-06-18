@@ -58,6 +58,7 @@ class _WaterBuddySuperAppState extends ConsumerState<WaterBuddySuperApp> {
 
     return MaterialApp.router(
       title: 'WaterBuddy',
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       routerConfig: router,
       builder: (context, child) {
@@ -67,7 +68,13 @@ class _WaterBuddySuperAppState extends ConsumerState<WaterBuddySuperApp> {
           },
           child: child ??
               const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
+                backgroundColor: Color(0xFFF8FAFC),
+                body: Center(
+                  child: CircularProgressIndicator(
+                    color: Color(0xFF0EA5E9),
+                    strokeWidth: 2.5,
+                  ),
+                ),
               ),
         );
       },
