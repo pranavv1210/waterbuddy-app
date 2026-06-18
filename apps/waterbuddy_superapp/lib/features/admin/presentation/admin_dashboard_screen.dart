@@ -1820,8 +1820,9 @@ class _NotificationsViewState extends State<_NotificationsView> {
                 label: 'Message',
                 maxLines: 3,
               ),
+              // ignore: deprecated_member_use
               DropdownButtonFormField<String>(
-                initialValue: _targetRole,
+                value: _targetRole,
                 decoration: const InputDecoration(labelText: 'Target role'),
                 items: const [
                   DropdownMenuItem(value: 'all', child: Text('All users')),

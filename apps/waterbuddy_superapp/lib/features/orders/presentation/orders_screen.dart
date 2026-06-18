@@ -69,7 +69,7 @@ class OrdersScreen extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Order History',
                                 style: TextStyle(
                                   color: WbColors.ink,
@@ -78,7 +78,7 @@ class OrdersScreen extends ConsumerWidget {
                                   letterSpacing: -0.5,
                                 ),
                               ),
-                              const Text(
+                              Text(
                                 'All your water deliveries',
                                 style: TextStyle(
                                   color: WbColors.muted,
