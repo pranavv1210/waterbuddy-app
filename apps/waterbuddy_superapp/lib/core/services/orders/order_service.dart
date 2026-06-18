@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../models/order.dart' as app_order;
+import '../../utils/id_generator.dart';
 import 'order_state_validator.dart';
 
 /// WaterBuddy Order Service
@@ -83,9 +84,10 @@ class OrderService {
       ],
     };
 
-    final docRef = await _firestore.collection('orders').add(orderData);
-    _log('Order created', orderId: docRef.id);
-    return docRef.id;
+    final orderId = IdGenerator.generateOrderId();
+    await _firestore.collection('orders').doc(orderId).set(orderData);
+    _log('Order created', orderId: orderId);
+    return orderId;
   }
 
   // ── Realtime Watchers ─────────────────────────────────────────────────────

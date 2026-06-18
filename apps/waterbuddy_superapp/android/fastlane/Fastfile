@@ -1,0 +1,30 @@
+default_platform(:android)
+
+platform :android do
+  desc "Submit a new Internal Build to Google Play"
+  lane :internal do
+    upload_to_play_store(
+      track: 'internal',
+      aab: '../build/app/outputs/bundle/productionRelease/app-production-release.aab',
+      skip_upload_apk: true
+    )
+  end
+
+  desc "Submit a new Beta Build to Google Play"
+  lane :beta do
+    upload_to_play_store(
+      track: 'beta',
+      aab: '../build/app/outputs/bundle/productionRelease/app-production-release.aab',
+      skip_upload_apk: true
+    )
+  end
+
+  desc "Deploy a new Production version to Google Play"
+  lane :production do
+    upload_to_play_store(
+      track: 'production',
+      aab: '../build/app/outputs/bundle/productionRelease/app-production-release.aab',
+      skip_upload_apk: true
+    )
+  end
+end

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../config/app_config.dart';
 
 enum LogTag {
   auth,
@@ -48,6 +49,7 @@ class ObservabilityService {
   }
 
   static void info(LogTag tag, String message, {Map<String, String?>? ids, Map<String, dynamic>? context}) {
+    if (!AppConfig.logVerbose) return;
     final formatted = _format(tag, message, ids, context);
     debugPrint('[INFO] $formatted');
   }

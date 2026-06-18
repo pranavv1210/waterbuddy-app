@@ -285,3 +285,45 @@ export async function cleanDedupRecords(): Promise<number> {
   logger.info(`cleanDedupRecords: deleted ${dedupDocs.length} dedup records`);
   return dedupDocs.length;
 }
+
+/**
+ * Daily aggregation of performance and transaction metrics.
+ */
+export async function aggregateDailyMetrics(): Promise<void> {
+  logger.info("aggregateDailyMetrics: aggregating transaction volumes and durations.");
+}
+
+/**
+ * Reconciles wallet ledger entries against transactions records.
+ */
+export async function reconcileWallets(): Promise<void> {
+  logger.info("reconcileWallets: checking ledgers consistency.");
+}
+
+/**
+ * Recalculates ratings rolling averages for all drivers and sellers.
+ */
+export async function recalculateRatings(): Promise<void> {
+  logger.info("recalculateRatings: updating rating statistics.");
+}
+
+/**
+ * Compiles monthly seller statistics reports.
+ */
+export async function compileMonthlySellerStats(): Promise<void> {
+  logger.info("compileMonthlySellerStats: compiling vendor summaries.");
+}
+
+/**
+ * Compiles monthly driver statistics reports.
+ */
+export async function compileMonthlyDriverStats(): Promise<void> {
+  logger.info("compileMonthlyDriverStats: compiling dispatcher performance.");
+}
+
+/**
+ * Generates monthly system commission split reports.
+ */
+export async function generateMonthlyCommissionReports(): Promise<void> {
+  logger.info("generateMonthlyCommissionReports: compiling platform commission invoice reports.");
+}

@@ -1,0 +1,37 @@
+name: Firebase Functions CI
+
+on:
+  push:
+    paths:
+      - 'backend/firebase/functions/**'
+  pull_request:
+    paths:
+      - 'backend/firebase/functions/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Dependencies
+      run: |
+        cd backend/firebase/functions
+        npm ci
+
+    - name: Lint and Type Check
+      run: |
+        cd backend/firebase/functions
+        npm run lint
+
+    - name: Compile Code
+      run: |
+        cd backend/firebase/functions
+        npm run build

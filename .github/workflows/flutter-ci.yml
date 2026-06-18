@@ -1,0 +1,53 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.6'
+        channel: 'stable'
+
+    - name: Install Dependencies
+      run: |
+        cd apps/waterbuddy_superapp
+        flutter pub get
+
+    - name: Static Analysis
+      run: |
+        cd apps/waterbuddy_superapp
+        dart analyze
+        flutter analyze
+
+    - name: Run Tests
+      run: |
+        cd apps/waterbuddy_superapp
+        flutter test
+
+    - name: Build Release APK
+      run: |
+        cd apps/waterbuddy_superapp
+        flutter build apk --release --flavor production -t lib/main.dart
+
+    - name: Build Release AAB
+      run: |
+        cd apps/waterbuddy_superapp
+        flutter build appbundle --release --flavor production -t lib/main.dart

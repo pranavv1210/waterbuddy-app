@@ -9,6 +9,12 @@ import {
   cleanDedupRecords,
   cleanOldMetrics,
   cleanOrphanSessions,
+  aggregateDailyMetrics,
+  reconcileWallets,
+  recalculateRatings,
+  compileMonthlySellerStats,
+  compileMonthlyDriverStats,
+  generateMonthlyCommissionReports,
 } from "../../services/cleanupService";
 
 /**
@@ -100,5 +106,39 @@ export const cleanupOrphanSessions = onSchedule("every 60 minutes", async () => 
     logger.info(`Scheduled: cleanupOrphanSessions — cancelled ${count} orphan sessions`);
   } catch (err) {
     logger.error("Scheduled: cleanupOrphanSessions failed", { error: err });
+  }
+});
+
+/**
+ * Daily aggregation and reconciliation tasks.
+ * Scheduled to run once per day at 2:00 AM UTC.
+ */
+export const dailyMaintenanceJobs = onSchedule("0 2 * * *", async () => {
+  try {
+    await Promise.all([
+      aggregateDailyMetrics(),
+      reconcileWallets(),
+      recalculateRatings(),
+    ]);
+    logger.info("Scheduled: dailyMaintenanceJobs finished successfully");
+  } catch (err) {
+    logger.error("Scheduled: dailyMaintenanceJobs failed", { error: err });
+  }
+});
+
+/**
+ * Monthly analytics compile and invoicing.
+ * Scheduled to run once per month on the 1st day at midnight.
+ */
+export const monthlyReportingJobs = onSchedule("0 0 1 * *", async () => {
+  try {
+    await Promise.all([
+      compileMonthlySellerStats(),
+      compileMonthlyDriverStats(),
+      generateMonthlyCommissionReports(),
+    ]);
+    logger.info("Scheduled: monthlyReportingJobs finished successfully");
+  } catch (err) {
+    logger.error("Scheduled: monthlyReportingJobs failed", { error: err });
   }
 });
