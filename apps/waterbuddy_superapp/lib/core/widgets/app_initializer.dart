@@ -2,8 +2,11 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -73,7 +76,11 @@ class _AppInitializerState extends State<AppInitializer>
           '[CRASHLYTICS] Initialized (reporting enabled: ${!kDebugMode})');
 
       // ── FCM ──────────────────────────────────────────────────────────────
-      _fcm = FcmService();
+      _fcm = FcmService(
+        messaging: FirebaseMessaging.instance,
+        firestore: FirebaseFirestore.instance,
+        auth: FirebaseAuth.instance,
+      );
       await _fcm!.initialize().catchError((Object e, StackTrace stack) {
         developer.log('FCM init warning (non-fatal)',
             name: 'waterbuddy.superapp', error: e);
