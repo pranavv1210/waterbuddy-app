@@ -30,3 +30,9 @@ export {
 // ── Ratings ───────────────────────────────────────────────────────────────────
 export { submitRatingFn as submitRating } from "./modules/ratings/submitRating";
 export { onRatingCreated } from "./modules/ratings/onRatingCreated";
+
+// Metrics
+export {
+  onSellerPresenceChanged,
+  onDriverPresenceChanged,
+} from "./modules/metrics/onPresenceChanged";

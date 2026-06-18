@@ -50,6 +50,10 @@ class NotificationException extends AppException {
   const NotificationException(super.message, {super.code, super.stackTrace});
 }
 
+class PermissionException extends AppException {
+  const PermissionException(super.message, {super.code, super.stackTrace});
+}
+
 class StorageException extends AppException {
   const StorageException(super.message, {super.code, super.stackTrace});
 }

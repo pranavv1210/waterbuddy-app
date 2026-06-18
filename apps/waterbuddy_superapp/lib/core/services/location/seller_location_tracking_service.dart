@@ -4,8 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../exceptions/exceptions.dart';
+import '../crashlytics/crashlytics_service.dart';
+import '../performance/performance_service.dart';
+
 /// Seller (Tanker Owner) Location Tracking Service
-/// 
+///
 /// Features:
 /// - Location write throttling: every 5 seconds OR every 20 meters
 /// - Offline protection: stops writes when going offline
@@ -17,7 +21,7 @@ class SellerLocationTrackingService {
   StreamSubscription<Position>? _subscription;
   DateTime? _lastWriteAt;
   Position? _lastPosition;
-  
+
   static const Duration _minInterval = Duration(seconds: 5);
   static const double _minDistance = 20.0; // meters
 
@@ -35,6 +39,12 @@ class SellerLocationTrackingService {
     final allowed = await _ensurePermission();
     if (!allowed) {
       debugPrint('[SELLER_LOC] Permission denied - location tracking disabled');
+      await CrashlyticsService.recordAppException(
+        const PermissionException(
+          'Seller location permission denied',
+          code: 'seller_location_permission_denied',
+        ),
+      );
       return;
     }
     await stop();
@@ -43,22 +53,25 @@ class SellerLocationTrackingService {
       accuracy: LocationAccuracy.high,
       distanceFilter: 20, // Triggers every 20m minimum
     );
-    
+
     _subscription =
-        Geolocator.getPositionStream(locationSettings: locationSettings)
-            .listen((position) async {
+        Geolocator.getPositionStream(locationSettings: locationSettings).listen(
+            (position) async {
       final now = DateTime.now();
-      
+
       // THROTTLE: Minimum 5 seconds between writes
-      if (_lastWriteAt != null && now.difference(_lastWriteAt!) < _minInterval) {
+      if (_lastWriteAt != null &&
+          now.difference(_lastWriteAt!) < _minInterval) {
         return;
       }
-      
+
       // THROTTLE: Minimum 20 meters distance change
       if (_lastPosition != null) {
         final distance = Geolocator.distanceBetween(
-          _lastPosition!.latitude, _lastPosition!.longitude,
-          position.latitude, position.longitude,
+          _lastPosition!.latitude,
+          _lastPosition!.longitude,
+          position.latitude,
+          position.longitude,
         );
         if (distance < _minDistance) {
           return;
@@ -68,42 +81,44 @@ class SellerLocationTrackingService {
       _lastWriteAt = now;
       _lastPosition = position;
 
-      // Use batch write for atomicity: seller doc + tanker_locations doc
-      final batch = _firestore.batch();
-      
-      batch.set(
-        _firestore.collection('sellers').doc(sellerId),
-        {
-          'currentLocation': {
+      await PerformanceService.traceLocationUpdate(() async {
+        // Use batch write for atomicity: seller doc + tanker_locations doc
+        final batch = _firestore.batch();
+
+        batch.set(
+          _firestore.collection('sellers').doc(sellerId),
+          {
+            'currentLocation': {
+              'latitude': position.latitude,
+              'longitude': position.longitude,
+              'heading': position.heading,
+              'speed': position.speed,
+              'accuracy': position.accuracy,
+              'updatedAt': FieldValue.serverTimestamp(),
+            },
+            'lastLocationAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
+
+        batch.set(
+          _firestore.collection('seller_locations').doc(sellerId),
+          {
+            'sellerId': sellerId,
             'latitude': position.latitude,
             'longitude': position.longitude,
+            'timestamp': FieldValue.serverTimestamp(),
             'heading': position.heading,
             'speed': position.speed,
             'accuracy': position.accuracy,
             'updatedAt': FieldValue.serverTimestamp(),
           },
-          'lastLocationAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
-      
-      batch.set(
-        _firestore.collection('tanker_locations').doc(sellerId),
-        {
-          'tankerId': sellerId,
-          'latitude': position.latitude,
-          'longitude': position.longitude,
-          'timestamp': FieldValue.serverTimestamp(),
-          'heading': position.heading,
-          'speed': position.speed,
-          'accuracy': position.accuracy,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
-      
-      await batch.commit();
-      
+          SetOptions(merge: true),
+        );
+
+        await batch.commit();
+      });
+
       debugPrint(
         '[SELLER_LOC] Update for $sellerId: '
         '${position.latitude},${position.longitude} '
@@ -111,8 +126,13 @@ class SellerLocationTrackingService {
       );
     }, onError: (error) {
       debugPrint('[SELLER_LOC] Error: $error');
+      CrashlyticsService.recordError(
+        error,
+        StackTrace.current,
+        context: 'SellerLocationTrackingService.positionStream',
+      );
     });
-    
+
     debugPrint('[SELLER_LOC] Started tracking for seller $sellerId');
   }
 

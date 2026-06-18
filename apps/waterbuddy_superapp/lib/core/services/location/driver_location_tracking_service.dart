@@ -4,8 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../exceptions/exceptions.dart';
+import '../crashlytics/crashlytics_service.dart';
+import '../performance/performance_service.dart';
+
 /// Driver Location Tracking Service
-/// 
+///
 /// Features:
 /// - Location write throttling: every 5 seconds OR every 20 meters
 /// - Offline protection: stops writes when going offline
@@ -18,7 +22,7 @@ class DriverLocationTrackingService {
   StreamSubscription<Position>? _subscription;
   DateTime? _lastWriteAt;
   Position? _lastPosition;
-  
+
   static const Duration _minInterval = Duration(seconds: 5);
   static const double _minDistance = 20.0; // meters
 
@@ -36,6 +40,12 @@ class DriverLocationTrackingService {
     final allowed = await _ensurePermission();
     if (!allowed) {
       debugPrint('[DRIVER_LOC] Permission denied - location tracking disabled');
+      await CrashlyticsService.recordAppException(
+        const PermissionException(
+          'Driver location permission denied',
+          code: 'driver_location_permission_denied',
+        ),
+      );
       return;
     }
     await stop();
@@ -44,22 +54,25 @@ class DriverLocationTrackingService {
       accuracy: LocationAccuracy.high,
       distanceFilter: 20, // Triggers every 20m minimum
     );
-    
+
     _subscription =
-        Geolocator.getPositionStream(locationSettings: locationSettings)
-            .listen((position) async {
+        Geolocator.getPositionStream(locationSettings: locationSettings).listen(
+            (position) async {
       final now = DateTime.now();
-      
+
       // THROTTLE: Minimum 5 seconds between writes
-      if (_lastWriteAt != null && now.difference(_lastWriteAt!) < _minInterval) {
+      if (_lastWriteAt != null &&
+          now.difference(_lastWriteAt!) < _minInterval) {
         return;
       }
-      
+
       // THROTTLE: Minimum 20 meters distance change
       if (_lastPosition != null) {
         final distance = Geolocator.distanceBetween(
-          _lastPosition!.latitude, _lastPosition!.longitude,
-          position.latitude, position.longitude,
+          _lastPosition!.latitude,
+          _lastPosition!.longitude,
+          position.latitude,
+          position.longitude,
         );
         if (distance < _minDistance) {
           return;
@@ -69,42 +82,44 @@ class DriverLocationTrackingService {
       _lastWriteAt = now;
       _lastPosition = position;
 
-      // Use batch write for atomicity: driver doc + driver_locations doc
-      final batch = _firestore.batch();
-      
-      batch.set(
-        _firestore.collection('drivers').doc(driverId),
-        {
-          'currentLocation': {
+      await PerformanceService.traceLocationUpdate(() async {
+        // Use batch write for atomicity: driver doc + driver_locations doc
+        final batch = _firestore.batch();
+
+        batch.set(
+          _firestore.collection('drivers').doc(driverId),
+          {
+            'currentLocation': {
+              'latitude': position.latitude,
+              'longitude': position.longitude,
+              'heading': position.heading,
+              'speed': position.speed,
+              'accuracy': position.accuracy,
+              'updatedAt': FieldValue.serverTimestamp(),
+            },
+            'lastLocationAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
+
+        batch.set(
+          _firestore.collection('driver_locations').doc(driverId),
+          {
+            'driverId': driverId,
             'latitude': position.latitude,
             'longitude': position.longitude,
+            'timestamp': FieldValue.serverTimestamp(),
             'heading': position.heading,
             'speed': position.speed,
             'accuracy': position.accuracy,
             'updatedAt': FieldValue.serverTimestamp(),
           },
-          'lastLocationAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
-      
-      batch.set(
-        _firestore.collection('driver_locations').doc(driverId),
-        {
-          'driverId': driverId,
-          'latitude': position.latitude,
-          'longitude': position.longitude,
-          'timestamp': FieldValue.serverTimestamp(),
-          'heading': position.heading,
-          'speed': position.speed,
-          'accuracy': position.accuracy,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
-      
-      await batch.commit();
-      
+          SetOptions(merge: true),
+        );
+
+        await batch.commit();
+      });
+
       debugPrint(
         '[DRIVER_LOC] Update for $driverId: '
         '${position.latitude},${position.longitude} '
@@ -112,8 +127,13 @@ class DriverLocationTrackingService {
       );
     }, onError: (error) {
       debugPrint('[DRIVER_LOC] Error: $error');
+      CrashlyticsService.recordError(
+        error,
+        StackTrace.current,
+        context: 'DriverLocationTrackingService.positionStream',
+      );
     });
-    
+
     debugPrint('[DRIVER_LOC] Started tracking for driver $driverId');
   }
 

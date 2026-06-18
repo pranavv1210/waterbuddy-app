@@ -13,6 +13,7 @@ import 'package:flutter/foundation.dart';
 import '../../firebase_options.dart';
 import '../services/crashlytics/crashlytics_service.dart';
 import '../services/notifications/notification_service.dart';
+import '../services/performance/performance_service.dart';
 
 class AppInitializer extends StatefulWidget {
   const AppInitializer({super.key, required this.child});
@@ -27,6 +28,7 @@ class _AppInitializerState extends State<AppInitializer> {
   bool _initialized = false;
   bool _error = false;
   String? _errorMessage;
+  FcmService? _fcm;
 
   @override
   void initState() {
@@ -36,9 +38,11 @@ class _AppInitializerState extends State<AppInitializer> {
 
   Future<void> _initialize() async {
     try {
-      await Firebase.initializeApp(
-              options: DefaultFirebaseOptions.currentPlatform)
-          .timeout(const Duration(seconds: 15));
+      await PerformanceService.traceAppStartup(() async {
+        await Firebase.initializeApp(
+                options: DefaultFirebaseOptions.currentPlatform)
+            .timeout(const Duration(seconds: 15));
+      });
 
       // ── Crashlytics ─────────────────────────────────────────────────────
       FlutterError.onError = CrashlyticsService.recordFlutterError;
@@ -53,7 +57,8 @@ class _AppInitializerState extends State<AppInitializer> {
       };
       await FirebaseCrashlytics.instance
           .setCrashlyticsCollectionEnabled(!kDebugMode);
-      debugPrint('[CRASHLYTICS] Initialized (reporting enabled: ${!kDebugMode})');
+      debugPrint(
+          '[CRASHLYTICS] Initialized (reporting enabled: ${!kDebugMode})');
 
       // ── Analytics ───────────────────────────────────────────────────────
       await FirebaseAnalytics.instance
@@ -73,12 +78,12 @@ class _AppInitializerState extends State<AppInitializer> {
       debugPrint('[FIRESTORE] Offline persistence enabled');
 
       // ── FCM ────────────────────────────────────────────────────────────
-      final fcm = FcmService(
+      _fcm = FcmService(
         messaging: FirebaseMessaging.instance,
         firestore: FirebaseFirestore.instance,
         auth: FirebaseAuth.instance,
       );
-      fcm.initialize().catchError((e, stack) {
+      _fcm!.initialize().catchError((e, stack) {
         developer.log('FCM init warning',
             name: 'waterbuddy.superapp', error: e);
         CrashlyticsService.recordError(
@@ -108,6 +113,12 @@ class _AppInitializerState extends State<AppInitializer> {
         _errorMessage = e.toString();
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _fcm?.dispose();
+    super.dispose();
   }
 
   @override

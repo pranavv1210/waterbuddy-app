@@ -36,11 +36,9 @@ void main() {
 
     test('onNotificationTap callback invocation', () {
       var callbackCalled = false;
-      var receivedData = <String, dynamic>{};
 
       FcmService.onNotificationTap((data) {
         callbackCalled = true;
-        receivedData = data;
       });
 
       // Directly invoke tap callback mechanism (simulating routing)

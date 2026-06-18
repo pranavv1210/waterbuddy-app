@@ -11,27 +11,27 @@ import '../../exceptions/exceptions.dart';
 /// - Debug builds suppress crash reporting to avoid polluting production data.
 /// - A consistent log breadcrumb is added for every error.
 class CrashlyticsService {
-  static final FirebaseCrashlytics _instance = FirebaseCrashlytics.instance;
+  static FirebaseCrashlytics get _instance => FirebaseCrashlytics.instance;
 
   // ── User context ──────────────────────────────────────────────────────────
 
   /// Call after successful login.
   static Future<void> setUserIdentifier(String uid) async {
     if (kDebugMode) return;
-    await _instance.setUserIdentifier(uid);
+    await _runSafely(() => _instance.setUserIdentifier(uid));
   }
 
   /// Call on logout.
   static Future<void> clearUserIdentifier() async {
     if (kDebugMode) return;
-    await _instance.setUserIdentifier('');
+    await _runSafely(() => _instance.setUserIdentifier(''));
   }
 
   // ── Custom keys ────────────────────────────────────────────────────────────
 
   static Future<void> setCustomKey(String key, Object value) async {
     if (kDebugMode) return;
-    await _instance.setCustomKey(key, value);
+    await _runSafely(() => _instance.setCustomKey(key, value));
   }
 
   static Future<void> setOrderContext(String orderId) async =>
@@ -45,7 +45,7 @@ class CrashlyticsService {
   static Future<void> log(String message) async {
     debugPrint('[CRASHLYTICS] $message');
     if (kDebugMode) return;
-    await _instance.log(message);
+    await _runSafely(() => _instance.log(message));
   }
 
   // ── Error recording ───────────────────────────────────────────────────────
@@ -76,11 +76,13 @@ class CrashlyticsService {
       setCustomKey('error_type', exception.runtimeType.toString()),
     ]);
 
-    await _instance.recordError(
-      exception,
-      stackTrace ?? exception.stackTrace,
-      reason: exception.message,
-      fatal: fatal,
+    await _runSafely(
+      () => _instance.recordError(
+        exception,
+        stackTrace ?? exception.stackTrace,
+        reason: exception.message,
+        fatal: fatal,
+      ),
     );
   }
 
@@ -98,7 +100,9 @@ class CrashlyticsService {
     if (context != null) {
       await setCustomKey('error_context', context);
     }
-    await _instance.recordError(error, stackTrace, fatal: fatal);
+    await _runSafely(
+      () => _instance.recordError(error, stackTrace, fatal: fatal),
+    );
   }
 
   /// Records a Flutter framework error (for FlutterError.onError).
@@ -107,6 +111,14 @@ class CrashlyticsService {
       FlutterError.presentError(details);
       return;
     }
-    _instance.recordFlutterFatalError(details);
+    _runSafely(() => _instance.recordFlutterFatalError(details));
+  }
+
+  static Future<void> _runSafely(Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (e) {
+      debugPrint('[CRASHLYTICS] Reporting unavailable: $e');
+    }
   }
 }

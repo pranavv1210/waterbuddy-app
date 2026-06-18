@@ -42,6 +42,9 @@ class PerformanceService {
   static Future<T> traceOrderCreation<T>(Future<T> Function() op) =>
       trace('order_creation', op);
 
+  static Future<T> traceAppStartup<T>(Future<T> Function() op) =>
+      trace('app_startup', op);
+
   static Future<T> tracePaymentFlow<T>(Future<T> Function() op) =>
       trace('payment_flow', op);
 

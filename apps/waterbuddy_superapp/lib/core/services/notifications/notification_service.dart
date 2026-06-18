@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,7 +14,8 @@ import '../crashlytics/crashlytics_service.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Firebase is already initialised at this point by the plugin's isolate spawn.
-  debugPrint('[FCM BG] Received: ${message.messageId} type=${message.data['type']}');
+  debugPrint(
+      '[FCM BG] Received: ${message.messageId} type=${message.data['type']}');
 }
 
 /// Android notification channel used by all WaterBuddy order notifications.
@@ -47,6 +49,9 @@ class FcmService {
 
   final FlutterLocalNotificationsPlugin _localNotifs =
       FlutterLocalNotificationsPlugin();
+  StreamSubscription<String>? _tokenRefreshSub;
+  StreamSubscription<RemoteMessage>? _foregroundMessageSub;
+  StreamSubscription<RemoteMessage>? _messageOpenedSub;
 
   /// Set of messageIds seen in this session — prevents duplicate local notifications.
   final Set<String> _seenMessageIds = {};
@@ -82,16 +87,40 @@ class FcmService {
     await _saveToken();
 
     // 5. Listen for token refresh
-    _messaging.onTokenRefresh.listen((token) {
+    _tokenRefreshSub = _messaging.onTokenRefresh.listen((token) {
       debugPrint('[FCM] Token refreshed');
       _saveTokenValue(token);
+    }, onError: (Object e, StackTrace stack) {
+      CrashlyticsService.recordError(
+        e,
+        stack,
+        context: 'FcmService.onTokenRefresh',
+      );
     });
 
     // 6. Handle foreground messages — display as local notification
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    _foregroundMessageSub = FirebaseMessaging.onMessage.listen(
+      _handleForegroundMessage,
+      onError: (Object e, StackTrace stack) {
+        CrashlyticsService.recordError(
+          e,
+          stack,
+          context: 'FcmService.onMessage',
+        );
+      },
+    );
 
     // 7. Handle notification taps from background (app in BG, not killed)
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+    _messageOpenedSub = FirebaseMessaging.onMessageOpenedApp.listen(
+      _handleNotificationTap,
+      onError: (Object e, StackTrace stack) {
+        CrashlyticsService.recordError(
+          e,
+          stack,
+          context: 'FcmService.onMessageOpenedApp',
+        );
+      },
+    );
 
     // 8. Handle notification that launched the app from terminated state
     final initialMessage = await _messaging.getInitialMessage();
@@ -111,6 +140,15 @@ class FcmService {
       badge: true,
       sound: true,
     );
+  }
+
+  Future<void> dispose() async {
+    await _tokenRefreshSub?.cancel();
+    await _foregroundMessageSub?.cancel();
+    await _messageOpenedSub?.cancel();
+    _tokenRefreshSub = null;
+    _foregroundMessageSub = null;
+    _messageOpenedSub = null;
   }
 
   // ── Local notifications setup ───────────────────────────────────────────────
@@ -134,9 +172,8 @@ class FcmService {
 
     // Create the Android notification channel
     if (Platform.isAndroid) {
-      final androidPlugin = _localNotifs
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+      final androidPlugin = _localNotifs.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
       await androidPlugin?.createNotificationChannel(_orderChannel);
     }
   }

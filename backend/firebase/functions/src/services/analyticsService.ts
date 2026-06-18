@@ -34,6 +34,36 @@ export class AnalyticsService {
     }
   }
 
+  private async updateRollingAverage(
+    totalField: string,
+    countField: string,
+    averageField: string,
+    value: number
+  ): Promise<void> {
+    try {
+      const ref = db.collection(collections.systemMetrics).doc(this.todayId);
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.data() ?? {};
+        const nextTotal = Number(data[totalField] ?? 0) + value;
+        const nextCount = Number(data[countField] ?? 0) + 1;
+        tx.set(
+          ref,
+          {
+            [totalField]: nextTotal,
+            [countField]: nextCount,
+            [averageField]: nextTotal / nextCount,
+            date: this.todayId,
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
+      });
+    } catch (e) {
+      logger.warn(`Analytics: failed to update ${averageField}`, { error: e });
+    }
+  }
+
   async incrementOrdersCreated(): Promise<void> {
     await this.increment("ordersCreated");
   }
@@ -68,6 +98,7 @@ export class AnalyticsService {
         .doc(this.todayId)
         .set(
           {
+            dailyRevenue: FieldValue.increment(amountPaise / 100),
             revenuePaise: FieldValue.increment(amountPaise),
             date: this.todayId,
             updatedAt: FieldValue.serverTimestamp(),
@@ -83,42 +114,31 @@ export class AnalyticsService {
    * Records delivery time in minutes for average calculation.
    */
   async recordDeliveryTime(durationMinutes: number): Promise<void> {
-    try {
-      await db
-        .collection(collections.systemMetrics)
-        .doc(this.todayId)
-        .set(
-          {
-            deliveryTimes: FieldValue.arrayUnion(durationMinutes),
-            totalDeliveries: FieldValue.increment(1),
-            date: this.todayId,
-            updatedAt: FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        );
-    } catch (e) {
-      logger.warn("Analytics: failed to record delivery time", { error: e });
-    }
+    await this.updateRollingAverage(
+      "totalDeliveryMinutes",
+      "deliverySamples",
+      "averageDeliveryTime",
+      durationMinutes
+    );
   }
 
   /**
    * Records time from order creation to seller acceptance (in seconds).
    */
   async recordAcceptanceTime(durationSeconds: number): Promise<void> {
-    try {
-      await db
-        .collection(collections.systemMetrics)
-        .doc(this.todayId)
-        .set(
-          {
-            acceptanceTimes: FieldValue.arrayUnion(durationSeconds),
-            date: this.todayId,
-            updatedAt: FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        );
-    } catch (e) {
-      logger.warn("Analytics: failed to record acceptance time", { error: e });
-    }
+    await this.updateRollingAverage(
+      "totalAcceptanceSeconds",
+      "acceptanceSamples",
+      "averageAcceptanceTime",
+      durationSeconds
+    );
+  }
+
+  async incrementActiveDrivers(delta: number): Promise<void> {
+    await this.increment("activeDrivers", delta);
+  }
+
+  async incrementActiveSellers(delta: number): Promise<void> {
+    await this.increment("activeSellers", delta);
   }
 }

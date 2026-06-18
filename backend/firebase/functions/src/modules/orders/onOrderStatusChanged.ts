@@ -35,6 +35,19 @@ export const onOrderStatusChanged = onDocumentUpdated(
     logger.info("Order status changed", { orderId, previousStatus, newStatus });
 
     try {
+      if (
+        sellerId &&
+        newStatus &&
+        ["ACCEPTED", "ASSIGNED", "DRIVER_ASSIGNED"].includes(newStatus) &&
+        !["ACCEPTED", "ASSIGNED", "DRIVER_ASSIGNED"].includes(previousStatus ?? "")
+      ) {
+        const createdAt = after.createdAt?.toDate?.() as Date | undefined;
+        if (createdAt) {
+          const durationSeconds = Math.round((Date.now() - createdAt.getTime()) / 1000);
+          await analytics.recordAcceptanceTime(durationSeconds);
+        }
+      }
+
       switch (newStatus) {
         case "ACCEPTED":
           if (customerId) {
