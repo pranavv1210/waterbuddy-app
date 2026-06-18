@@ -124,7 +124,7 @@ class _AppSettingsScreenState extends ConsumerState<AppSettingsScreen> {
                   const SizedBox(height: 16),
                   SwitchListTile.adaptive(
                     value: _orderAlerts,
-                    activeColor: OpsColors.blue,
+                    activeTrackColor: OpsColors.blue,
                     contentPadding: EdgeInsets.zero,
                     title: const Text(
                       'Order alerts',
@@ -143,7 +143,7 @@ class _AppSettingsScreenState extends ConsumerState<AppSettingsScreen> {
                   const Divider(height: 20),
                   SwitchListTile.adaptive(
                     value: _locationUpdates,
-                    activeColor: OpsColors.blue,
+                    activeTrackColor: OpsColors.blue,
                     contentPadding: EdgeInsets.zero,
                     title: const Text(
                       'Location updates',

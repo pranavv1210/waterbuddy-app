@@ -1821,7 +1821,7 @@ class _NotificationsViewState extends State<_NotificationsView> {
                 maxLines: 3,
               ),
               DropdownButtonFormField<String>(
-                value: _targetRole,
+                initialValue: _targetRole,
                 decoration: const InputDecoration(labelText: 'Target role'),
                 items: const [
                   DropdownMenuItem(value: 'all', child: Text('All users')),
