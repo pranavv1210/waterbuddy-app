@@ -18,10 +18,10 @@ export const onRatingCreated = onDocumentCreated(
 
     const { rateeId, rateeRole } = rating as {
       rateeId: string;
-      rateeRole: "seller" | "driver" | "customer";
+      rateeRole: "seller" | "driver" | "customer" | "service";
     };
 
-    if (!rateeId || !rateeRole || rateeRole === "customer") return;
+    if (!rateeId || !rateeRole || rateeRole === "customer" || rateeRole === "service") return;
 
     try {
       await aggregateRating(rateeId, rateeRole);

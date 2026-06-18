@@ -24,6 +24,7 @@ export class AnalyticsService {
         .set(
           {
             [field]: FieldValue.increment(amount),
+            ...(field === "ordersCreated" ? { ordersPerDay: FieldValue.increment(amount) } : {}),
             date: this.todayId,
             updatedAt: FieldValue.serverTimestamp(),
           },
@@ -99,6 +100,8 @@ export class AnalyticsService {
         .set(
           {
             dailyRevenue: FieldValue.increment(amountPaise / 100),
+            weeklyRevenue: FieldValue.increment(amountPaise / 100),
+            monthlyRevenue: FieldValue.increment(amountPaise / 100),
             revenuePaise: FieldValue.increment(amountPaise),
             date: this.todayId,
             updatedAt: FieldValue.serverTimestamp(),
@@ -131,6 +134,15 @@ export class AnalyticsService {
       "acceptanceSamples",
       "averageAcceptanceTime",
       durationSeconds
+    );
+  }
+
+  async recordEta(minutes: number): Promise<void> {
+    await this.updateRollingAverage(
+      "totalEtaMinutes",
+      "etaSamples",
+      "averageETA",
+      minutes
     );
   }
 

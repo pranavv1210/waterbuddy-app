@@ -19,7 +19,7 @@ export const submitRatingFn = onCall(async (request) => {
   const { orderId, rateeId, rateeRole, stars, comment } = request.data as {
     orderId: string;
     rateeId: string;
-    rateeRole: "seller" | "driver";
+    rateeRole: "seller" | "driver" | "service";
     stars: number;
     comment?: string;
   };
@@ -51,6 +51,9 @@ export const submitRatingFn = onCall(async (request) => {
 
   if (!isCustomer && !isSeller && !isDriver) {
     throw new HttpsError("permission-denied", "You were not part of this order.");
+  }
+  if (isCustomer && !["seller", "driver", "service"].includes(rateeRole)) {
+    throw new HttpsError("invalid-argument", "Customers can rate driver, seller, or service.");
   }
 
   try {

@@ -1,6 +1,7 @@
 name: waterbuddy_superapp
 description: WaterBuddy unified role-based mobile app.
 publish_to: none
+version: 1.8.0+8
 
 environment:
   sdk: ">=3.3.0 <4.0.0"

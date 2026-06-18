@@ -7,6 +7,8 @@ import {
   cleanInactiveLocations,
   cleanOldDispatchLogs,
   cleanDedupRecords,
+  cleanOldMetrics,
+  cleanOrphanSessions,
 } from "../../services/cleanupService";
 
 /**
@@ -74,5 +76,29 @@ export const cleanupOldDispatchLogs = onSchedule("0 0 * * *", async () => {
     logger.info(`Scheduled: cleanOldDispatchLogs — deleted ${count} old logs`);
   } catch (err) {
     logger.error("Scheduled: cleanOldDispatchLogs failed", { error: err });
+  }
+});
+
+/**
+ * Once per day at 1:00 AM UTC: delete system metrics older than 90 days.
+ */
+export const cleanupOldMetrics = onSchedule("0 1 * * *", async () => {
+  try {
+    const count = await cleanOldMetrics(90);
+    logger.info(`Scheduled: cleanupOldMetrics — deleted ${count} old metrics docs`);
+  } catch (err) {
+    logger.error("Scheduled: cleanupOldMetrics failed", { error: err });
+  }
+});
+
+/**
+ * Every hour: clean up orphan sessions (active orders stuck for > 24 hours).
+ */
+export const cleanupOrphanSessions = onSchedule("every 60 minutes", async () => {
+  try {
+    const count = await cleanOrphanSessions();
+    logger.info(`Scheduled: cleanupOrphanSessions — cancelled ${count} orphan sessions`);
+  } catch (err) {
+    logger.error("Scheduled: cleanupOrphanSessions failed", { error: err });
   }
 });

@@ -5,8 +5,12 @@ import { collections } from "../constants/collections";
 import { PaymentEvent, PaymentStatus } from "../models/domain";
 import { db } from "./firebase";
 import { NotificationService } from "./notificationService";
+import { WalletService } from "./walletService";
+import { RefundService } from "./refundService";
 
 const notificationService = new NotificationService();
+const walletService = new WalletService();
+const refundService = new RefundService(walletService);
 
 /**
  * Verifies a Razorpay webhook or checkout signature.
@@ -112,6 +116,27 @@ export async function processPaymentSuccess(
     amount,
   });
 
+  try {
+    const orderSnap = await orderRef.get();
+    const order = orderSnap.data() ?? {};
+    const customerId = order.customerId as string | undefined;
+    const paidAmount = amount != null ? amount / 100 : Number(order.amount ?? 0);
+    if (customerId && paidAmount > 0) {
+      await walletService.record({
+        userId: customerId,
+        role: "consumer",
+        type: "ORDER_PAYMENT",
+        direction: "EXTERNAL_SPEND",
+        amount: paidAmount,
+        createdBy: "payment_success",
+        orderId,
+        metadata: { razorpayPaymentId, razorpayOrderId },
+      });
+    }
+  } catch (e) {
+    logger.warn("Could not record payment wallet transaction", { orderId, error: e });
+  }
+
   // Notify customer
   try {
     const orderSnap = await orderRef.get();
@@ -190,6 +215,32 @@ export async function processRefund(
     status: "REFUNDED",
     amount,
   });
+
+  try {
+    const existing = await db
+      .collection(collections.refunds)
+      .where("razorpayRefundId", "==", razorpayRefundId)
+      .limit(1)
+      .get();
+    if (existing.empty) {
+      const orderSnap = await orderRef.get();
+      const order = orderSnap.data() ?? {};
+      const refund = await refundService.requestRefund({
+        orderId,
+        requestedBy: String(order.customerId),
+        type: "PAYMENT_FAILURE",
+        reason: "Razorpay refund webhook",
+        requestedAmount: amount / 100,
+      });
+      await refundService.approveRefund({
+        refundId: refund.refundId,
+        adminId: "razorpay_webhook",
+        razorpayRefundId,
+      });
+    }
+  } catch (e) {
+    logger.warn("Could not mirror refund into refund engine", { orderId, error: e });
+  }
 
   logger.info("Refund processed", { orderId, razorpayRefundId, amount });
 }

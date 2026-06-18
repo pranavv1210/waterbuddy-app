@@ -12,7 +12,7 @@ export async function submitRating(params: {
   orderId: string;
   raterId: string;
   rateeId: string;
-  rateeRole: "seller" | "driver" | "customer";
+  rateeRole: "seller" | "driver" | "customer" | "service";
   stars: number;
   comment?: string;
 }): Promise<string> {
@@ -20,8 +20,8 @@ export async function submitRating(params: {
     throw new Error("Stars must be between 1 and 5");
   }
 
-  // Idempotency: one rating per orderId + raterId pair
-  const dedupId = `${params.orderId}_${params.raterId}`;
+  // Idempotency: one rating per order + rater + ratee target.
+  const dedupId = `${params.orderId}_${params.raterId}_${params.rateeRole}_${params.rateeId}`;
   const existingRef = db.collection(collections.ratings).doc(dedupId);
   const existing = await existingRef.get();
   if (existing.exists) {
@@ -40,6 +40,18 @@ export async function submitRating(params: {
   };
 
   await existingRef.set(rating);
+  if (params.comment != null && params.comment.trim().length > 0) {
+    await db.collection(collections.reviews).doc(dedupId).set({
+      id: dedupId,
+      orderId: params.orderId,
+      raterId: params.raterId,
+      rateeId: params.rateeId,
+      rateeRole: params.rateeRole,
+      comment: params.comment.trim(),
+      stars: params.stars,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+  }
   logger.info("Rating submitted", {
     ratingId: dedupId,
     rateeId: params.rateeId,
@@ -58,9 +70,9 @@ export async function submitRating(params: {
  */
 export async function aggregateRating(
   userId: string,
-  role: "seller" | "driver" | "customer"
+  role: "seller" | "driver" | "customer" | "service"
 ): Promise<void> {
-  if (role === "customer") return; // No customer aggregation needed
+  if (role === "customer" || role === "service") return; // No profile aggregation needed
 
   const ratingsSnapshot = await db
     .collection(collections.ratings)
@@ -102,4 +114,15 @@ export async function aggregateRating(
   );
 
   logger.info("Rating aggregated", { userId, role, average, count });
+
+  const metricsCollection =
+    role === "seller" ? collections.sellerMetrics : collections.driverMetrics;
+  await db.collection(metricsCollection).doc(userId).set(
+    {
+      ratingAverage: average,
+      ratingCount: count,
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
 }

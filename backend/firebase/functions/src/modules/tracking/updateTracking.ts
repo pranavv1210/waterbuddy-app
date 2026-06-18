@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { FieldValue } from "firebase-admin/firestore";
-import { collections } from "../../constants/collections";
-import { db } from "../../services/firebase";
+import { RouteIntelligenceService } from "../../services/routeIntelligenceService";
+
+const routeIntelligence = new RouteIntelligenceService();
 
 export const updateTracking = onCall(async (request) => {
   if (!request.auth) {
@@ -14,12 +14,7 @@ export const updateTracking = onCall(async (request) => {
     lng: number;
   };
 
-  await db.collection(collections.tracking).doc(payload.orderId).set({
-    orderId: payload.orderId,
-    lat: payload.lat,
-    lng: payload.lng,
-    timestamp: FieldValue.serverTimestamp(),
-  });
+  await routeIntelligence.updateTracking(payload);
 
   return { orderId: payload.orderId, ok: true };
 });

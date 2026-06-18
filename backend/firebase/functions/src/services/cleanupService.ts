@@ -143,14 +143,71 @@ export async function cleanInactiveLocations(inactiveHours = 2): Promise<number>
 }
 
 /**
- * Deletes dispatch_logs older than retentionDays (default 30).
+ * Deletes dispatch_logs, route_analytics, and tracking data older than retentionDays (default 30).
  */
 export async function cleanOldDispatchLogs(retentionDays = 30): Promise<number> {
   const cutoff = Timestamp.fromMillis(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+  
+  // Clean dispatch logs
   const snapshot = await db
     .collection(collections.dispatchLogs)
     .where("createdAt", "<=", cutoff)
     .limit(500)
+    .get();
+
+  let totalDeleted = 0;
+  if (!snapshot.empty) {
+    const batch = db.batch();
+    for (const doc of snapshot.docs) {
+      batch.delete(doc.ref);
+    }
+    await batch.commit();
+    totalDeleted += snapshot.size;
+  }
+
+  // Clean route analytics
+  const routeSnap = await db
+    .collection("route_analytics")
+    .where("updatedAt", "<=", cutoff)
+    .limit(200)
+    .get();
+  if (!routeSnap.empty) {
+    const batch = db.batch();
+    for (const doc of routeSnap.docs) {
+      batch.delete(doc.ref);
+    }
+    await batch.commit();
+    totalDeleted += routeSnap.size;
+  }
+
+  // Clean tracking
+  const trackingSnap = await db
+    .collection(collections.tracking)
+    .where("updatedAt", "<=", cutoff)
+    .limit(200)
+    .get();
+  if (!trackingSnap.empty) {
+    const batch = db.batch();
+    for (const doc of trackingSnap.docs) {
+      batch.delete(doc.ref);
+    }
+    await batch.commit();
+    totalDeleted += trackingSnap.size;
+  }
+
+  logger.info(`cleanOldDispatchLogs: deleted ${totalDeleted} old logs and analytics records`);
+  return totalDeleted;
+}
+
+/**
+ * Deletes system metrics older than retentionDays (default 90).
+ */
+export async function cleanOldMetrics(retentionDays = 90): Promise<number> {
+  const cutoff = Timestamp.fromMillis(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+  const snapshot = await db
+    .collection(collections.systemMetrics)
+    .where("updatedAt", "<=", cutoff)
+    .limit(100)
     .get();
 
   if (snapshot.empty) return 0;
@@ -160,7 +217,48 @@ export async function cleanOldDispatchLogs(retentionDays = 30): Promise<number> 
     batch.delete(doc.ref);
   }
   await batch.commit();
-  logger.info(`cleanOldDispatchLogs: deleted ${snapshot.size} old logs`);
+  logger.info(`cleanOldMetrics: deleted ${snapshot.size} system metrics documents`);
+  return snapshot.size;
+}
+
+/**
+ * Cancels/fails orphan sessions (orders stuck in active statuses for more than 24 hours).
+ */
+export async function cleanOrphanSessions(): Promise<number> {
+  const cutoff = Timestamp.fromMillis(Date.now() - 24 * 60 * 60 * 1000);
+  const activeStatuses = [
+    "ACCEPTED",
+    "ASSIGNED",
+    "DRIVER_ASSIGNED",
+    "EN_ROUTE",
+    "ON_THE_WAY",
+    "ARRIVED",
+    "DELIVERING",
+  ];
+
+  const snapshot = await db
+    .collection(collections.orders)
+    .where("status", "in", activeStatuses)
+    .where("updatedAt", "<=", cutoff)
+    .limit(100)
+    .get();
+
+  if (snapshot.empty) return 0;
+
+  const batch = db.batch();
+  for (const doc of snapshot.docs) {
+    batch.set(
+      doc.ref,
+      {
+        status: "FAILED",
+        failureReason: "Session expired / abandoned (stuck in active state >24h)",
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+  }
+  await batch.commit();
+  logger.info(`cleanOrphanSessions: failed ${snapshot.size} abandoned orders`);
   return snapshot.size;
 }
 

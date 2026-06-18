@@ -2,12 +2,20 @@ import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions";
 import { NotificationService } from "../../services/notificationService";
 import { AnalyticsService } from "../../services/analyticsService";
+import { CommissionService } from "../../services/commissionService";
+import { PerformanceMetricsService } from "../../services/performanceMetricsService";
+import { RouteIntelligenceService } from "../../services/routeIntelligenceService";
+import { WalletService } from "../../services/walletService";
 import { collections } from "../../constants/collections";
 import { db } from "../../services/firebase";
 import { OrderStatus } from "../../models/domain";
 
 const notifications = new NotificationService();
 const analytics = new AnalyticsService();
+const commissions = new CommissionService();
+const performanceMetrics = new PerformanceMetricsService();
+const routeIntelligence = new RouteIntelligenceService();
+const wallets = new WalletService();
 
 /**
  * Firestore trigger: fires on every order document update.
@@ -98,6 +106,8 @@ export const onOrderStatusChanged = onDocumentUpdated(
 
           // Analytics
           await analytics.incrementOrdersCompleted();
+          await commissions.settleDeliveredOrder(orderId);
+          await routeIntelligence.finalizeRoute(orderId);
 
           // Record revenue
           const amount = after.amount as number | undefined;
@@ -111,6 +121,13 @@ export const onOrderStatusChanged = onDocumentUpdated(
           if (createdAt) {
             const durationMinutes = Math.round((now.getTime() - createdAt.getTime()) / 60000);
             await analytics.recordDeliveryTime(durationMinutes);
+            await performanceMetrics.recordDelivery({
+              orderId,
+              sellerId,
+              driverId,
+              amount: amount ?? 0,
+              deliveryMinutes: durationMinutes,
+            });
           }
 
           // Free up seller availability
@@ -139,6 +156,55 @@ export const onOrderStatusChanged = onDocumentUpdated(
           await notifications.notifyOrderCancelled(notifyIds, orderId, reason);
 
           await analytics.incrementOrdersCancelled();
+          await performanceMetrics.recordCancellation({ sellerId, driverId });
+
+          const cancelledBy = String(after.cancelledBy ?? "unknown");
+          const cancellationCharge = Number(after.cancellationCharge ?? 0);
+          const refundEligible =
+            after.paymentStatus === "PAID" && previousStatus !== "DELIVERED";
+          await db.collection(collections.orders).doc(orderId).set(
+            {
+              cancellationAudit: {
+                whoCancelled: cancelledBy,
+                reason: reason ?? null,
+                timestamp: new Date(),
+                refundEligible,
+                penaltyAmount: cancellationCharge,
+              },
+              refundEligible,
+              updatedAt: new Date(),
+            },
+            { merge: true }
+          );
+
+          if (cancellationCharge > 0 && cancelledBy === "seller" && sellerId) {
+            await wallets.record({
+              userId: sellerId,
+              role: "seller",
+              type: "PENALTY",
+              direction: "DEBIT",
+              amount: cancellationCharge,
+              createdBy: "cancellation_engine",
+              orderId,
+              metadata: { reason },
+            }).catch((error) =>
+              logger.warn("Seller penalty could not be charged", { orderId, error })
+            );
+          }
+          if (cancellationCharge > 0 && cancelledBy === "driver" && driverId) {
+            await wallets.record({
+              userId: driverId,
+              role: "driver",
+              type: "PENALTY",
+              direction: "DEBIT",
+              amount: cancellationCharge,
+              createdBy: "cancellation_engine",
+              orderId,
+              metadata: { reason },
+            }).catch((error) =>
+              logger.warn("Driver penalty could not be charged", { orderId, error })
+            );
+          }
 
           // Free up seller
           if (sellerId) {

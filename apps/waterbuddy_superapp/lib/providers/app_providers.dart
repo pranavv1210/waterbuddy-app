@@ -295,7 +295,11 @@ final searchingOrdersProvider = StreamProvider<List<app_order.Order>>((ref) {
   final sellers = onlineSellersAsync.value ?? const <Map<String, dynamic>>[];
   if (currentLoc == null) return Stream.value(const <app_order.Order>[]);
 
-  return ref.watch(orderServiceProvider).watchSearchingOrders().map((orders) {
+  return ref.watch(orderServiceProvider).watchSearchingOrdersNear(
+    latitude: currentLoc.latitude,
+    longitude: currentLoc.longitude,
+    radiusKm: settings.dispatchRadiusKm,
+  ).map((orders) {
     return orders.where((order) {
       final orderLat = (order.location['latitude'] as num?)?.toDouble();
       final orderLng = (order.location['longitude'] as num?)?.toDouble();

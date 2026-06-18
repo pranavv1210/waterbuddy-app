@@ -181,6 +181,36 @@ service cloud.firestore {
       allow write: if false; // backend only — enforced
     }
 
+    match /wallets/{walletId} {
+      allow read: if isAdminRole()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /wallet_transactions/{transactionId} {
+      allow read: if isAdminRole()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /driver_payouts/{payoutId} {
+      allow read: if isAdminRole()
+        || (isDriverRole() && resource.data.driverId == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /seller_payouts/{payoutId} {
+      allow read: if isAdminRole()
+        || (isSellerRole() && resource.data.sellerId == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /refunds/{refundId} {
+      allow read: if isAdminRole()
+        || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow write: if false;
+    }
+
     // ── Ratings — Phase 5 ──────────────────────────────────────────────────
     match /ratings/{ratingId} {
       allow read: if isSignedIn();
@@ -188,6 +218,11 @@ service cloud.firestore {
       // Direct client creation is blocked to enforce order-membership validation.
       allow create: if false;
       allow update, delete: if isAdminRole();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if isSignedIn();
+      allow write: if false;
     }
 
     // ── Rating Aggregates — Phase 5 ────────────────────────────────────────
@@ -200,6 +235,26 @@ service cloud.firestore {
     match /system_metrics/{docId} {
       allow read: if isAdminRole();
       allow write: if false; // incremented by Cloud Functions only
+    }
+
+    match /driver_metrics/{driverId} {
+      allow read: if isAdminRole() || isOwner(driverId);
+      allow write: if false;
+    }
+
+    match /seller_metrics/{sellerId} {
+      allow read: if isAdminRole() || isOwner(sellerId);
+      allow write: if false;
+    }
+
+    match /route_analytics/{orderId} {
+      allow read: if isAdminRole();
+      allow write: if false;
+    }
+
+    match /order_settlements/{orderId} {
+      allow read: if isAdminRole();
+      allow write: if false;
     }
   }
 }

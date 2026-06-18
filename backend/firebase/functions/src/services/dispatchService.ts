@@ -6,6 +6,8 @@ import { db } from "./firebase";
 import { NotificationService } from "./notificationService";
 import { SellerDiscoveryService } from "./sellerDiscoveryService";
 import { AnalyticsService } from "./analyticsService";
+import { PerformanceMetricsService } from "./performanceMetricsService";
+import { LoggerService } from "./loggerService";
 
 const DEFAULT_SETTINGS: SystemSettings = {
   bookingsEnabled: true,
@@ -28,7 +30,8 @@ export class DispatchService {
   constructor(
     private readonly sellerDiscovery = new SellerDiscoveryService(),
     private readonly notifications = new NotificationService(),
-    private readonly analytics = new AnalyticsService()
+    private readonly analytics = new AnalyticsService(),
+    private readonly metrics = new PerformanceMetricsService()
   ) {}
 
   async getSettings(): Promise<SystemSettings> {
@@ -59,7 +62,6 @@ export class DispatchService {
     const order = { id: orderSnapshot.id, ...orderSnapshot.data() } as OrderRecord;
     if (order.status !== "SEARCHING") return;
 
-    await this.analytics.incrementOrdersCreated();
     await this.offerNextSeller(order);
   }
 
@@ -262,6 +264,7 @@ export class DispatchService {
       },
       { merge: true }
     );
+    await this.metrics.recordOfferRejected(params.sellerId);
     await this.retryAfterOfferEnd(offer.orderId, params.sellerId, "OFFER_REJECTED");
   }
 
@@ -338,7 +341,7 @@ export class DispatchService {
     event: string,
     data: Record<string, unknown>
   ): Promise<void> {
-    logger.info("Dispatch event", { orderId, event, ...data });
+    LoggerService.info("ORDER", "Dispatch event", { orderId }, { event, ...data });
     await db.collection(collections.dispatchLogs).add({
       orderId,
       event,

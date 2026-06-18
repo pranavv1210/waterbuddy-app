@@ -1,0 +1,16 @@
+{
+  "name": "waterbuddy-emulator-tests",
+  "version": "1.0.0",
+  "description": "Security rules and load testing for WaterBuddy Firebase emulators",
+  "main": "security_rules.test.js",
+  "scripts": {
+    "test:rules": "mocha security_rules.test.js --timeout 15000",
+    "test:load": "node load_test.js"
+  },
+  "dependencies": {
+    "@firebase/rules-unit-testing": "^3.0.1",
+    "firebase-admin": "^12.1.0",
+    "firebase": "^10.11.1",
+    "mocha": "^10.4.0"
+  }
+}

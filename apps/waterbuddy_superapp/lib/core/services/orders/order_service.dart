@@ -115,6 +115,25 @@ class OrderService {
             snapshot.docs.map(app_order.Order.fromDocument).toList());
   }
 
+  Stream<List<app_order.Order>> watchSearchingOrdersNear({
+    required double latitude,
+    required double longitude,
+    required double radiusKm,
+  }) {
+    final latDelta = radiusKm / 111.32;
+    final minLat = latitude - latDelta;
+    final maxLat = latitude + latDelta;
+
+    return _firestore
+        .collection('orders')
+        .where('status', isEqualTo: statusSearching)
+        .where('location.latitude', isGreaterThanOrEqualTo: minLat)
+        .where('location.latitude', isLessThanOrEqualTo: maxLat)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map(app_order.Order.fromDocument).toList());
+  }
+
   Stream<List<app_order.Order>> watchSellerOrders(String sellerId) {
     return _firestore
         .collection('orders')

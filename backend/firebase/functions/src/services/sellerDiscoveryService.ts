@@ -37,11 +37,17 @@ export class SellerDiscoveryService {
     excludedSellerIds: string[];
     limit: number;
   }): Promise<SellerCandidate[]> {
+    const latDelta = params.radiusKm / 111.32;
+    const minLat = params.lat - latDelta;
+    const maxLat = params.lat + latDelta;
+
     const sellerSnapshot = await db
       .collection(collections.sellers)
       .where("isOnline", "==", true)
       .where("isAvailable", "==", true)
       .where("verificationStatus", "in", ["approved", "active"])
+      .where("currentLocation.latitude", ">=", minLat)
+      .where("currentLocation.latitude", "<=", maxLat)
       .get();
 
     const excluded = new Set(params.excludedSellerIds);

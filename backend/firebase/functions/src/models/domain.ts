@@ -137,10 +137,102 @@ export interface RatingRecord {
   orderId: string;
   raterId: string;
   rateeId: string;
-  rateeRole: "seller" | "driver" | "customer";
+  rateeRole: "seller" | "driver" | "customer" | "service";
   stars: number; // 1-5
   comment?: string;
   createdAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+}
+
+export type WalletRole = "consumer" | "seller" | "driver" | "admin";
+export type WalletTransactionType =
+  | "ORDER_PAYMENT"
+  | "PAYOUT"
+  | "REFUND"
+  | "BONUS"
+  | "PENALTY"
+  | "ADJUSTMENT";
+export type WalletTransactionDirection =
+  | "CREDIT"
+  | "DEBIT"
+  | "LOCK_CREDIT"
+  | "UNLOCK_DEBIT"
+  | "EXTERNAL_SPEND";
+export type PayoutStatus = "PENDING" | "PROCESSING" | "PAID" | "FAILED";
+export type RefundStatus = "REQUESTED" | "APPROVED" | "REJECTED" | "PROCESSED";
+export type RefundType =
+  | "FULL"
+  | "PARTIAL"
+  | "CANCELLATION"
+  | "PAYMENT_FAILURE";
+
+export interface WalletRecord {
+  id: string;
+  userId: string;
+  role: WalletRole;
+  balance: number;
+  lockedBalance: number;
+  totalEarned: number;
+  totalSpent: number;
+  lastUpdated: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+  createdAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+}
+
+export interface WalletTransactionRecord {
+  id: string;
+  walletId: string;
+  userId: string;
+  role: WalletRole;
+  type: WalletTransactionType;
+  direction: WalletTransactionDirection;
+  amount: number;
+  balanceAfter: number;
+  lockedBalanceAfter: number;
+  orderId?: string;
+  payoutId?: string;
+  refundId?: string;
+  createdBy: string;
+  metadata?: Record<string, unknown>;
+  createdAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+}
+
+export interface DriverPayoutRecord {
+  id: string;
+  driverId: string;
+  amount: number;
+  status: PayoutStatus;
+  method: string;
+  createdAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+  paidAt?: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue | null;
+}
+
+export interface SellerPayoutRecord {
+  id: string;
+  sellerId: string;
+  orderId?: string;
+  commission: number;
+  platformFee: number;
+  tax: number;
+  netAmount: number;
+  status: PayoutStatus;
+  method: string;
+  createdAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+  paidAt?: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue | null;
+}
+
+export interface RefundRecord {
+  id: string;
+  orderId: string;
+  customerId: string;
+  amount: number;
+  type: RefundType;
+  status: RefundStatus;
+  reason: string;
+  requestedBy: string;
+  approvedBy?: string;
+  razorpayRefundId?: string;
+  createdAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+  updatedAt: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+  processedAt?: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue | null;
 }
 
 export interface RatingAggregate {

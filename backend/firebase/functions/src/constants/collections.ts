@@ -14,7 +14,15 @@ export const collections = {
   complaints: "complaints",
   // Phase 5 additions
   paymentEvents: "payment_events",
+  wallets: "wallets",
+  walletTransactions: "wallet_transactions",
+  driverPayouts: "driver_payouts",
+  sellerPayouts: "seller_payouts",
+  refunds: "refunds",
   ratings: "ratings",
+  reviews: "reviews",
   ratingAggregates: "rating_aggregates",
   systemMetrics: "system_metrics",
+  driverMetrics: "driver_metrics",
+  sellerMetrics: "seller_metrics",
 } as const;
