@@ -50,6 +50,120 @@ class WaterBuddyDesignSystem {
   }
 }
 
+class WbSafeScaffold extends StatelessWidget {
+  const WbSafeScaffold({
+    super.key,
+    required this.child,
+    this.backgroundColor = WbColors.surface,
+    this.resizeToAvoidBottomInset = true,
+    this.bottomNavigationBar,
+    this.drawer,
+  });
+
+  final Widget child;
+  final Color backgroundColor;
+  final bool resizeToAvoidBottomInset;
+  final Widget? bottomNavigationBar;
+  final Widget? drawer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+      drawer: drawer,
+      bottomNavigationBar: bottomNavigationBar,
+      body: SafeArea(
+        top: true,
+        bottom: true,
+        child: child,
+      ),
+    );
+  }
+}
+
+class WbSkeletonCard extends StatelessWidget {
+  const WbSkeletonCard({
+    super.key,
+    this.height = 112,
+    this.padding = const EdgeInsets.all(18),
+  });
+
+  final double height;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      padding: padding,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(WaterBuddyDesignSystem.radiusMd),
+        boxShadow: WaterBuddyDesignSystem.premiumShadow(),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          WbShimmer(width: 190, height: 14, borderRadius: 999),
+          SizedBox(height: 12),
+          WbShimmer(width: 130, height: 12, borderRadius: 999),
+        ],
+      ),
+    );
+  }
+}
+
+class WbMapPlaceholder extends StatelessWidget {
+  const WbMapPlaceholder({super.key, this.label = 'Preparing map'});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        const AbstractWaterBackground(),
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.30),
+                  WbColors.blue.withValues(alpha: 0.08),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Center(
+          child: GlassPanel(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            radius: 22,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const WbShimmer(width: 34, height: 34, borderRadius: 999),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: WbColors.ink,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class GlassPanel extends StatelessWidget {
   const GlassPanel({
     super.key,
@@ -854,14 +968,7 @@ class _WbGradientButtonState extends State<WbGradientButton>
       child = Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          ),
+          const _PremiumLoadingDots(color: Colors.white),
           const SizedBox(width: 10),
           Text(label,
               style: const TextStyle(
@@ -944,6 +1051,63 @@ class _WbGradientButtonState extends State<WbGradientButton>
           child: child,
         ),
       ),
+    );
+  }
+}
+
+class _PremiumLoadingDots extends StatefulWidget {
+  const _PremiumLoadingDots({required this.color});
+
+  final Color color;
+
+  @override
+  State<_PremiumLoadingDots> createState() => _PremiumLoadingDotsState();
+}
+
+class _PremiumLoadingDotsState extends State<_PremiumLoadingDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 920),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(3, (index) {
+            final phase = ((_controller.value + index * 0.18) % 1);
+            final scale = 0.62 + (1 - (phase - 0.5).abs() * 2) * 0.38;
+            return Transform.scale(
+              scale: scale,
+              child: Container(
+                width: 6,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  color: widget.color.withValues(alpha: 0.72 + scale * 0.28),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 }

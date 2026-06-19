@@ -38,6 +38,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   firebase_remote_config: ^5.0.2
   google_fonts: ^6.2.1
+  lottie: ^3.1.2
 
 dev_dependencies:
   flutter_test:
@@ -53,6 +54,7 @@ flutter:
     - assets/ui/tanker.png
     - assets/ui/filtered.png
     - assets/ui/express.png
+    - assets/lottie/
     - .env.dev
     - .env.staging
     - .env.production

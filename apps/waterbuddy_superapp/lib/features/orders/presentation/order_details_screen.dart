@@ -9,6 +9,7 @@ import '../../../models/order.dart';
 import '../../../providers/app_providers.dart';
 import '../../../routes/route_names.dart';
 import '../../../widgets/premium_ui.dart';
+import '../../../widgets/waterbuddy_toast.dart';
 import 'cancellation_sheet.dart';
 import '../../tracking/providers/tracking_providers.dart';
 
@@ -142,11 +143,9 @@ class _OrderDetailsBody extends ConsumerWidget {
                               size: 16, color: Color(0xFF94A3B8)),
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: order.id));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Order ID copied'),
-                                duration: Duration(seconds: 1),
-                              ),
+                            WaterBuddyToastService.success(
+                              context,
+                              'Order ID copied',
                             );
                           },
                         ),
@@ -223,8 +222,7 @@ class _OrderDetailsBody extends ConsumerWidget {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.25)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
             ),
             child: const Icon(
               Icons.arrow_back_ios_new_rounded,
@@ -830,9 +828,7 @@ class _CtaButtons extends ConsumerWidget {
                     .read(orderServiceProvider)
                     .cancelOrder(orderId: order.id, reason: reason);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Order cancelled')),
-                  );
+                  WaterBuddyToastService.success(context, 'Order cancelled');
                   context.go(RouteNames.orders);
                 }
               },
@@ -853,9 +849,9 @@ class _CtaButtons extends ConsumerWidget {
             height: 54,
             child: ElevatedButton.icon(
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Invoice details are on this order.')),
+                WaterBuddyToastService.info(
+                  context,
+                  'Invoice details are on this order.',
                 );
               },
               icon: const Icon(Icons.receipt_long_rounded, size: 18),
@@ -1023,8 +1019,17 @@ class _LoadingCard extends StatelessWidget {
       height: 80,
       alignment: Alignment.center,
       decoration: _cardDecoration(),
-      child: const CircularProgressIndicator(
-          color: Color(0xFF0F2B5B), strokeWidth: 2),
+      child: const Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            WbShimmer(width: 180, height: 12, borderRadius: 999),
+            SizedBox(height: 10),
+            WbShimmer(width: 130, height: 10, borderRadius: 999),
+          ],
+        ),
+      ),
     );
   }
 }

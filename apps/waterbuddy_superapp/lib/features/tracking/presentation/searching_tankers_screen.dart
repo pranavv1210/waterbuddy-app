@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../components/wb_lottie_state.dart';
 import '../../../widgets/premium_ui.dart';
 
 import '../../../providers/app_providers.dart';
@@ -626,15 +627,10 @@ class _TimeoutView extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: WbColors.red.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.timer_off_rounded,
-                      size: 46, color: WbColors.red),
+                const WbLottieState(
+                  type: WbLottieStateType.empty,
+                  repeat: true,
+                  size: 112,
                 ),
                 const SizedBox(height: 28),
                 const Text(

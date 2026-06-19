@@ -40,7 +40,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   int _tab = 0;
 
   static const _sections = [
-    OpsTab(label: 'Dashboard', icon: Icons.dashboard_rounded),
+    OpsTab(label: 'Home', icon: Icons.dashboard_rounded),
     OpsTab(label: 'Orders', icon: Icons.radar_rounded),
     OpsTab(label: 'Tankers', icon: Icons.water_drop_rounded),
     OpsTab(label: 'Settings', icon: Icons.tune_rounded),
@@ -58,7 +58,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     return switch (_tab) {
       0 => 0,
       1 => 1,
-      2 => 2,
+      5 || 6 || 7 => 2,
       3 => 3,
       _ => 3,
     };
@@ -107,7 +107,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               _tab = switch (index) {
                 0 => 0,
                 1 => 1,
-                2 => 2,
+                2 => 7,
                 _ => 3,
               };
             });
@@ -335,7 +335,7 @@ class _AdminShell extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
             selectedIcon: Icon(Icons.dashboard_rounded),
-            label: 'Dashboard',
+            label: 'Home',
           ),
           NavigationDestination(
             icon: Icon(Icons.radar_outlined),
@@ -343,9 +343,9 @@ class _AdminShell extends StatelessWidget {
             label: 'Orders',
           ),
           NavigationDestination(
-            icon: Icon(Icons.water_drop_outlined),
-            selectedIcon: Icon(Icons.water_drop_rounded),
-            label: 'Tankers',
+            icon: Icon(Icons.people_alt_outlined),
+            selectedIcon: Icon(Icons.people_alt_rounded),
+            label: 'Users',
           ),
           NavigationDestination(
             icon: Icon(Icons.tune_outlined),

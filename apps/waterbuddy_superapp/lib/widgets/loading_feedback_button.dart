@@ -52,23 +52,7 @@ class LoadingFeedbackButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           key: const ValueKey('loading'),
           children: [
-            SizedBox(
-              width: 18,
-              height: 18,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 900),
-                curve: Curves.easeInOut,
-                builder: (context, value, _) {
-                  return CircularProgressIndicator(
-                    value: value,
-                    strokeWidth: 2.5,
-                    backgroundColor: Colors.white.withValues(alpha: 0.22),
-                    valueColor: AlwaysStoppedAnimation<Color>(textFg),
-                  );
-                },
-              ),
-            ),
+            _LoadingDots(color: textFg),
             const SizedBox(width: 12),
             Text(
               loadingLabel,
@@ -137,6 +121,63 @@ class LoadingFeedbackButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _LoadingDots extends StatefulWidget {
+  const _LoadingDots({required this.color});
+
+  final Color color;
+
+  @override
+  State<_LoadingDots> createState() => _LoadingDotsState();
+}
+
+class _LoadingDotsState extends State<_LoadingDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 920),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(3, (index) {
+            final phase = ((_controller.value + index * 0.18) % 1);
+            final scale = 0.62 + (1 - (phase - 0.5).abs() * 2) * 0.38;
+            return Transform.scale(
+              scale: scale,
+              child: Container(
+                width: 6,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  color: widget.color.withValues(alpha: 0.72 + scale * 0.28),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 }
