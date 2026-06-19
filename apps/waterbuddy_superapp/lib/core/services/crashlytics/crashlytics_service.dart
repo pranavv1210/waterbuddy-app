@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
@@ -115,6 +116,10 @@ class CrashlyticsService {
   }
 
   static Future<void> _runSafely(Future<void> Function() action) async {
+    if (Firebase.apps.isEmpty) {
+      debugPrint('[CRASHLYTICS] Firebase not initialized; reporting skipped.');
+      return;
+    }
     try {
       await action();
     } catch (e) {

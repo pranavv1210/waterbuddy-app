@@ -53,11 +53,10 @@ class _AppInitializerState extends State<AppInitializer>
 
   Future<void> _initialize() async {
     try {
-      await PerformanceService.traceAppStartup(() async {
-        await Firebase.initializeApp(
-                options: DefaultFirebaseOptions.currentPlatform)
-            .timeout(const Duration(seconds: 15));
-      });
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
+          .timeout(const Duration(seconds: 15));
+
+      await PerformanceService.traceAppStartup(() async {});
 
       // ── Crashlytics ─────────────────────────────────────────────────────
       FlutterError.onError = CrashlyticsService.recordFlutterError;
