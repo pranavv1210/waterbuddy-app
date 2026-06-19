@@ -1,8 +1,11 @@
-import 'dart:async';
-import 'dart:math';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 
-import 'premium_ui.dart';
 import 'waterbuddy_bottom_sheet.dart';
 import 'waterbuddy_toast.dart';
 
@@ -55,41 +58,89 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
     });
   }
 
-  // Simulates uploading a file with a sleek progress bar
-  void _simulateUpload(String name, String size, String mockUrl) {
+  Future<void> _uploadBytes({
+    required String name,
+    required int sizeBytes,
+    required String contentType,
+    Uint8List? bytes,
+    String? localPath,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      WaterBuddyToastService.error(
+        context,
+        'Sign in before uploading documents.',
+      );
+      return;
+    }
+
     setState(() {
       _uploading = true;
       _uploadProgress = 0.0;
       _fileName = name;
-      _fileSize = size;
+      _fileSize = _formatSize(sizeBytes);
       _success = false;
     });
 
-    const steps = 15;
-    double currentStep = 0;
-    Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      currentStep++;
-      if (mounted) {
-        setState(() {
-          _uploadProgress = currentStep / steps;
-        });
+    try {
+      final safeLabel = widget.label
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+          .replaceAll(RegExp(r'_+'), '_')
+          .replaceAll(RegExp(r'^_|_$'), '');
+      final safeName = name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]+'), '_');
+      final ref = FirebaseStorage.instance.ref(
+        'verification_documents/${user.uid}/$safeLabel/${DateTime.now().millisecondsSinceEpoch}_$safeName',
+      );
+      final metadata = SettableMetadata(
+        contentType: contentType,
+        customMetadata: {
+          'label': widget.label,
+          'uid': user.uid,
+        },
+      );
+
+      final UploadTask task;
+      if (!kIsWeb && localPath != null) {
+        task = ref.putFile(File(localPath), metadata);
+      } else if (bytes != null) {
+        task = ref.putData(bytes, metadata);
+      } else {
+        throw StateError('No upload data available.');
       }
 
-      if (currentStep >= steps) {
-        timer.cancel();
-        if (mounted) {
-          setState(() {
-            _uploading = false;
-            _success = true;
-            widget.controller.text = mockUrl;
-          });
-          WaterBuddyToastService.success(
-            context,
-            '${widget.label} uploaded successfully',
-          );
-        }
-      }
-    });
+      final sub = task.snapshotEvents.listen((snapshot) {
+        final total = snapshot.totalBytes;
+        if (!mounted || total <= 0) return;
+        setState(() {
+          _uploadProgress = snapshot.bytesTransferred / total;
+        });
+      });
+
+      final snapshot = await task;
+      await sub.cancel();
+      final url = await snapshot.ref.getDownloadURL();
+      if (!mounted) return;
+      setState(() {
+        _uploading = false;
+        _uploadProgress = 1;
+        _success = true;
+        widget.controller.text = url;
+      });
+      WaterBuddyToastService.success(
+        context,
+        '${widget.label} uploaded successfully',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _uploading = false;
+        _uploadProgress = 0;
+        _success = false;
+        widget.controller.clear();
+      });
+      WaterBuddyToastService.error(context, 'Upload failed: $e');
+    }
   }
 
   void _openUploadBottomSheet() {
@@ -223,399 +274,74 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
   }
 
   void _openCameraScanner() {
-    showWaterBuddyBottomSheet<void>(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: widget.themeColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    Icons.document_scanner_rounded,
-                    color: widget.themeColor,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Scan ${widget.label}',
-                    style: const TextStyle(
-                      color: WbColors.ink,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, color: WbColors.muted),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              height: 310,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(26),
-                border: Border.all(color: WbColors.line),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Stack(
-                children: [
-                  const Positioned.fill(child: AbstractWaterBackground()),
-                  Center(
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 0.74,
-                      height: 210,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: widget.themeColor, width: 2),
-                        borderRadius: BorderRadius.circular(22),
-                        color: Colors.white.withValues(alpha: 0.42),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Align ${widget.label} inside frame',
-                          style: const TextStyle(
-                            color: WbColors.ink,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: 42,
-                    right: 42,
-                    top: 154,
-                    child: Container(
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: widget.themeColor.withValues(alpha: 0.75),
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color: widget.themeColor.withValues(alpha: 0.30),
-                            blurRadius: 14,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Hold steady while WaterBuddy captures a clear verification document.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: WbColors.muted,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                final randomNum = Random().nextInt(9000) + 1000;
-                final name =
-                    "${widget.label.toLowerCase().replaceAll(' ', '_')}_scan_$randomNum.jpg";
-                final size = "1.${Random().nextInt(9) + 1} MB";
-                final mockUrl = widget.isPhoto
-                    ? "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500"
-                    : "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500";
-                _simulateUpload(name, size, mockUrl);
-              },
-              icon: const Icon(Icons.camera_alt_rounded),
-              label: const Text('Capture Document'),
-              style: FilledButton.styleFrom(
-                backgroundColor: WbColors.ink,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    _pickImage(ImageSource.camera);
   }
 
   void _openGalleryPicker() {
-    showWaterBuddyBottomSheet(
-      context: context,
-      child: Container(
-        color: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Select ${widget.label} from Gallery',
-                  style: const TextStyle(
-                      color: Color(0xFF0F172A),
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon:
-                      const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 120,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  _buildTemplateCard(
-                    label: 'Recent Scan 1',
-                    ext: 'PNG',
-                    size: '1.2 MB',
-                    icon: Icons.image_rounded,
-                    color: Colors.amber,
-                  ),
-                  _buildTemplateCard(
-                    label: 'Scan_Copy.jpg',
-                    ext: 'JPG',
-                    size: '890 KB',
-                    icon: Icons.filter_hdr_rounded,
-                    color: Colors.lightBlue,
-                  ),
-                  _buildTemplateCard(
-                    label: 'Official_Doc.pdf',
-                    ext: 'PDF',
-                    size: '2.8 MB',
-                    icon: Icons.picture_as_pdf_rounded,
-                    color: Colors.redAccent,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            OutlinedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                final randomNum = Random().nextInt(9000) + 1000;
-                _simulateUpload(
-                  "${widget.label.toLowerCase().replaceAll(' ', '_')}_gallery_$randomNum.png",
-                  "2.1 MB",
-                  "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=500",
-                );
-              },
-              icon: const Icon(Icons.folder_open_rounded),
-              label: const Text('Browse Other Device Files...',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF0F172A),
-                side: const BorderSide(color: Color(0xFFE2E8F0)),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+    _pickImage(ImageSource.gallery);
+  }
+
+  Future<void> _openFileBrowser() async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      withData: kIsWeb,
+      type: FileType.custom,
+      allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'],
+    );
+    final file = result?.files.single;
+    if (file == null) return;
+    await _uploadBytes(
+      name: file.name,
+      sizeBytes: file.size,
+      contentType: _contentTypeFor(file.extension),
+      bytes: file.bytes,
+      localPath: file.path,
     );
   }
 
-  void _openFileBrowser() {
-    showWaterBuddyBottomSheet(
-      context: context,
-      child: Container(
-        color: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Select Document File',
-                  style: TextStyle(
-                      color: Color(0xFF0F172A),
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon:
-                      const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildFileListOption(
-                'Aadhaar_Card_Digital.pdf', '1.4 MB', Colors.redAccent),
-            const SizedBox(height: 8),
-            _buildFileListOption(
-                'Driving_License_Copy.pdf', '980 KB', Colors.redAccent),
-            const SizedBox(height: 8),
-            _buildFileListOption(
-                'Vehicle_RC_Official.docx', '3.1 MB', Colors.blue),
-            const SizedBox(height: 20),
-            OutlinedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                _simulateUpload(
-                  "${widget.label.toLowerCase().replaceAll(' ', '_')}_browse.pdf",
-                  "1.6 MB",
-                  "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500",
-                );
-              },
-              icon: const Icon(Icons.file_copy_rounded),
-              label: const Text('Select Custom File...',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF0F172A),
-                side: const BorderSide(color: Color(0xFFE2E8F0)),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(
+      source: source,
+      imageQuality: 88,
+      maxWidth: 2200,
+    );
+    if (file == null) return;
+    final bytes = kIsWeb ? await file.readAsBytes() : null;
+    final size = kIsWeb ? bytes!.length : await File(file.path).length();
+    await _uploadBytes(
+      name: file.name,
+      sizeBytes: size,
+      contentType: _contentTypeFor(file.name.split('.').last),
+      bytes: bytes,
+      localPath: file.path,
     );
   }
 
-  Widget _buildFileListOption(String name, String size, Color extColor) {
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        _simulateUpload(name, size,
-            "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500");
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.description_rounded, color: extColor, size: 24),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name,
-                      style: const TextStyle(
-                          color: Color(0xFF0F172A),
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold)),
-                  Text(size,
-                      style: const TextStyle(
-                          color: Color(0xFF64748B), fontSize: 11)),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_downward_rounded,
-                color: Color(0xFF94A3B8), size: 18),
-          ],
-        ),
-      ),
-    );
+  String _contentTypeFor(String? extension) {
+    switch ((extension ?? '').toLowerCase()) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'pdf':
+        return 'application/pdf';
+      case 'doc':
+        return 'application/msword';
+      case 'docx':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      default:
+        return 'application/octet-stream';
+    }
   }
 
-  Widget _buildTemplateCard({
-    required String label,
-    required String ext,
-    required String size,
-    required IconData icon,
-    required Color color,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-        _simulateUpload(label, size,
-            "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=500");
-      },
-      child: Container(
-        width: 110,
-        margin: const EdgeInsets.only(right: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Icon(icon, color: color, size: 20),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4)),
-                  child: Text(ext,
-                      style: TextStyle(
-                          color: color,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold)),
-                ),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                      color: Color(0xFF0F172A),
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(size,
-                    style:
-                        const TextStyle(color: Color(0xFF64748B), fontSize: 9)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+  String _formatSize(int bytes) {
+    if (bytes >= 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
+    if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
+    return '$bytes B';
   }
 
   @override
