@@ -6,7 +6,11 @@ import 'package:flutter/foundation.dart';
 /// Wraps Firebase Performance custom traces and HTTP metric recording.
 /// In debug mode all operations are no-ops to avoid cluttering dashboards.
 class PerformanceService {
-  static final FirebasePerformance _perf = FirebasePerformance.instance;
+  // Lazy getter — NEVER access FirebasePerformance.instance at class load time.
+  // A static `final` field is initialized on first class reference, which would
+  // happen when traceAppStartup() is called to WRAP Firebase.initializeApp(),
+  // causing [core/no-app]. A getter defers the access until after init is done.
+  static FirebasePerformance get _perf => FirebasePerformance.instance;
 
   // ── Trace runner ──────────────────────────────────────────────────────────
 
