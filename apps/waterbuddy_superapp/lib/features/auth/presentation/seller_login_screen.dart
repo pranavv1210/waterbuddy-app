@@ -23,8 +23,8 @@ class SellerLoginScreen extends ConsumerStatefulWidget {
 
 class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _email = TextEditingController(text: AuthService.testSellerEmail);
-  final _password = TextEditingController(text: AuthService.testSellerPassword);
+  final _email = TextEditingController();
+  final _password = TextEditingController();
   LoadingButtonState _btnState = LoadingButtonState.idle;
 
   @override
@@ -187,16 +187,6 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
       final auth = ref.read(authServiceProvider);
       final email = _email.text.trim();
       final password = _password.text.trim();
-      if (email == AuthService.testSellerEmail &&
-          password == AuthService.testSellerPassword) {
-        await auth.signInOrCreateTestSeller();
-        if (!mounted) return;
-        setState(() => _btnState = LoadingButtonState.success);
-        await Future.delayed(const Duration(milliseconds: 400));
-        if (mounted) context.go(RouteNames.sellerDashboard);
-        return;
-      }
-
       await auth.signInWithEmailPassword(email: email, password: password);
       unawaited(auth
           .upsertUserProfile(

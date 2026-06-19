@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../core/services/location/google_maps_service.dart';
 import '../../../routes/route_names.dart';
 import '../../../models/order.dart' as app_order;
 import '../../../widgets/premium_ui.dart';
@@ -198,6 +201,9 @@ class _TrackingScreenBody extends StatefulWidget {
 class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
   GoogleMapController? _googleMapController;
   BitmapDescriptor? _tankerIcon;
+  final GoogleMapsService _googleMapsService = GoogleMapsService();
+  List<LatLng> _routePoints = const [];
+  String? _routeKey;
 
   @override
   void initState() {
@@ -228,6 +234,8 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
         CameraUpdate.newLatLngZoom(
             LatLng(newTracking.lat, newTracking.lng), 15.0),
       );
+      _routePoints = const [];
+      _routeKey = null;
     }
   }
 
@@ -255,6 +263,13 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
 
     final cameraTarget =
         driverLatLng ?? consumerLatLng ?? const LatLng(12.9716, 77.5946);
+    final currentRouteKey = consumerLatLng != null && driverLatLng != null
+        ? '${driverLatLng.latitude},${driverLatLng.longitude}:${consumerLatLng.latitude},${consumerLatLng.longitude}'
+        : null;
+    if (currentRouteKey != null && currentRouteKey != _routeKey) {
+      _routeKey = currentRouteKey;
+      unawaited(_refreshRoute(driverLatLng!, consumerLatLng!));
+    }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
@@ -306,7 +321,9 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
                   if (consumerLatLng != null && driverLatLng != null)
                     Polyline(
                       polylineId: const PolylineId('route'),
-                      points: [consumerLatLng, driverLatLng],
+                      points: _routePoints.isEmpty
+                          ? [consumerLatLng, driverLatLng]
+                          : _routePoints,
                       color: const Color(0xFF007AFF),
                       width: 5,
                     ),
@@ -487,6 +504,21 @@ class _TrackingScreenBodyState extends State<_TrackingScreenBody> {
         ),
       ),
     );
+  }
+
+  Future<void> _refreshRoute(LatLng driver, LatLng consumer) async {
+    final route = await _googleMapsService.getDirections(
+      originLatitude: driver.latitude,
+      originLongitude: driver.longitude,
+      destinationLatitude: consumer.latitude,
+      destinationLongitude: consumer.longitude,
+    );
+    if (!mounted || route == null || route.polylinePoints.isEmpty) return;
+    setState(() {
+      _routePoints = route.polylinePoints
+          .map((point) => LatLng(point.latitude, point.longitude))
+          .toList();
+    });
   }
 
   String _getStatusTitle(String status) {

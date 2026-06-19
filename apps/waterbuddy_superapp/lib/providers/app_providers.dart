@@ -563,9 +563,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           case AppRole.consumer:
             return RouteNames.consumerHome;
           case AppRole.seller:
-            if (user.email == AuthService.testSellerEmail) {
-              return RouteNames.sellerDashboard;
-            }
             final verification =
                 ref.read(sellerVerificationStatusProvider).value ?? 'pending';
             if (verification == 'approved') return RouteNames.sellerDashboard;
@@ -583,9 +580,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
       if (path.startsWith('/seller')) {
         if (role != AppRole.seller) return RouteNames.unauthorized;
-        if (user.email == AuthService.testSellerEmail) {
-          return null;
-        }
         final verification =
             ref.read(sellerVerificationStatusProvider).value ?? 'pending';
         if (verification == 'approved' && path != RouteNames.sellerDashboard) {

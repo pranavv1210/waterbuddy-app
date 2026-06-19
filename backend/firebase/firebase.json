@@ -9,6 +9,9 @@
     "rules": "firestore_rules/firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "hosting": {
     "public": "hosting/admin_dashboard",
     "ignore": [

@@ -1,0 +1,33 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        (request.auth.token.admin == true ||
+         request.auth.token.role == 'admin' ||
+         request.auth.token.email == 'waterbuddyapp.wb@gmail.com' ||
+         request.auth.token.email == 'admin@waterbuddy.com');
+    }
+
+    function isAllowedDocumentUpload() {
+      return request.resource.size < 10 * 1024 * 1024 &&
+        request.resource.contentType.matches(
+          'image/.*|application/pdf|application/msword|application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        );
+    }
+
+    match /verification_documents/{uid}/{allPaths=**} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) && isAllowedDocumentUpload();
+    }
+  }
+}

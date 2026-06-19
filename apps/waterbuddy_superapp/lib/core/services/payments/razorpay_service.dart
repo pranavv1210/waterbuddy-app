@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
+import '../../config/app_config.dart';
 import '../../exceptions/exceptions.dart';
 import '../crashlytics/crashlytics_service.dart';
 import '../performance/performance_service.dart';
@@ -24,8 +25,6 @@ class RazorpayService {
   // ── Replace with your actual Razorpay Key ID from the dashboard ──────────
   // The key is fetched from the createRazorpayOrder response so this is only
   // a fallback display identifier.
-  static const String _keyId = 'rzp_test_REPLACE_WITH_YOUR_KEY';
-
   Razorpay? _razorpay;
   String? _pendingOrderId; // WaterBuddy order ID awaiting payment
 
@@ -94,13 +93,23 @@ class RazorpayService {
     required String customerPhone,
     required String customerEmail,
     required String description,
+    String? razorpayKeyId,
     String? prefillMethod,
   }) {
     assert(_razorpay != null, 'Call init() before openCheckout()');
     _pendingOrderId = orderId;
+    final keyId = (razorpayKeyId == null || razorpayKeyId.isEmpty)
+        ? AppConfig.razorpayKeyId
+        : razorpayKeyId;
+    if (keyId.isEmpty || !keyId.startsWith('rzp_live_')) {
+      throw const PaymentException(
+        'Razorpay live key is not configured.',
+        code: 'razorpay_live_key_missing',
+      );
+    }
 
     final options = <String, dynamic>{
-      'key': _keyId,
+      'key': keyId,
       'amount': amountInPaise,
       'currency': 'INR',
       'name': 'WaterBuddy',

@@ -49,10 +49,7 @@ class SellerLocationTrackingService {
     }
     await stop();
 
-    const locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 20, // Triggers every 20m minimum
-    );
+    final locationSettings = _locationSettings();
 
     _subscription =
         Geolocator.getPositionStream(locationSettings: locationSettings).listen(
@@ -142,5 +139,36 @@ class SellerLocationTrackingService {
     _lastPosition = null;
     _lastWriteAt = null;
     debugPrint('[SELLER_LOC] Stopped tracking');
+  }
+
+  LocationSettings _locationSettings() {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return AndroidSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 20,
+        foregroundNotificationConfig: const ForegroundNotificationConfig(
+          notificationTitle: 'WaterBuddy tanker tracking',
+          notificationText: 'Sharing tanker owner location while online',
+          enableWakeLock: true,
+        ),
+      );
+    }
+
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      return AppleSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 20,
+        activityType: ActivityType.automotiveNavigation,
+        pauseLocationUpdatesAutomatically: false,
+        showBackgroundLocationIndicator: true,
+        allowBackgroundLocationUpdates: true,
+      );
+    }
+
+    return const LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 20,
+    );
   }
 }

@@ -222,6 +222,12 @@ class FcmService {
         SetOptions(merge: true),
       );
 
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      final role = userDoc.data()?['role']?.toString();
+      if (role == 'seller' || role == 'driver') {
+        await _saveRoleTokenValue(role!, token, tokenData);
+      }
+
       debugPrint('[FCM] Token saved for user ${user.uid}');
     } catch (e) {
       debugPrint('[FCM] Failed to save token: $e');
@@ -246,20 +252,10 @@ class FcmService {
 
       switch (role) {
         case 'seller':
-          await _firestore
-              .collection('sellers')
-              .doc(user.uid)
-              .collection('fcmTokens')
-              .doc(token)
-              .set(tokenData, SetOptions(merge: true));
+          await _saveRoleTokenValue(role, token, tokenData);
           break;
         case 'driver':
-          await _firestore
-              .collection('drivers')
-              .doc(user.uid)
-              .collection('fcmTokens')
-              .doc(token)
-              .set(tokenData, SetOptions(merge: true));
+          await _saveRoleTokenValue(role, token, tokenData);
           break;
         default:
           // consumer — already saved in _saveTokenValue
@@ -269,6 +265,26 @@ class FcmService {
     } catch (e) {
       debugPrint('[FCM] Failed to save role token: $e');
     }
+  }
+
+  Future<void> _saveRoleTokenValue(
+    String role,
+    String token,
+    Map<String, Object> tokenData,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final collection = role == 'seller' ? 'sellers' : 'drivers';
+    final doc = _firestore.collection(collection).doc(user.uid);
+    await doc.collection('fcmTokens').doc(token).set(
+          tokenData,
+          SetOptions(merge: true),
+        );
+    await doc.set(
+      {'fcmToken': token, 'fcmUpdatedAt': FieldValue.serverTimestamp()},
+      SetOptions(merge: true),
+    );
   }
 
   /// Call after login / when user changes to ensure token is always fresh.
@@ -342,6 +358,11 @@ class FcmService {
           importance: Importance.max,
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',
+          styleInformation: BigTextStyleInformation(
+            notification.body ?? '',
+            contentTitle: notification.title,
+            summaryText: 'WaterBuddy',
+          ),
         ),
         iOS: const DarwinNotificationDetails(
           presentAlert: true,

@@ -80,31 +80,39 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
     });
   }
 
-  void _sendOtp() {
-    final digits = _phone.text.replaceAll(RegExp(r'\D'), '');
-    if (digits.length < 10) {
-      setState(() => _error = 'Enter a valid mobile number.');
+  Future<void> _sendOtp() async {
+    final email = _phone.text.trim();
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      setState(() => _error = 'Enter a valid registered email address.');
       return;
     }
     setState(() {
+      _loading = true;
       _error = null;
-      _step = 1;
     });
-    _startTimer();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _otpNodes.first.requestFocus();
-    });
+    try {
+      await ref.read(authServiceProvider).sendPasswordResetEmail(email);
+      if (!mounted) return;
+      setState(() => _step = 3);
+    } on AuthFailure catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Unable to send reset email right now.');
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   void _verifyOtp() {
     final otp = _otpControllers.map((c) => c.text).join();
-    if (otp != AuthService.devOtpCode) {
-      setState(() => _error = 'Invalid OTP. Enter 123456 for testing.');
+    if (otp.length != 6) {
+      setState(() => _error = 'Enter the complete 6-digit code.');
       return;
     }
     setState(() {
-      _error = null;
-      _step = 2;
+      _error = 'Use the password reset link sent to your email.';
     });
   }
 
@@ -120,24 +128,8 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
     }
 
     setState(() {
-      _loading = true;
-      _error = null;
+      _error = 'Use the password reset link sent to your email.';
     });
-    try {
-      await ref.read(authServiceProvider).resetDevelopmentOtpPassword(
-            phoneNumber: _phone.text.trim(),
-            otpCode: AuthService.devOtpCode,
-            newPassword: password,
-          );
-      if (!mounted) return;
-      setState(() => _step = 3);
-    } on AuthFailure catch (e) {
-      setState(() => _error = e.message);
-    } catch (_) {
-      setState(() => _error = 'Unable to reset password right now.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
   }
 
   @override
@@ -159,10 +151,10 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
 
   String get _subtitle {
     return switch (_step) {
-      0 => 'Enter your registered mobile number',
-      1 => 'Verify OTP sent to ${_phone.text.trim()}',
+      0 => 'Enter your registered email address',
+      1 => 'Check the verification code',
       2 => 'Create a new secure password',
-      _ => 'Password updated successfully',
+      _ => 'Password reset email sent',
     };
   }
 
@@ -229,12 +221,15 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
       children: [
         _field(
           controller: _phone,
-          label: 'Registered mobile number',
-          icon: Icons.phone_outlined,
-          keyboardType: TextInputType.phone,
+          label: 'Registered email address',
+          icon: Icons.email_outlined,
+          keyboardType: TextInputType.emailAddress,
         ),
         const SizedBox(height: 24),
-        _primaryButton(label: 'Send OTP', onPressed: _sendOtp),
+        _primaryButton(
+          label: _loading ? 'Sending...' : 'Send Reset Link',
+          onPressed: _loading ? null : _sendOtp,
+        ),
       ],
     );
   }
@@ -251,7 +246,7 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
             border: Border.all(color: const Color(0xFFDCEFFF)),
           ),
           child: const Text(
-            'Development OTP: 123456',
+            'Use the password reset link sent to your registered email.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Color(0xFF0095F6),
@@ -323,7 +318,7 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
             TextButton(
               onPressed: _seconds == 0 ? _startTimer : null,
               child: Text(
-                _seconds == 0 ? 'Resend OTP' : 'Resend in ${_seconds}s',
+                _seconds == 0 ? 'Resend link' : 'Resend in ${_seconds}s',
                 style: TextStyle(
                   color: _seconds == 0
                       ? const Color(0xFF0095F6)
@@ -382,7 +377,7 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
         ),
         const SizedBox(height: 20),
         const Text(
-          'Use your new password the next time this account asks for one.',
+          'Open the reset link from your email to create a new password.',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Color(0xFF6B7280),

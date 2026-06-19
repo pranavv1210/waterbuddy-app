@@ -24,6 +24,19 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>GoogleMapsApiKey</key>
+	<string>AIzaSyBDH8TLcO_vfDQ2wl_72bj09UT06PDPsbo</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>WaterBuddy uses your location to find nearby tankers and show delivery tracking.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>WaterBuddy uses background location during active deliveries so customers can see live tanker progress.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>WaterBuddy uses background location during active deliveries so customers can see live tanker progress.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

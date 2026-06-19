@@ -86,6 +86,8 @@ class PaymentController extends StateNotifier<PaymentState> {
 
       final razorpayOrderId =
           razorpayOrderData['razorpayOrderId'] as String? ?? '';
+      final razorpayKeyId = razorpayOrderData['keyId'] as String? ??
+          razorpayOrderData['razorpayKeyId'] as String?;
 
       if (razorpayOrderId.isEmpty) {
         throw const PaymentException(
@@ -125,6 +127,7 @@ class PaymentController extends StateNotifier<PaymentState> {
         customerPhone: customerPhone,
         customerEmail: customerEmail,
         description: description,
+        razorpayKeyId: razorpayKeyId,
         prefillMethod: method,
       );
       // Note: state remains isProcessing=true until callback fires

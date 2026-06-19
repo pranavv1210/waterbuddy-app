@@ -17,7 +17,7 @@ class DriverOtpScreen extends ConsumerStatefulWidget {
 
 class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
     with SingleTickerProviderStateMixin {
-  final _otp = TextEditingController(text: '123456');
+  final _otp = TextEditingController();
 
   late final AnimationController _animController;
   late final Animation<double> _fadeAnimation;
@@ -122,23 +122,6 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                   ],
                 ),
                 const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF7FF),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFDCEFFF)),
-                  ),
-                  child: const Text(
-                    'Development OTP: 123456',
-                    style: TextStyle(
-                        color: Color(0xFF0095F6),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 20),
                 TextField(
                   controller: _otp,
                   keyboardType: TextInputType.number,
@@ -220,11 +203,6 @@ class _DriverOtpScreenState extends ConsumerState<DriverOtpScreen>
                                   )
                                   .catchError((_) {}),
                             );
-                          } else if (phoneNumber == '9988776655') {
-                            unawaited(ref
-                                .read(authServiceProvider)
-                                .seedTemporaryRoleData(role: AppRole.driver)
-                                .catchError((_) {}));
                           }
                           context.go(RouteNames.driverDashboard);
                         },

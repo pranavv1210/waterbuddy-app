@@ -25,13 +25,6 @@ class AuthService {
     serverClientId:
         '979686341816-gi2haph462optrduomb8m8rqm99jfc54.apps.googleusercontent.com',
   );
-  static const String devOtpCode = '123456';
-  static const String testConsumerPhone = '9876543210';
-  static const String testDriverPhone = '9988776655';
-  static const String testSellerEmail = 'seller@waterbuddy.test';
-  static const String testSellerPassword = 'Waterbuddy@123';
-  static const String _testOtpPassword = 'WaterbuddyOtp@123';
-
   Stream<User?> authStateChanges() => _auth.authStateChanges();
 
   Future<UserCredential?> signInWithGoogle({
@@ -108,74 +101,78 @@ class AuthService {
     }
   }
 
-  Future<UserCredential> signInOrCreateTestSeller() async {
-    UserCredential credential;
-    try {
-      credential = await signInWithEmailPassword(
-        email: testSellerEmail,
-        password: testSellerPassword,
-      );
-    } on AuthFailure {
-      credential = await signUpWithEmailPassword(
-        email: testSellerEmail,
-        password: testSellerPassword,
-      );
-    }
-
-    unawaited(credential.user?.updateDisplayName('Kaveri Water Tankers'));
-    unawaited(seedTemporaryRoleData(role: AppRole.seller).catchError((_) {}));
-    return credential;
-  }
-
-  Future<UserCredential> signInWithDevelopmentOtp({
-    required String phoneNumber,
-    required String otpCode,
-  }) async {
-    if (otpCode.trim() != devOtpCode) {
-      throw const AuthFailure('Invalid OTP. Please enter the 6-digit code.');
-    }
-
-    final email = _developmentOtpEmail(phoneNumber);
-    try {
-      final credential = await signInWithEmailPassword(
-        email: email,
-        password: _testOtpPassword,
-      );
-      unawaited(credential.user?.updateDisplayName(phoneNumber));
-      return credential;
-    } on AuthFailure {
-      final credential = await signUpWithEmailPassword(
-        email: email,
-        password: _testOtpPassword,
-      );
-      unawaited(credential.user?.updateDisplayName(phoneNumber));
-      return credential;
-    }
-  }
-
   Future<String> sendOtp({
     required String phoneNumber,
     Duration timeout = const Duration(seconds: 60),
     Future<void> Function(UserCredential credential)? onVerificationCompleted,
   }) async {
-    return 'mock_verification_id_${phoneNumber.trim()}';
+    final completer = Completer<String>();
+
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber.trim(),
+        timeout: timeout,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          try {
+            final userCredential = await _auth.signInWithCredential(credential);
+            await onVerificationCompleted?.call(userCredential);
+          } catch (_) {
+            if (!completer.isCompleted) {
+              completer.completeError(
+                const AuthFailure(
+                  'Auto verification failed. Enter the OTP manually.',
+                ),
+              );
+            }
+          }
+        },
+        verificationFailed: (FirebaseAuthException exception) {
+          if (!completer.isCompleted) {
+            completer.completeError(AuthFailure(_authErrorMessage(exception)));
+          }
+        },
+        codeSent: (String verificationId, int? forceResendingToken) {
+          if (!completer.isCompleted) {
+            completer.complete(verificationId);
+          }
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          if (!completer.isCompleted) {
+            completer.complete(verificationId);
+          }
+        },
+      );
+
+      return await completer.future.timeout(
+        timeout + const Duration(seconds: 5),
+        onTimeout: () => throw const AuthFailure(
+          'OTP request timed out. Please try again.',
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure(_authErrorMessage(e));
+    }
   }
 
   Future<UserCredential> verifyOtp({
     required String verificationId,
     required String smsCode,
   }) async {
-    if (smsCode.trim() != devOtpCode) {
-      throw const AuthFailure('Invalid OTP. Please enter the 6-digit code.');
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: smsCode.trim(),
+      );
+      return await _auth.signInWithCredential(credential).timeout(
+            const Duration(seconds: 12),
+          );
+    } on TimeoutException {
+      throw const AuthFailure(
+        'OTP verification timed out. Please try again.',
+      );
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure(_authErrorMessage(e));
     }
-
-    final phoneNumber = verificationId.startsWith('mock_verification_id_')
-        ? verificationId.replaceFirst('mock_verification_id_', '')
-        : '+910000000000';
-    return signInWithDevelopmentOtp(
-      phoneNumber: phoneNumber,
-      otpCode: smsCode,
-    );
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
@@ -184,19 +181,6 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       throw AuthFailure(_authErrorMessage(e));
     }
-  }
-
-  Future<void> resetDevelopmentOtpPassword({
-    required String phoneNumber,
-    required String otpCode,
-    required String newPassword,
-  }) async {
-    final credential = await signInWithDevelopmentOtp(
-      phoneNumber: phoneNumber,
-      otpCode: otpCode,
-    );
-    await credential.user?.updatePassword(newPassword);
-    await signOut();
   }
 
   Future<void> upsertUserProfile({
@@ -403,109 +387,6 @@ class AuthService {
     }, SetOptions(merge: true));
   }
 
-  Future<void> seedTemporaryRoleData({required AppRole role}) async {
-    final user = _auth.currentUser;
-    if (user == null) throw const AuthFailure('User not authenticated.');
-
-    final now = FieldValue.serverTimestamp();
-    switch (role) {
-      case AppRole.consumer:
-        await _firestore.collection('users').doc(user.uid).set({
-          'uid': user.uid,
-          'role': role.value,
-          'fullName': 'Test Consumer',
-          'displayName': 'Test Consumer',
-          'email': user.email ?? 'consumer@waterbuddy.test',
-          'phoneNumber': testConsumerPhone,
-          'authProvider': 'otp',
-          'isVerified': true,
-          'isBlocked': false,
-          'createdAt': now,
-          'updatedAt': now,
-        }, SetOptions(merge: true));
-        break;
-      case AppRole.seller:
-        await _firestore.collection('users').doc(user.uid).set({
-          'uid': user.uid,
-          'role': role.value,
-          'fullName': 'Kaveri Water Tankers',
-          'displayName': 'Kaveri Water Tankers',
-          'email': testSellerEmail,
-          'phoneNumber': '9876501234',
-          'authProvider': 'email_password',
-          'isVerified': true,
-          'isBlocked': false,
-          'createdAt': now,
-          'updatedAt': now,
-        }, SetOptions(merge: true));
-        await _firestore.collection('sellers').doc(user.uid).set({
-          'uid': user.uid,
-          'ownerName': 'Pranav Test Owner',
-          'businessName': 'Kaveri Water Tankers',
-          'phoneNumber': '9876501234',
-          'email': testSellerEmail,
-          'address': 'Indiranagar, Bengaluru',
-          'aadhaarNumber': '999988887777',
-          'tankerCapacity': '15000',
-          'vehicleNumber': 'KA 01 WB 2026',
-          'verificationStatus': 'approved',
-          'isOnline': true,
-          'ownerDriver': true,
-          'lat': 12.9716,
-          'lng': 77.5946,
-          'rating': 4.8,
-          'totalOrders': 0,
-          'createdAt': now,
-          'updatedAt': now,
-        }, SetOptions(merge: true));
-        await _firestore.collection('drivers').doc(user.uid).set({
-          'uid': user.uid,
-          'sellerId': user.uid,
-          'driverName': 'Pranav Test Driver',
-          'phone': '9876501234',
-          'email': testSellerEmail,
-          'driverLicenseNumber': 'KA20260001234',
-          'verificationStatus': 'approved',
-          'ownerDriver': true,
-          'isOnline': true,
-          'createdAt': now,
-          'updatedAt': now,
-        }, SetOptions(merge: true));
-        break;
-      case AppRole.driver:
-        await _firestore.collection('users').doc(user.uid).set({
-          'uid': user.uid,
-          'role': role.value,
-          'fullName': 'Test Driver',
-          'displayName': 'Test Driver',
-          'email': user.email ?? 'driver@waterbuddy.test',
-          'phoneNumber': testDriverPhone,
-          'authProvider': 'otp',
-          'isVerified': true,
-          'isBlocked': false,
-          'createdAt': now,
-          'updatedAt': now,
-        }, SetOptions(merge: true));
-        await _firestore.collection('drivers').doc(user.uid).set({
-          'uid': user.uid,
-          'driverName': 'Test Driver',
-          'phone': testDriverPhone,
-          'email': 'driver@waterbuddy.test',
-          'driverLicenseNumber': 'KA20260005678',
-          'aadhaarNumber': '888877776666',
-          'address': 'Bengaluru',
-          'emergencyContact': '9000000000',
-          'verificationStatus': 'approved',
-          'isOnline': true,
-          'createdAt': now,
-          'updatedAt': now,
-        }, SetOptions(merge: true));
-        break;
-      case AppRole.admin:
-        break;
-    }
-  }
-
   Future<String?> getUserRole(String uid) async {
     final doc = await _firestore.collection('users').doc(uid).get();
     return doc.data()?['role'] as String?;
@@ -544,13 +425,6 @@ class AuthService {
     await _googleSignIn.signOut();
     await _auth.signOut();
   }
-
-  String _developmentOtpEmail(String phoneNumber) {
-    final digits = phoneNumber.replaceAll(RegExp(r'\D'), '');
-    final suffix = digits.isEmpty ? '0000000000' : digits;
-    return 'otp_$suffix@waterbuddy.test';
-  }
-
   String _authErrorMessage(FirebaseAuthException exception) {
     switch (exception.code) {
       case 'invalid-phone-number':

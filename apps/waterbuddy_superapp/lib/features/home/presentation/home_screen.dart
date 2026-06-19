@@ -11,6 +11,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../core/services/location/google_maps_service.dart';
 import '../../../models/order.dart' as app_order;
 import '../../../models/system_settings.dart';
 import '../../../models/tank_category.dart';
@@ -89,10 +90,13 @@ class _HomeMapExperienceState extends ConsumerState<_HomeMapExperience>
   LatLng _source = _defaultLocation;
   LatLng _destination = _defaultLocation;
   String _address = 'Select delivery location';
+  String? _routeSummary;
   bool _loadingLocation = false;
   LoadingButtonState _bookingState = LoadingButtonState.idle;
   BitmapDescriptor? _tankerIcon;
+  List<LatLng> _routePoints = const [];
   late final AnimationController _pulseController;
+  final GoogleMapsService _googleMapsService = GoogleMapsService();
 
   @override
   void initState() {
@@ -156,6 +160,8 @@ class _HomeMapExperienceState extends ConsumerState<_HomeMapExperience>
       setState(() {
         _source = latLng;
         _destination = latLng;
+        _routePoints = const [];
+        _routeSummary = null;
       });
       _animateTo(latLng, zoom: 15.8);
       await _resolveAddress(latLng);
@@ -236,11 +242,31 @@ class _HomeMapExperienceState extends ConsumerState<_HomeMapExperience>
     return {
       Polyline(
         polylineId: const PolylineId('delivery_route'),
-        points: [_source, _destination],
+        points: _routePoints.isEmpty ? [_source, _destination] : _routePoints,
         color: WbColors.blue,
         width: 5,
       ),
     };
+  }
+
+  Future<void> _refreshRoute() async {
+    if (_source == _destination) return;
+    final route = await _googleMapsService.getDirections(
+      originLatitude: _source.latitude,
+      originLongitude: _source.longitude,
+      destinationLatitude: _destination.latitude,
+      destinationLongitude: _destination.longitude,
+    );
+    if (!mounted || route == null || route.polylinePoints.isEmpty) return;
+    setState(() {
+      _routePoints = route.polylinePoints
+          .map((point) => LatLng(point.latitude, point.longitude))
+          .toList();
+      _routeSummary = [
+        route.durationInTrafficText ?? route.durationText,
+        route.distanceText,
+      ].where((value) => value.isNotEmpty).join(' • ');
+    });
   }
 
   Future<void> _openLocationPicker() async {
@@ -255,8 +281,11 @@ class _HomeMapExperienceState extends ConsumerState<_HomeMapExperience>
     setState(() {
       _destination = latLng;
       _address = (result['address'] as String?) ?? 'Pinned delivery location';
+      _routePoints = const [];
+      _routeSummary = null;
     });
     _animateTo(latLng);
+    unawaited(_refreshRoute());
     HapticFeedback.selectionClick();
   }
 
@@ -366,7 +395,14 @@ class _HomeMapExperienceState extends ConsumerState<_HomeMapExperience>
                 markers: _markers(sellers),
                 polylines: _polylines,
                 onCameraMove: (position) => _destination = position.target,
-                onCameraIdle: () => _resolveAddress(_destination),
+                onCameraIdle: () {
+                  _resolveAddress(_destination);
+                  setState(() {
+                    _routePoints = const [];
+                    _routeSummary = null;
+                  });
+                  unawaited(_refreshRoute());
+                },
               ),
             ),
             Positioned(
@@ -505,8 +541,9 @@ class _HomeMapExperienceState extends ConsumerState<_HomeMapExperience>
                     )
                   else
                     _OperationalNotice(
-                      message:
-                          '${sellers.length} live tanker owner${sellers.length == 1 ? '' : 's'} visible in your service area.',
+                      message: _routeSummary == null
+                          ? '${sellers.length} live tanker owner${sellers.length == 1 ? '' : 's'} visible in your service area.'
+                          : '${sellers.length} live tanker owner${sellers.length == 1 ? '' : 's'} visible • $_routeSummary',
                     ),
                   const SizedBox(height: 16),
                   SizedBox(

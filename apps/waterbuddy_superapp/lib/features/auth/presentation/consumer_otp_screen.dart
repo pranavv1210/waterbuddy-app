@@ -41,14 +41,6 @@ class _ConsumerOtpScreenState extends ConsumerState<ConsumerOtpScreen>
       duration: const Duration(milliseconds: 600),
     );
     _startTimer();
-
-    // Pre-fill for development
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      const mock = '123456';
-      for (int i = 0; i < mock.length; i++) {
-        _controllers[i].text = mock[i];
-      }
-    });
   }
 
   void _startTimer() {
