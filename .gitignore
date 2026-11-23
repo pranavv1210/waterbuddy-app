@@ -21,3 +21,7 @@ lib/firebase_options.dart
 backend/firebase/functions/lib/
 backend/firebase/hosting/
 backend/firebase/.firebase/
+# Local Android release-signing material
+**/key.properties
+**/*.jks
+**/*.keystore
