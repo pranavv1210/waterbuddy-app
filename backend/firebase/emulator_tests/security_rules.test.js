@@ -212,6 +212,34 @@ describe("Firestore Security Rules", () => {
     });
   });
 
+  describe("Scenario 7: Notification privacy and read-only updates", () => {
+    beforeEach(async () => {
+      await testEnv.withSecurityRulesDisabled(async (context) => {
+        await context.firestore().collection("notifications").doc("notification_a").set({
+          userId: "user_a",
+          read: false,
+          message: "private notification",
+        });
+      });
+    });
+
+    it("should reject another user reading or marking a notification as read", async () => {
+      const userB = getContext({ uid: "user_b", token: { role: "consumer" } });
+      const notification = userB.firestore().collection("notifications").doc("notification_a");
+
+      await testing.assertFails(notification.get());
+      await testing.assertFails(notification.update({ read: true }));
+    });
+
+    it("should allow the owner to mark read but reject changing other fields", async () => {
+      const userA = getContext({ uid: "user_a", token: { role: "consumer" } });
+      const notification = userA.firestore().collection("notifications").doc("notification_a");
+
+      await testing.assertSucceeds(notification.update({ read: true }));
+      await testing.assertFails(notification.update({ message: "changed" }));
+    });
+  });
+
   describe("Scenario 6: Admin spoof attempts", () => {
     it("should reject driver writing to admins collection", async () => {
       const driverContext = getContext({
